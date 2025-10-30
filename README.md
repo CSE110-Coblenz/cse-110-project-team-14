@@ -1,2 +1,4 @@
 # Lab2
 Fresh repository with main branch.
+
+Allison Chan
