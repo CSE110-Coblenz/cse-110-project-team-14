@@ -1,3 +1,9 @@
 # Lab2
+
+Fresh repository with main branch.
+
+Amy Zhang
 Fresh repository with main branch. <br>
-Sankalp Branch Added
+Sankalp-branch Added
+
+Allison Chan
