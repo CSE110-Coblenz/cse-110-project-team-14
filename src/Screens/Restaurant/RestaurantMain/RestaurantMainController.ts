@@ -21,6 +21,7 @@ export class RestaurantMainController {
     this.view.show();
   }
 
+  //Interaction between clicking item and updating dock
   private handleItemClick(itemName: string) : void{
     this.model.select_item(itemName);
     const selected = this.model.get_selected_item();

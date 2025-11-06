@@ -1,6 +1,6 @@
 import Konva from "konva";
 import type {Item} from "./RestaurantMainModel";
-import { STAGE_WIDTH, STAGE_HEIGHT } from "../../../constants.ts";
+import { STAGE_WIDTH, STAGE_HEIGHT } from "../../../constants";
 //import type { View } from "../../types.ts";
 
 

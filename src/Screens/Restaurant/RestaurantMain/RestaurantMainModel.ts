@@ -1,14 +1,5 @@
+import {Item} from '../../../types';
 
-
-export interface Item {
-    name: string;
-    english: string;
-    french: string;
-    phonetic: string;
-    image: string;
-    x: number;
-    y: number;
-}
 
 export class RestaurantMainModel {
     private items: Item[] = [];
