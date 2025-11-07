@@ -1,0 +1,29 @@
+[
+    {
+        "name": "apple",
+        "english": "Apple",
+        "french": "Pomme",
+        "phonetic": "pom",
+        "image": "/ItemImage/Store/apple.png",
+        "x": 100,
+        "y": 300
+    },
+    {
+        "name": "banana",
+        "english": "Banana",
+        "french": "Banane",
+        "phonetic": "bah-nahn",
+        "image": "/ItemImage/Store/banana.png",
+        "x": 100,
+        "y": 200
+    },
+    {
+        "name": "tomato",
+        "english": "Tomato",
+        "french": "Tomate",
+        "phonetic": "toh-maht",
+        "image": "/ItemImage/Store/tomato.png",
+        "x": 100,
+        "y": 100
+    }
+]
