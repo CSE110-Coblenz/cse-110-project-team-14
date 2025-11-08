@@ -63,6 +63,9 @@ export interface Assessment {
 export interface Person {
     name: string;
     role: string;
+    image: string;
+    x: number;
+    y: number;
     dialogue: string[];
 }
 

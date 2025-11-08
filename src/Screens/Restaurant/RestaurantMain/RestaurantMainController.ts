@@ -1,42 +1,51 @@
-import { RestaurantMainModel } from './RestaurantMainModel';
-import { RestaurantMainView } from './RestaurantMainView';
-//import type {ScreenSwitcher} from "../../../types.ts";
+import { RestaurantMainModel } from "./RestaurantMainModel";
+import { RestaurantMainView } from "./RestaurantMainView";
+import { ProgressTracker } from "../../../utils/ProgressTracker";
 
+/**
+ * Restaurant controller mirrors the classroom controller so both scenes share
+ * the same progress tracking behavior.
+ */
 export class RestaurantMainController {
+  private readonly model = new RestaurantMainModel();
+  private readonly view = new RestaurantMainView();
+  private readonly tracker: ProgressTracker;
+  private readonly switchToClassroom?: () => void;
+  private unsubscribeProgress?: () => void;
 
-  private model: RestaurantMainModel;
-  private view: RestaurantMainView;
-  private screenSwitcher?: {ScreenSwitcher: (name: string) => void };
-
-  constructor(screenSwitcher?: {ScreenSwitcher: (name: string) => void }) {
-    this.screenSwitcher = screenSwitcher;
-    this.model = new RestaurantMainModel();
-    this.view = new RestaurantMainView((itemName) => this.handleItemClick(itemName));
+  constructor(tracker: ProgressTracker, switchToClassroom?: () => void) {
+    this.tracker = tracker;
+    this.switchToClassroom = switchToClassroom;
   }
 
   async start(): Promise<void> {
     await this.model.load_items("/ItemImage/Restaurant/items.json");
     const items = this.model.get_items();
-    this.view.addItems(items, (itemName) => this.handleItemClick(itemName));
-    this.view.show();
+
+    const ids = items.map((item) => `restaurant:${item.name}`);
+    this.tracker.registerItems(ids);
+
+    this.view.addItems(items, (name) => this.handleItemClick(name));
+    this.view.setOnSwitchToClassroom(() => this.switchToClassroom?.());
+
+    this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {
+      this.view.updateProgress(found, total);
+    });
+
+    this.view.resetPanel();
   }
 
-  //Interaction between clicking item and updating dock
-  private handleItemClick(itemName: string) : void{
-    this.model.select_item(itemName);
-    const selected = this.model.get_selected_item();
-    if(!selected){
-      return;
-    }
-    this.view.updateDock(selected);
-
-  }
-
-  getView() : RestaurantMainView {
+  getView(): RestaurantMainView {
     return this.view;
   }
 
-  //public initialize(): void {
-  //  this.view.render();
-  //}
+  private handleItemClick(name: string): void {
+    this.model.select_item(name);
+    const selected = this.model.get_selected_item();
+    if (!selected) {
+      return;
+    }
+    this.tracker.markFound(`restaurant:${name}`);
+    this.view.updatePanel(selected);
+  }
 }
