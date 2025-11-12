@@ -6,6 +6,8 @@ import {
   STAGE_WIDTH,
 } from "../../../constants";
 
+const STORE_BACKGROUND = "/Background/storeScene.png";
+
 type ItemClickHandler = (itemName: string) => void;
 
 /**
@@ -25,14 +27,7 @@ export class RestaurantMainView {
   constructor() {
     this.group = new Konva.Group({ visible: false });
 
-    const background = new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: STAGE_WIDTH,
-      height: STAGE_HEIGHT,
-      fill: "#FFE4C4", // warm restaurant tone
-    });
-    this.group.add(background);
+    this.addBackground();
 
     const panelHeight = 130;
     this.infoPanel = new Konva.Rect({
@@ -208,5 +203,36 @@ export class RestaurantMainView {
     });
     group.on("click tap", onClick);
     return group;
+  }
+
+  private addBackground(): void {
+    const image = new window.Image();
+    image.onload = () => {
+      const background = new Konva.Image({
+        image,
+        x: 0,
+        y: 0,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        listening: false,
+      });
+      this.group.add(background);
+      background.moveToBottom();
+      this.group.getLayer()?.draw();
+    };
+    image.onerror = () => {
+      const fallback = new Konva.Rect({
+        x: 0,
+        y: 0,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        fill: "#FFE4C4",
+        listening: false,
+      });
+      this.group.add(fallback);
+      fallback.moveToBottom();
+      this.group.getLayer()?.draw();
+    };
+    image.src = STORE_BACKGROUND;
   }
 }

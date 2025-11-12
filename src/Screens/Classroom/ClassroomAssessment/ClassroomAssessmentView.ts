@@ -11,6 +11,8 @@ import type { KonvaEventObject } from "konva/lib/Node";
 import type { Item, Person } from "../../../types";
 import { IMAGE_DIMENSIONS } from "../../../constants";
 
+const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
+
 type ItemSelectHandler = (item: Item) => void;
 
 /**
@@ -51,14 +53,7 @@ export class ClassroomAssessmentView {
     this.backgroundGroup = new Konva.Group({ visible: false });
     this.dialogueOverlay = new Konva.Group({ visible: false });
 
-    const background = new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: stage.width(),
-      height: stage.height(),
-      fill: "#7EC8FF",
-    });
-    this.backgroundGroup.add(background);
+    this.addBackground();
 
     this.bottomPanel = new Konva.Rect({
       x: 30,
@@ -358,6 +353,37 @@ export class ClassroomAssessmentView {
       image.onerror = () => reject(new Error(`Failed to load image asset: ${src}`));
       image.src = src;
     });
+  }
+
+  private addBackground(): void {
+    const image = new window.Image();
+    image.onload = () => {
+      const background = new Konva.Image({
+        image,
+        x: 0,
+        y: 0,
+        width: this.stage.width(),
+        height: this.stage.height(),
+        listening: false,
+      });
+      this.backgroundGroup.add(background);
+      background.moveToBottom();
+      this.layer.batchDraw();
+    };
+    image.onerror = () => {
+      const fallback = new Konva.Rect({
+        x: 0,
+        y: 0,
+        width: this.stage.width(),
+        height: this.stage.height(),
+        fill: "#7EC8FF",
+        listening: false,
+      });
+      this.backgroundGroup.add(fallback);
+      fallback.moveToBottom();
+      this.layer.batchDraw();
+    };
+    image.src = CLASSROOM_BACKGROUND;
   }
 
   private createButton(label: string, x: number, y: number, handler: () => void): Konva.Group {
