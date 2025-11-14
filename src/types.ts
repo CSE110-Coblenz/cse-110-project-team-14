@@ -53,13 +53,12 @@ export abstract class ScreenController {
 // }
 export interface Item {
     name: string;
-    isCorrect: boolean;
-    itemImageSrc: string;
-    x?: number;
-    y?: number;
     english: string;
     french: string;
     phonetic: string;
+    image: string;
+    x: number;
+    y: number;
 }
 
 
