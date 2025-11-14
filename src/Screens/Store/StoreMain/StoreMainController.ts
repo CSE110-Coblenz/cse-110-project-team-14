@@ -1,6 +1,6 @@
 import { StoreMainModel } from './StoreMainModel';
 import { StoreMainView } from './StoreMainView';
-//import type {ScreenSwitcher} from "../../../types.ts";
+import type {ScreenSwitcher} from "../../../types.ts";
 
 
 
