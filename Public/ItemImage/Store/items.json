@@ -1,12 +1,21 @@
 [
     {
+        "name": "tomato",
+        "english": "Tomato",
+        "french": "Tomate",
+        "phonetic": "toh-maht",
+        "image": "/ItemImage/Store/tomato.png",
+        "x": 100,
+        "y": 100
+    },
+    {
         "name": "apple",
         "english": "Apple",
         "french": "Pomme",
         "phonetic": "pom",
         "image": "/ItemImage/Store/apple.png",
         "x": 100,
-        "y": 300
+        "y": 200
     },
     {
         "name": "banana",
@@ -15,15 +24,44 @@
         "phonetic": "bah-nahn",
         "image": "/ItemImage/Store/banana.png",
         "x": 100,
+        "y": 300
+    },
+  
+    {
+        "name": "milk",
+        "english": "milk",
+        "french": "lait",
+        "phonetic": "leh",
+        "image": "/ItemImage/Store/milk.png",
+        "x": 200,
+        "y": 100
+    },
+    {
+        "name": "egg",
+        "english": "egg",
+        "french": "œuf",
+        "phonetic": "uhf",
+        "image": "/ItemImage/Store/egg.png",
+        "x": 200,
         "y": 200
     },
     {
-        "name": "tomato",
-        "english": "Tomato",
-        "french": "Tomate",
-        "phonetic": "toh-maht",
-        "image": "/ItemImage/Store/tomato.png",
-        "x": 100,
+        "name": "beef",
+        "english": "beef",
+        "french": "bœuf",
+        "phonetic": "buff",
+        "image": "/ItemImage/Store/beef.png",
+        "x": 200,
+        "y": 300
+    },
+    {
+        "name": "cheese",
+        "english": "cheese (brie) ",
+        "french": "fromage (brie)",
+        "phonetic": "froh-mahzh (bree)",
+        "image": "ItemImage/Store/cheese.png",
+        "x": 300,
         "y": 100
     }
+   
 ]

@@ -12,21 +12,46 @@ export class StoreMainView {
   private itemImages: Record<string, Konva.Image> = {};
   private dock: Konva.Rect;
   private clerkImage?: Konva.Image;
+  private backgroundImage?: Konva.Image;
 
-  constructor(onItemClick: (itemName: string) => void) {
-    this.group = new Konva.Group({ visible: false });
+  // constructor(onItemClick: (itemName: string) => void) {
+  //   this.group = new Konva.Group({ visible: false });
 
-    this.backgroundLayer = this.createbackgroundLayer();
-    this.group.add(this.backgroundLayer);
+  //   this.backgroundLayer = this.createbackgroundLayer();
+  //   this.group.add(this.backgroundLayer);
 
-    const { dock, englishText, frenchVocab, phonetic } = this.createDock();
-    this.dock = dock;
-    this.englishVocab = englishText;
-    this.frenchVocab = frenchVocab;
-    this.phonetic = phonetic;
+  //   const { dock, englishText, frenchVocab, phonetic } = this.createDock();
+  //   this.dock = dock;
+  //   this.englishVocab = englishText;
+  //   this.frenchVocab = frenchVocab;
+  //   this.phonetic = phonetic;
 
-    this.group.add(dock, englishText, frenchVocab, phonetic);
-  }
+  //   this.group.add(dock, englishText, frenchVocab, phonetic);
+  // }
+  private onStartClick: () => void;
+
+
+constructor(
+  onItemClick: (itemName: string) => void,
+  onStartClick: () => void
+) {
+  this.group = new Konva.Group({ visible: false });
+  this.onStartClick = onStartClick;   // <-- store the second callback
+
+  this.backgroundLayer = this.createbackgroundLayer();
+  this.group.add(this.backgroundLayer);
+
+  const { dock, englishText, frenchVocab, phonetic } = this.createDock();
+  this.dock = dock;
+  this.englishVocab = englishText;
+  this.frenchVocab = frenchVocab;
+  this.phonetic = phonetic;
+
+  this.group.add(dock, englishText, frenchVocab, phonetic);
+
+  this.createRestaurantButton(); // <-- new button
+}
+
 
   private createbackgroundLayer(): Konva.Rect {
     return new Konva.Rect({
@@ -37,6 +62,74 @@ export class StoreMainView {
       fill: "#ffffff",
       stroke: "#000000",
       strokeWidth: 1,
+    });
+  }
+  loadBackground(imageUrl: string): void {
+    Konva.Image.fromURL(imageUrl, (imgNode) => {
+      imgNode.setAttrs({
+        x: 0,
+        y: 0,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        image: imgNode.image()
+      });
+  
+      this.backgroundImage = imgNode;
+  
+      // Put background at the bottom
+      this.group.add(imgNode);
+      imgNode.moveToBottom();
+      this.backgroundLayer.moveToBottom();
+  
+      this.group.getLayer()?.draw();
+    });
+  }
+
+  
+
+  showItem(items: Item[], onItemClick: (itemName: string) => void): void {
+    for (const item of items) {
+      Konva.Image.fromURL(item.image, (imgNode) => {
+        imgNode.setAttrs({
+          x: item.x,
+          y: item.y,
+          width: 75,
+          height: 75,
+          name: item.name,
+          image: imgNode.image(),
+        });
+
+        imgNode.on("click", () => {
+          // Add item to dictionary (English → French) if not already added
+          if (!globals.dictionary[item.english]) {
+            globals.dictionary[item.english] = item.french;
+            console.log(globals.dictionary);
+
+          }
+
+          // Call external click callback
+          onItemClick(item.name);
+        });
+
+        this.itemImages[item.name] = imgNode;
+        this.group.add(imgNode);
+        this.group.getLayer()?.draw();
+      });
+    }
+  }
+
+  showClerk(imageUrl: string, x: number, y: number, width: number, height: number): void {
+    Konva.Image.fromURL(imageUrl, (imgNode) => {
+      imgNode.setAttrs({
+        x,
+        y,
+        width,
+        height,
+        image: imgNode.image(),
+      });
+      this.clerkImage = imgNode;
+      this.group.add(imgNode);
+      this.group.getLayer()?.draw();
     });
   }
 
@@ -92,54 +185,39 @@ export class StoreMainView {
 
     return { dock, englishText, frenchVocab, phonetic };
   }
-
-
-
-  showItem(items: Item[], onItemClick: (itemName: string) => void): void {
-    for (const item of items) {
-      Konva.Image.fromURL(item.image, (imgNode) => {
-        imgNode.setAttrs({
-          x: item.x,
-          y: item.y,
-          width: 75,
-          height: 75,
-          name: item.name,
-          image: imgNode.image(),
-        });
-
-        imgNode.on("click", () => {
-          // Add item to dictionary (English → French) if not already added
-          if (!globals.dictionary[item.english]) {
-            globals.dictionary[item.english] = item.french;
-            console.log(globals.dictionary);
-
-          }
-
-          // Call external click callback
-          onItemClick(item.name);
-        });
-
-        this.itemImages[item.name] = imgNode;
-        this.group.add(imgNode);
-        this.group.getLayer()?.draw();
-      });
-    }
-  }
-
-  showClerk(imageUrl: string, x: number, y: number, width: number, height: number): void {
-    Konva.Image.fromURL(imageUrl, (imgNode) => {
-      imgNode.setAttrs({
-        x,
-        y,
-        width,
-        height,
-        image: imgNode.image(),
-      });
-      this.clerkImage = imgNode;
-      this.group.add(imgNode);
-      this.group.getLayer()?.draw();
+  private createRestaurantButton(): void {
+    const btnX = STAGE_WIDTH - 240;
+    const btnY = STAGE_HEIGHT - 150;
+  
+    const button = new Konva.Rect({
+      x: btnX,
+      y: btnY,
+      width: 100,
+      height: 30,
+      fill: "#ffffff",
+      stroke: "#000",
+      strokeWidth: 2
     });
+  
+    const label = new Konva.Text({
+      x: btnX,
+      y: btnY + 10,
+      width: 100,
+      align: "center",
+      text: "Restaurant",
+      fontSize: 16,
+      fontFamily: "Arial",
+      fill: "#000000"
+    });
+  
+    // Both text & button respond to click
+    const handler = () => this.onStartClick();
+    button.on("click", handler);
+    label.on("click", handler);
+  
+    this.group.add(button, label);
   }
+
 
   updateDock(item: Item): void {
     this.englishVocab.text(item.english);
