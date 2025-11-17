@@ -1,0 +1,29 @@
+[
+    {
+        "name": "cookie",
+        "english": "Cookie",
+        "french": "Le biscuit",
+        "phonetic": "luh bis-kwi",
+        "image": "/ItemImage/Restaurant/cookie.png",
+        "x": 300,
+        "y": 200
+    },
+    {
+        "name": "fork",
+        "english": "Fork",
+        "french": "La fourchette",
+        "phonetic": "lah foor-shett",
+        "image": "/ItemImage/Restaurant/fork.png",
+        "x": 600,
+        "y": 200
+    },
+    {
+        "name": "soup",
+        "english": "Soup",
+        "french": "Le soupe",
+        "phonetic": "lah soop",
+        "image": "/ItemImage/Restaurant/soup.png",
+        "x": 100,
+        "y": 100
+    }
+]
