@@ -6,7 +6,12 @@ import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS } from "../../../constants";
 import type { Item } from "../../../types";
 
-const MINIGAME_BG = "/Background/classroomMinigame.png";
+const MINIGAME_BG = "/Background/ClassMinigame.jpg";
+
+export interface BasketData {
+  name: string;       // French label
+  imageSrc: string;   // Basket image URL
+}
 
 export class ClassroomMinigameView {
   private stage: Stage;
@@ -14,7 +19,8 @@ export class ClassroomMinigameView {
   private group: Group;
 
   private itemNodes: KonvaImage[] = [];
-  private baskets: Konva.Rect[] = [];
+  private baskets: KonvaImage[] = [];
+  private basketLabels: Konva.Text[] = [];
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -38,28 +44,47 @@ export class ClassroomMinigameView {
     this.layer.batchDraw();
   }
 
-  async renderScene(items: Item[], basketNames: string[], onItemClick: (item: Item) => void) {
+  async renderScene(
+    items: Item[],
+    baskets: BasketData[],
+    onItemDrop: (item: Item, basketName: string) => void
+  ) {
     this.clearScene();
 
-    // Render baskets
-    const spacing = this.stage.width() / (basketNames.length + 1);
+    // --- Render baskets ---
+    const spacing = this.stage.width() / (baskets.length + 1);
     const basketY = this.stage.height() - 200;
-    this.baskets = basketNames.map((name, i) => {
-      const basket = new Konva.Rect({
+
+    for (let i = 0; i < baskets.length; i++) {
+      const basketData = baskets[i];
+      const img = await this.loadImage(basketData.imageSrc);
+
+      const basketNode = new Konva.Image({
         x: spacing * (i + 1) - 60,
         y: basketY,
         width: 120,
         height: 120,
-        fill: "#FFD700",
-        cornerRadius: 16,
-        stroke: "#1B1B1B",
-        strokeWidth: 2,
+        image: img,
       });
-      this.group.add(basket);
-      return basket;
-    });
+      this.group.add(basketNode);
+      this.baskets.push(basketNode);
 
-    // Render items
+      // French label below basket
+      const labelNode = new Konva.Text({
+        x: basketNode.x(),
+        y: basketNode.y() + 125,
+        width: 120,
+        align: "center",
+        text: basketData.name,
+        fontSize: 18,
+        fontFamily: "Arial",
+        fill: "#000",
+      });
+      this.group.add(labelNode);
+      this.basketLabels.push(labelNode);
+    }
+
+    // --- Render draggable items ---
     const itemSpacing = this.stage.width() / (items.length + 1);
     const itemY = 100;
 
@@ -75,19 +100,22 @@ export class ClassroomMinigameView {
       });
 
       node.on("dragend", () => {
-        const basket = this.baskets.find(b =>
-          node.x() + node.width() / 2 > b.x() &&
-          node.x() + node.width() / 2 < b.x() + b.width() &&
-          node.y() + node.height() / 2 > b.y() &&
-          node.y() + node.height() / 2 < b.y() + b.height()
+        const basket = this.baskets.find(
+          (b) =>
+            node.x() + node.width() / 2 > b.x() &&
+            node.x() + node.width() / 2 < b.x() + b.width() &&
+            node.y() + node.height() / 2 > b.y() &&
+            node.y() + node.height() / 2 < b.y() + b.height()
         );
         if (basket) {
-          // Snap to basket center
+          const basketName = baskets[this.baskets.indexOf(basket)].name;
+
           node.position({
             x: basket.x() + basket.width() / 2 - node.width() / 2,
             y: basket.y() + basket.height() / 2 - node.height() / 2,
           });
-          onItemClick(item);
+
+          onItemDrop(item, basketName);
         }
       });
 
@@ -100,10 +128,14 @@ export class ClassroomMinigameView {
   }
 
   private clearScene() {
-    this.itemNodes.forEach(node => node.destroy());
+    this.itemNodes.forEach((n) => n.destroy());
     this.itemNodes = [];
-    this.baskets.forEach(b => b.destroy());
+
+    this.baskets.forEach((b) => b.destroy());
     this.baskets = [];
+
+    this.basketLabels.forEach((t) => t.destroy());
+    this.basketLabels = [];
   }
 
   private addBackground() {

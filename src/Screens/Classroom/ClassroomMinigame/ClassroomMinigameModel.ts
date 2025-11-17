@@ -13,7 +13,8 @@ export class ClassroomMinigameModel {
   private selectedItem: Item | null = null;
 
   constructor(items: Item[]) {
-    this.items = items;
+    // Initialize items with `placed` property
+    this.items = items.map((item) => ({ ...item, placed: false }));
   }
 
   getItems(): Item[] {
@@ -30,15 +31,21 @@ export class ClassroomMinigameModel {
 
   /**
    * Places an item in a basket.
+   * Returns true if item is in the correct basket (basketName matches item.french).
    */
-  placeItemInBasket(itemName: string, basketName: string): void {
+  placeItemInBasket(itemName: string, basketName: string): boolean {
     const item = this.items.find((i) => i.name === itemName);
-    if (!item) return;
+    if (!item) return false;
+
+    item.placed = true;
 
     if (!this.baskets[basketName]) this.baskets[basketName] = [];
     if (!this.baskets[basketName].includes(item)) {
       this.baskets[basketName].push(item);
     }
+
+    // If basketName matches the item's French label, it's correct
+    return basketName === item.french;
   }
 
   getBasketContents(basketName: string): Item[] {
@@ -48,5 +55,6 @@ export class ClassroomMinigameModel {
   reset(): void {
     this.baskets = {};
     this.selectedItem = null;
+    this.items.forEach((i) => (i.placed = false));
   }
 }
