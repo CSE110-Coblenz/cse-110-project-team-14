@@ -1,8 +1,10 @@
 import Konva from "konva";
-import { ClassroomAssessmentController } from "./Screens/Classroom/ClassroomAssessment/ClassroomAssessmentController";
-import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
-import { ProgressTracker } from "./utils/ProgressTracker";
 import { STAGE_HEIGHT, STAGE_WIDTH } from "./constants";
+import { ClassroomAssessmentController } from "./Screens/Classroom/ClassroomAssessment/ClassroomAssessmentController";
+import { ClassroomMinigameController } from "./Screens/Classroom/ClassroomMinigame/ClassroomMinigameController";
+import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
+import type { Item } from "./types";
+import { ProgressTracker } from "./utils/ProgressTracker";
 
 async function main() {
   const stage = new Konva.Stage({
@@ -16,34 +18,48 @@ async function main() {
 
   const tracker = new ProgressTracker();
 
-  const restaurantController = new RestaurantMainController(tracker, () =>
-    switchScene("classroom")
+  // ⬇️ RESTAURANT
+  const restaurantController = new RestaurantMainController(
+    tracker,
+    () => switchScene("classroom")
   );
   await restaurantController.start();
   const restaurantGroup = restaurantController.getView().getGroup();
-  restaurantGroup.visible(false);
+  restaurantGroup.hide();
   layer.add(restaurantGroup);
 
+  // ⬇️ CLASSROOM
   const classroomController = new ClassroomAssessmentController(
     stage,
     layer,
     tracker,
-    () => switchScene("restaurant")
+    () => switchScene("restaurant"),
+    () => switchScene("minigame")
   );
   await classroomController.start();
   const classroomGroup = classroomController.getView().getGroup();
   layer.add(classroomGroup);
 
+  // ⬇️ MINIGAME
+  const minigameController = new ClassroomMinigameController(
+    stage,
+    layer,
+    classroomController["model"].getItems() as Item[]
+  );
+
+  const minigameGroup = minigameController.getView().getGroup();
+  layer.add(minigameGroup);
+  await minigameController.start();
+  minigameGroup.hide();
+
   layer.draw();
 
-  function switchScene(target: "classroom" | "restaurant"): void {
-    const isClassroom = target === "classroom";
-    classroomGroup.visible(isClassroom);
-    restaurantGroup.visible(!isClassroom);
+  function switchScene(target: "classroom" | "restaurant" | "minigame") {
+    classroomGroup.visible(target === "classroom");
+    restaurantGroup.visible(target === "restaurant");
+    minigameGroup.visible(target === "minigame");
     layer.batchDraw();
   }
 }
 
-main().catch((error) => {
-  console.error("Failed to bootstrap scenes:", error);
-});
+main().catch(err => console.error("Failed to start scenes:", err));

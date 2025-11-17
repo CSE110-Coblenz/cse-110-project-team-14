@@ -1,15 +1,15 @@
 import Konva from "konva";
 import "konva/lib/filters/Blur";
-import type { Stage } from "konva/lib/Stage";
-import type { Layer } from "konva/lib/Layer";
 import type { Group } from "konva/lib/Group";
+import type { Layer } from "konva/lib/Layer";
+import type { KonvaEventObject } from "konva/lib/Node";
 import type { Image as KonvaImage } from "konva/lib/shapes/Image";
 import type { Rect } from "konva/lib/shapes/Rect";
 import type { Text } from "konva/lib/shapes/Text";
-import type { KonvaEventObject } from "konva/lib/Node";
+import type { Stage } from "konva/lib/Stage";
 
-import type { Item, Person } from "../../../types";
 import { IMAGE_DIMENSIONS } from "../../../constants";
+import type { Item, Person } from "../../../types";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
 
@@ -32,6 +32,7 @@ export class ClassroomAssessmentView {
   private readonly progressText: Text;
   private readonly switchButton: Konva.Group;
   private readonly resetButton: Konva.Group;
+  private readonly minigameButton: Konva.Group;
   private readonly overlayScrim: Rect;
   private readonly speechBubble: Rect;
   private readonly speechText: Text;
@@ -45,155 +46,169 @@ export class ClassroomAssessmentView {
   private currentDialogueIndex = 0;
   private switchHandler?: () => void;
   private resetHandler?: () => void;
+  private minigameHandler?: () => void;
 
-  constructor(stage: Stage, layer: Layer) {
-    this.stage = stage;
-    this.layer = layer;
+constructor(stage: Stage, layer: Layer) {
+  this.stage = stage;
+  this.layer = layer;
 
-    this.backgroundGroup = new Konva.Group({ visible: false });
-    this.dialogueOverlay = new Konva.Group({ visible: false });
+  this.backgroundGroup = new Konva.Group({ visible: false });
+  this.dialogueOverlay = new Konva.Group({ visible: false });
 
-    this.addBackground();
+  this.addBackground();
 
-    this.bottomPanel = new Konva.Rect({
-      x: 30,
-      y: stage.height() - 150,
-      width: stage.width() - 60,
-      height: 120,
-      fill: "#FFFFFF",
-      stroke: "#1B1B1B",
-      strokeWidth: 2,
-      cornerRadius: 16,
-      listening: false,
-    });
-    this.backgroundGroup.add(this.bottomPanel);
+  this.bottomPanel = new Konva.Rect({
+    x: 30,
+    y: stage.height() - 150,
+    width: stage.width() - 60,
+    height: 120,
+    fill: "#FFFFFF",
+    stroke: "#1B1B1B",
+    strokeWidth: 2,
+    cornerRadius: 16,
+    listening: false,
+  });
+  this.backgroundGroup.add(this.bottomPanel);
 
-    this.frenchText = new Konva.Text({
-      x: this.bottomPanel.x() + 20,
-      y: this.bottomPanel.y() + 16,
-      width: this.bottomPanel.width() - 40,
-      align: "center",
-      fontSize: 26,
-      fontFamily: "Arial",
-      fontStyle: "bold",
-      fill: "#1D3557",
-      text: "",
-      listening: false,
-    });
-    this.backgroundGroup.add(this.frenchText);
+  this.frenchText = new Konva.Text({
+    x: this.bottomPanel.x() + 20,
+    y: this.bottomPanel.y() + 16,
+    width: this.bottomPanel.width() - 40,
+    align: "center",
+    fontSize: 26,
+    fontFamily: "Arial",
+    fontStyle: "bold",
+    fill: "#1D3557",
+    text: "",
+    listening: false,
+  });
+  this.backgroundGroup.add(this.frenchText);
 
-    this.phoneticText = new Konva.Text({
-      x: this.bottomPanel.x() + 20,
-      y: this.bottomPanel.y() + 50,
-      width: this.bottomPanel.width() - 40,
-      align: "center",
-      fontSize: 22,
-      fontFamily: "Arial",
-      fontStyle: "italic",
-      fill: "#475569",
-      text: "",
-      listening: false,
-    });
-    this.backgroundGroup.add(this.phoneticText);
+  this.phoneticText = new Konva.Text({
+    x: this.bottomPanel.x() + 20,
+    y: this.bottomPanel.y() + 50,
+    width: this.bottomPanel.width() - 40,
+    align: "center",
+    fontSize: 22,
+    fontFamily: "Arial",
+    fontStyle: "italic",
+    fill: "#475569",
+    text: "",
+    listening: false,
+  });
+  this.backgroundGroup.add(this.phoneticText);
 
-    this.englishText = new Konva.Text({
-      x: this.bottomPanel.x() + 20,
-      y: this.bottomPanel.y() + 84,
-      width: this.bottomPanel.width() - 40,
-      align: "center",
-      fontSize: 24,
-      fontFamily: "Arial",
-      fill: "#0F172A",
-      text: "Tap an item to learn the word.",
-      listening: false,
-    });
-    this.backgroundGroup.add(this.englishText);
+  this.englishText = new Konva.Text({
+    x: this.bottomPanel.x() + 20,
+    y: this.bottomPanel.y() + 84,
+    width: this.bottomPanel.width() - 40,
+    align: "center",
+    fontSize: 24,
+    fontFamily: "Arial",
+    fill: "#0F172A",
+    text: "Tap an item to learn the word.",
+    listening: false,
+  });
+  this.backgroundGroup.add(this.englishText);
 
-    this.progressText = new Konva.Text({
-      x: stage.width() - 200,
-      y: 20,
-      width: 170,
-      align: "right",
-      fontSize: 22,
-      fontFamily: "Arial",
-      fill: "#0F172A",
-      text: "0 / 0 found",
-      listening: false,
-    });
-    this.backgroundGroup.add(this.progressText);
+  this.progressText = new Konva.Text({
+    x: stage.width() - 200,
+    y: 20,
+    width: 170,
+    align: "right",
+    fontSize: 22,
+    fontFamily: "Arial",
+    fill: "#0F172A",
+    text: "0 / 0 found",
+    listening: false,
+  });
+  this.backgroundGroup.add(this.progressText);
 
-    this.switchButton = this.createButton("Switch to Restaurant", 30, 24, () =>
-      this.switchHandler?.()
-    );
-    this.backgroundGroup.add(this.switchButton);
+  // --- Buttons ---
+  this.switchButton = this.createButton("Switch to Restaurant", 30, 24, () =>
+    this.switchHandler?.()
+  );
+  this.backgroundGroup.add(this.switchButton);
 
-    this.resetButton = this.createButton("Reset Count", 210, 24, () =>
-      this.resetHandler?.()
-    );
-    this.backgroundGroup.add(this.resetButton);
+  this.resetButton = this.createButton("Reset Count", 210, 24, () =>
+    this.resetHandler?.()
+  );
+  this.backgroundGroup.add(this.resetButton);
 
-    this.overlayScrim = new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: stage.width(),
-      height: stage.height(),
-      fill: "rgba(15,23,42,0.45)",
-    });
-    this.overlayScrim.on("click tap", () => this.closeDialogue());
+  this.minigameButton = this.createButton("Go to Minigame", 390, 24, () =>
+    this.minigameHandler?.()
+  );
+  this.backgroundGroup.add(this.minigameButton);
+  // --- End Buttons ---
 
-    const placeholder = new window.Image();
-    this.overlayCharacter = new Konva.Image({
-      image: placeholder,
-      listening: true,
-      opacity: 0,
-    });
-    this.overlayCharacter.position({
-      x: stage.width() * 0.08,
-      y: stage.height() * 0.2,
-    });
-    this.overlayCharacter.size({ width: 220, height: 220 });
-    this.overlayCharacter.on("click tap", (evt) => this.stopOverlayPropagation(evt));
+  this.overlayScrim = new Konva.Rect({
+    x: 0,
+    y: 0,
+    width: stage.width(),
+    height: stage.height(),
+    fill: "rgba(15,23,42,0.45)",
+  });
+  this.overlayScrim.on("click tap", () => this.closeDialogue());
 
-    const bubbleWidth = stage.width() * 0.55;
-    const bubbleHeight = stage.height() * 0.45;
-    this.speechBubble = new Konva.Rect({
-      x: stage.width() * 0.35,
-      y: stage.height() * 0.2,
-      width: bubbleWidth,
-      height: bubbleHeight,
-      fill: "#FFFFFF",
-      cornerRadius: 32,
-      shadowColor: "rgba(15,23,42,0.25)",
-      shadowBlur: 20,
-      shadowOffsetY: 10,
-    });
-    this.speechBubble.on("click tap", (evt) => this.stopOverlayPropagation(evt));
+  const placeholder = new window.Image();
+  this.overlayCharacter = new Konva.Image({
+    image: placeholder,
+    listening: true,
+    opacity: 0,
+  });
+  this.overlayCharacter.position({
+    x: stage.width() * 0.08,
+    y: stage.height() * 0.2,
+  });
+  this.overlayCharacter.size({ width: 220, height: 220 });
+  this.overlayCharacter.on("click tap", (evt) => this.stopOverlayPropagation(evt));
 
-    this.speechText = new Konva.Text({
-      x: this.speechBubble.x() + 32,
-      y: this.speechBubble.y() + 32,
-      width: this.speechBubble.width() - 64,
-      fontSize: 24,
-      fontFamily: "Arial",
-      lineHeight: 1.3,
-      fill: "#0F172A",
-      text: "",
-    });
-    this.speechText.on("click tap", (evt) => this.stopOverlayPropagation(evt));
+  const bubbleWidth = stage.width() * 0.55;
+  const bubbleHeight = stage.height() * 0.45;
+  this.speechBubble = new Konva.Rect({
+    x: stage.width() * 0.35,
+    y: stage.height() * 0.2,
+    width: bubbleWidth,
+    height: bubbleHeight,
+    fill: "#FFFFFF",
+    cornerRadius: 32,
+    shadowColor: "rgba(15,23,42,0.25)",
+    shadowBlur: 20,
+    shadowOffsetY: 10,
+  });
+  this.speechBubble.on("click tap", (evt) => this.stopOverlayPropagation(evt));
 
-    this.leftArrow = this.createArrowControl("left", () => this.showPreviousDialogue());
-    this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
+  this.speechText = new Konva.Text({
+    x: this.speechBubble.x() + 32,
+    y: this.speechBubble.y() + 32,
+    width: this.speechBubble.width() - 64,
+    fontSize: 24,
+    fontFamily: "Arial",
+    lineHeight: 1.3,
+    fill: "#0F172A",
+    text: "",
+  });
+  this.speechText.on("click tap", (evt) => this.stopOverlayPropagation(evt));
 
-    this.dialogueOverlay.add(this.overlayScrim);
-    this.dialogueOverlay.add(this.overlayCharacter);
-    this.dialogueOverlay.add(this.speechBubble);
-    this.dialogueOverlay.add(this.speechText);
-    this.dialogueOverlay.add(this.leftArrow);
-    this.dialogueOverlay.add(this.rightArrow);
+  this.leftArrow = this.createArrowControl("left", () => this.showPreviousDialogue());
+  this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
 
-    this.layer.add(this.backgroundGroup);
-    this.layer.add(this.dialogueOverlay);
-  }
+  this.dialogueOverlay.add(this.overlayScrim);
+  this.dialogueOverlay.add(this.overlayCharacter);
+  this.dialogueOverlay.add(this.speechBubble);
+  this.dialogueOverlay.add(this.speechText);
+  this.dialogueOverlay.add(this.leftArrow);
+  this.dialogueOverlay.add(this.rightArrow);
+
+  this.layer.add(this.backgroundGroup);
+  this.layer.add(this.dialogueOverlay);
+}
+
+// --- Setter for minigame button ---
+setOnSwitchToMinigame(handler: () => void): void {
+  this.minigameHandler = handler;
+}
+
 
   getGroup(): Group {
     return this.backgroundGroup;
