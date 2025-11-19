@@ -12,11 +12,13 @@ interface BasketData {
 export class ClassroomMinigameController {
   private model: ClassroomMinigameModel;
   private view: ClassroomMinigameView;
+
   private baskets: BasketData[] = [
     { name: "Le crayon", imageSrc: "ItemImage/Classroom/basket.png" },
     { name: "La table", imageSrc: "ItemImage/Classroom/basket.png" },
     { name: "Le livre", imageSrc: "ItemImage/Classroom/basket.png" },
   ];
+
   private onComplete?: () => void;
 
   constructor(stage: Stage, layer: Layer, items: Item[]) {
@@ -34,20 +36,35 @@ export class ClassroomMinigameController {
       this.baskets,
       (item, basketName) => this.handleItemDrop(item, basketName)
     );
+
     this.view.show();
   }
 
+  /** -----------------------------------------------------
+   * DROPPING LOGIC — cleaned up & modular
+   * ----------------------------------------------------- */
   private handleItemDrop(item: Item, basketName: string) {
-    const correct = this.model.placeItemInBasket(item.name, basketName);
+    const isCorrect = this.model.placeItemInBasket(item.name, basketName);
 
-    // Visual feedback
-    if (correct) {
-      alert(`✅ Correct! ${item.french} goes in ${basketName}.`);
-    } else {
-      alert(`❌ Oops! ${item.french} doesn’t go in ${basketName}.`);
+    this.showFeedback(item, basketName, isCorrect);
+
+    if (this.model.allItemsPlaced()) {
+      this.finishGame();
     }
+  }
 
-    if (this.model.allItemsPlaced() && this.onComplete) {
+  /** Creates nice fade-out popup instead of blocking alerts */
+  private showFeedback(item: Item, basketName: string, correct: boolean) {
+    const message = correct
+      ? `✔ Correct! ${item.french} goes in ${basketName}.`
+      : `✖ Oops! ${item.french} doesn’t go in ${basketName}.`;
+
+    this.view.showFeedback(message, correct);
+  }
+
+  /** Called when all items placed */
+  private finishGame() {
+    if (this.onComplete) {
       this.onComplete();
     }
   }

@@ -5,6 +5,7 @@ import type { Image as KonvaImage } from "konva/lib/shapes/Image";
 import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS } from "../../../constants";
 import type { Item } from "../../../types";
+import { View } from "../../../types";
 
 const MINIGAME_BG = "/Background/ClassMinigame.jpg";
 
@@ -13,7 +14,7 @@ interface BasketData {
   imageSrc: string;   // Basket image URL
 }
 
-export class ClassroomMinigameView {
+export class ClassroomMinigameView implements View {
   private stage: Stage;
   private layer: Layer;
   private group: Group;
@@ -21,6 +22,9 @@ export class ClassroomMinigameView {
   private itemNodes: KonvaImage[] = [];
   private baskets: KonvaImage[] = [];
   private basketLabels: Konva.Text[] = [];
+
+  private _feedbackGroup?: Konva.Group;
+  private _returnButton?: Konva.Group;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -135,6 +139,16 @@ export class ClassroomMinigameView {
 
     this.basketLabels.forEach((t) => t.destroy());
     this.basketLabels = [];
+
+    if (this._feedbackGroup) {
+      this._feedbackGroup.destroy();
+      this._feedbackGroup = undefined;
+    }
+
+    if (this._returnButton) {
+      this._returnButton.destroy();
+      this._returnButton = undefined;
+    }
   }
 
   private addBackground() {
@@ -163,4 +177,113 @@ export class ClassroomMinigameView {
       img.src = src;
     });
   }
+
+  
+
+  /** -----------------------------------
+   * Show floating feedback message in a cloud
+   * ----------------------------------- */
+  showFeedback(message: string, correct: boolean) {
+    if (this._feedbackGroup) {
+      this._feedbackGroup.destroy();
+      this._feedbackGroup = undefined;
+    }
+
+    const group = new Konva.Group();
+    const padding = 20;
+
+    const text = new Konva.Text({
+      text: message,
+      fontSize: 28,
+      fontFamily: "Calibri",
+      fill: "#fff",
+      align: "center",
+    });
+
+    const rect = new Konva.Rect({
+      width: text.width() + padding * 2,
+      height: text.height() + padding,
+      fill: correct ? "rgba(0,200,0,0.85)" : "rgba(200,0,0,0.85)",
+      cornerRadius: 20,
+      x: this.stage.width() / 2 - (text.width() + padding * 2) / 2,
+      y: this.stage.height() / 2 - (text.height() + padding) / 2 - 20,
+      opacity: 0,
+    });
+
+    text.x(rect.x() + padding);
+    text.y(rect.y() + (rect.height() - text.height()) / 2);
+
+    group.add(rect);
+    group.add(text);
+
+    this.layer.add(group);
+    this._feedbackGroup = group;
+    this.layer.draw();
+
+    // Animate fade in
+    rect.to({ opacity: 1, duration: 0.25 });
+    text.to({ opacity: 1, duration: 0.25 });
+
+    setTimeout(() => {
+      rect.to({
+        opacity: 0,
+        duration: 0.25,
+        onFinish: () => {
+          group.destroy();
+          this._feedbackGroup = undefined;
+          this.layer.draw();
+        },
+      });
+      text.to({ opacity: 0, duration: 0.25 });
+    }, 700);
+  }
+
+  /** -----------------------------------
+   * Add Return Button
+   * ----------------------------------- */
+  addReturnButton(onClick: () => void) {
+    if (this._returnButton) {
+      this._returnButton.destroy();
+    }
+
+    const group = new Konva.Group({ x: 20, y: 20 });
+
+    const rect = new Konva.Rect({
+      width: 120,
+      height: 50,
+      fill: "#3498db",
+      cornerRadius: 10,
+      shadowColor: "black",
+      shadowBlur: 4,
+      shadowOffset: { x: 2, y: 2 },
+      shadowOpacity: 0.4,
+      cursor: "pointer",
+    });
+
+    const text = new Konva.Text({
+      text: "Return",
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#fff",
+      width: rect.width(),
+      height: rect.height(),
+      align: "center",
+      verticalAlign: "middle",
+    });
+
+    group.add(rect);
+    group.add(text);
+
+    // Hover effect
+    group.on("mouseover", () => rect.fill("#2980b9"));
+    group.on("mouseout", () => rect.fill("#3498db"));
+    group.on("click", onClick);
+
+    // Add button to the layer and bring to top
+    this.layer.add(group);
+    group.moveToTop(); // <<< Ensure button is on top of everything
+    this._returnButton = group;
+    this.layer.draw();
+}
+
 }
