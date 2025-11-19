@@ -11,11 +11,11 @@
     {
         "name": "brocolli",
         "english": "brocolli",
-        "french": "brocolli",
-        "phonetic": "buff",
+        "french": "brocoli",
+        "phonetic": "broh-koh-LEE",
         "image": "/ItemImage/Store/brocolli.png",
-        "x": 250,
-        "y": 320
+        "x": 40,
+        "y": 450
     },
     {
         "name": "apple",
@@ -63,22 +63,22 @@
         "y": 320
     },
     {
-        "name": "fish",
+        "name": "fishy",
         "english": "fish",
         "french": "poisson",
         "phonetic": "pwah-sohn",
-        "image": "/ItemImage/Store/fish.png",
+        "image": "/ItemImage/Store/fishs.png",
         "x": 250,
-        "y": 250
+        "y": 225
     },
     {
         "name": "cheese",
-        "english": "cheese (brie) ",
-        "french": "fromage (brie)",
-        "phonetic": "froh-mahzh (bree)",
+        "english": "cheese",
+        "french": "fromage",
+        "phonetic": "froh-mahzh",
         "image": "ItemImage/Store/cheese.png",
-        "x": 300,
-        "y": 100
+        "x": 315,
+        "y": 240
     }
    
 ]
