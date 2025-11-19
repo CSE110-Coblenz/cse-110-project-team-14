@@ -8,7 +8,7 @@ import type { Item } from "../../../types";
 
 const MINIGAME_BG = "/Background/ClassMinigame.jpg";
 
-export interface BasketData {
+interface BasketData {
   name: string;       // French label
   imageSrc: string;   // Basket image URL
 }
@@ -25,7 +25,6 @@ export class ClassroomMinigameView {
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
     this.layer = layer;
-
     this.group = new Konva.Group({ visible: false });
     this.addBackground();
   }
@@ -51,10 +50,10 @@ export class ClassroomMinigameView {
   ) {
     this.clearScene();
 
-    // --- Render baskets ---
     const spacing = this.stage.width() / (baskets.length + 1);
     const basketY = this.stage.height() - 200;
 
+    // Render baskets + labels
     for (let i = 0; i < baskets.length; i++) {
       const basketData = baskets[i];
       const img = await this.loadImage(basketData.imageSrc);
@@ -69,7 +68,6 @@ export class ClassroomMinigameView {
       this.group.add(basketNode);
       this.baskets.push(basketNode);
 
-      // French label below basket
       const labelNode = new Konva.Text({
         x: basketNode.x(),
         y: basketNode.y() + 125,
@@ -84,7 +82,7 @@ export class ClassroomMinigameView {
       this.basketLabels.push(labelNode);
     }
 
-    // --- Render draggable items ---
+    // Render draggable items
     const itemSpacing = this.stage.width() / (items.length + 1);
     const itemY = 100;
 
@@ -99,22 +97,23 @@ export class ClassroomMinigameView {
         draggable: true,
       });
 
+      // Drag & drop logic
       node.on("dragend", () => {
-        const basket = this.baskets.find(
+        const basketIndex = this.baskets.findIndex(
           (b) =>
             node.x() + node.width() / 2 > b.x() &&
             node.x() + node.width() / 2 < b.x() + b.width() &&
             node.y() + node.height() / 2 > b.y() &&
             node.y() + node.height() / 2 < b.y() + b.height()
         );
-        if (basket) {
-          const basketName = baskets[this.baskets.indexOf(basket)].name;
 
+        if (basketIndex !== -1) {
+          const basketName = baskets[basketIndex].name;
+          // Snap to basket
           node.position({
-            x: basket.x() + basket.width() / 2 - node.width() / 2,
-            y: basket.y() + basket.height() / 2 - node.height() / 2,
+            x: this.baskets[basketIndex].x() + this.baskets[basketIndex].width() / 2 - node.width() / 2,
+            y: this.baskets[basketIndex].y() + this.baskets[basketIndex].height() / 2 - node.height() / 2,
           });
-
           onItemDrop(item, basketName);
         }
       });

@@ -1,20 +1,16 @@
 import type { Item } from "../../../types";
 
-interface MinigameState {
-  baskets: { [key: string]: Item[] };
-}
-
 /**
  * Manages the state of the classroom minigame.
  */
 export class ClassroomMinigameModel {
   private items: Item[];
   private baskets: { [key: string]: Item[] } = {};
+  private placedItems: Set<string> = new Set(); // Track item placement
   private selectedItem: Item | null = null;
 
   constructor(items: Item[]) {
-    // Initialize items with `placed` property
-    this.items = items.map((item) => ({ ...item, placed: false }));
+    this.items = items;
   }
 
   getItems(): Item[] {
@@ -30,31 +26,38 @@ export class ClassroomMinigameModel {
   }
 
   /**
-   * Places an item in a basket.
-   * Returns true if item is in the correct basket (basketName matches item.french).
+   * Place an item in a basket.
+   * Returns true if placed in the correct basket (basketName matches item.french).
    */
   placeItemInBasket(itemName: string, basketName: string): boolean {
     const item = this.items.find((i) => i.name === itemName);
     if (!item) return false;
 
-    item.placed = true;
+    this.placedItems.add(itemName);
 
     if (!this.baskets[basketName]) this.baskets[basketName] = [];
     if (!this.baskets[basketName].includes(item)) {
       this.baskets[basketName].push(item);
     }
 
-    // If basketName matches the item's French label, it's correct
-    return basketName === item.french;
+    return basketName === item.french; // correct basket check
+  }
+
+  isPlaced(itemName: string): boolean {
+    return this.placedItems.has(itemName);
   }
 
   getBasketContents(basketName: string): Item[] {
     return this.baskets[basketName] ?? [];
   }
 
+  allItemsPlaced(): boolean {
+    return this.items.every((i) => this.placedItems.has(i.name));
+  }
+
   reset(): void {
     this.baskets = {};
     this.selectedItem = null;
-    this.items.forEach((i) => (i.placed = false));
+    this.placedItems.clear();
   }
 }

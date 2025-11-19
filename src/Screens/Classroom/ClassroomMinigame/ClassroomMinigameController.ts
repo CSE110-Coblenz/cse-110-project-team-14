@@ -1,15 +1,21 @@
-import type { Layer, Stage } from "konva";
+import type { Layer } from "konva/lib/Layer";
+import type { Stage } from "konva/lib/Stage";
 import type { Item } from "../../../types";
 import { ClassroomMinigameModel } from "./ClassroomMinigameModel";
-import { BasketData, ClassroomMinigameView } from "./ClassroomMinigameView";
+import { ClassroomMinigameView } from "./ClassroomMinigameView";
+
+interface BasketData {
+  name: string;       // French label
+  imageSrc: string;
+}
 
 export class ClassroomMinigameController {
   private model: ClassroomMinigameModel;
   private view: ClassroomMinigameView;
   private baskets: BasketData[] = [
-    { name: "Le Crayon", imageSrc: "/ItemImage/Classroom/basket.png" },
-    { name: "Le Livre", imageSrc: "/ItemImage/Classroom/basket.png" },
-    { name: "La Table", imageSrc: "/ItemImage/Classroom/basket.png" },
+    { name: "Le crayon", imageSrc: "ItemImage/Classroom/basket.png" },
+    { name: "La table", imageSrc: "ItemImage/Classroom/basket.png" },
+    { name: "Le livre", imageSrc: "ItemImage/Classroom/basket.png" },
   ];
   private onComplete?: () => void;
 
@@ -34,14 +40,16 @@ export class ClassroomMinigameController {
   private handleItemDrop(item: Item, basketName: string) {
     const correct = this.model.placeItemInBasket(item.name, basketName);
 
+    // Visual feedback
     if (correct) {
-      alert(`Correct! ${item.french} goes in ${basketName}.`);
+      alert(`✅ Correct! ${item.french} goes in ${basketName}.`);
     } else {
-      alert(`Oops! ${item.french} doesn’t go in ${basketName}. Try again.`);
+      alert(`❌ Oops! ${item.french} doesn’t go in ${basketName}.`);
     }
 
-    const allPlaced = this.model.getItems().every((i) => i.placed);
-    if (allPlaced && this.onComplete) this.onComplete();
+    if (this.model.allItemsPlaced() && this.onComplete) {
+      this.onComplete();
+    }
   }
 
   setOnComplete(handler: () => void) {
