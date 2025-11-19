@@ -76,7 +76,6 @@ constructor(
   
       this.backgroundImage = imgNode;
   
-      // Put background at the bottom
       this.group.add(imgNode);
       imgNode.moveToBottom();
       this.backgroundLayer.moveToBottom();
@@ -85,16 +84,14 @@ constructor(
     });
   }
 
-  
-
   showItem(items: Item[], onItemClick: (itemName: string) => void): void {
     for (const item of items) {
       Konva.Image.fromURL(item.image, (imgNode) => {
         imgNode.setAttrs({
           x: item.x,
           y: item.y,
-          width: 75,
-          height: 75,
+          width: 60,
+          height: 60,
           name: item.name,
           image: imgNode.image(),
         });
@@ -187,7 +184,7 @@ constructor(
   }
   private createRestaurantButton(): void {
     const btnX = STAGE_WIDTH - 240;
-    const btnY = STAGE_HEIGHT - 150;
+    const btnY = 50;
   
     const button = new Konva.Rect({
       x: btnX,
