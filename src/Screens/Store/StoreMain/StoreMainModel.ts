@@ -1,14 +1,3 @@
-// export interface Item {
-//     h: number | undefined;
-//     w: number | undefined;
-//     name: string;
-//     english: string;
-//     french: string;
-//     phonetic: string;
-//     image: string;
-//     x: number;
-//     y: number;
-// }
 import type { Item } from "../../../types"; 
 
 export class StoreMainModel {

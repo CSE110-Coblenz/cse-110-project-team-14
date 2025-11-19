@@ -1,9 +1,7 @@
-
 import { StoreMainModel } from './StoreMainModel';
 import { StoreMainView } from './StoreMainView';
 import { ScreenController } from "../../../types";
 import type { ScreenSwitcher } from "../../../types";
-import type { Item } from "../../../types"; 
 
 export class StoreMainController extends ScreenController {
   private model: StoreMainModel;
@@ -16,14 +14,13 @@ export class StoreMainController extends ScreenController {
 
     this.model = new StoreMainModel();
 
-    // Pass callbacks: item click and start/restaurant button click
     this.view = new StoreMainView(
       (itemName) => this.handleItemClick(itemName),
       () => this.switchToRestaurant()
     );
   }
 
-  /** Show the store screen and load content */
+  // Show the store screen and load content 
   async start(): Promise<void> {
     this.view.loadBackground("Public/Background/storeBackground.png");
     await this.model.load_items("/ItemImage/Store/items.json");
@@ -33,9 +30,8 @@ export class StoreMainController extends ScreenController {
     
     this.view.show();  // Make store screen visible
   }
-  
 
-  /** Handle item click: update dock display */
+  // Handle item clicked and update dock
   private handleItemClick(itemName: string): void {
     this.model.select_item(itemName);
     const selected = this.model.get_selected_item();
@@ -43,7 +39,7 @@ export class StoreMainController extends ScreenController {
     this.view.updateDock(selected);
   }
 
-  /** Switch to another screen using ScreenSwitcher */
+  // Switch to restaurant screen
   private switchToRestaurant(): void {
     this.screenSwitcher.switchToScreen({ type: "Restaurant" });
   }
@@ -61,7 +57,6 @@ export class StoreMainController extends ScreenController {
     return this.view;
   }
 
-  // public initialize(): void {
-  //  this.view.render();
 }
+
 
