@@ -9,6 +9,15 @@
         "y": 325
     },
     {
+        "name": "brocolli",
+        "english": "beef",
+        "french": "bœuf",
+        "phonetic": "buff",
+        "image": "/ItemImage/Store/brocolli.png",
+        "x": 250,
+        "y": 320
+    },
+    {
         "name": "apple",
         "english": "Apple",
         "french": "Pomme",
@@ -59,9 +68,9 @@
         "english": "fish",
         "french": "poisson",
         "phonetic": "pwah-sohn",
-        "image": "ItemImage/Store/fishs.png",
+        "image": "/ItemImage/Store/fish.png",
         "x": 250,
-        "y": 220
+        "y": 250
     },
     {
         "name": "cheese",

@@ -25,7 +25,7 @@ export class StoreMainController extends ScreenController {
 
   /** Show the store screen and load content */
   async start(): Promise<void> {
-    this.view.loadBackground("Public/Background/storeBackground.png");
+    //this.view.loadBackground("Public/Background/storeBackground.png");
     await this.model.load_items("/ItemImage/Store/items.json");
     const items = this.model.get_items();
     this.view.showItem(items, (itemName) => this.handleItemClick(itemName));
