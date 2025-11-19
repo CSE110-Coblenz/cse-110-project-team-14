@@ -4,37 +4,28 @@ import { STAGE_WIDTH, STAGE_HEIGHT, globals } from "../../../constants"; // impo
 import type { Person, DialogueNode } from "../../../types";
 
 export class StoreMainView {
+  //Background / main group
   private group: Konva.Group;
   private backgroundLayer: Konva.Rect;
   private backgroundImage?: Konva.Image;
 
-  private itemImages: Record<string, Konva.Image> = {};
+  //dock / images / character
+  private dock: Konva.Rect;
   private englishVocab: Konva.Text;
   private frenchVocab: Konva.Text;
   private phonetic: Konva.Text;
+
+  private itemImages: Record<string, Konva.Image> = {};
+
   private clerkImage?: Konva.Image;
-  private dock: Konva.Rect;
  
 
-
+  //popup for character
   private popupGroup?: Konva.Group;
   private popupText?: Konva.Text; 
   private popupDialogueIndex = 0; // tracks current line
   private currentDialogue: string[] = []; 
-  // constructor(onItemClick: (itemName: string) => void) {
-  //   this.group = new Konva.Group({ visible: false });
 
-  //   this.backgroundLayer = this.createbackgroundLayer();
-  //   this.group.add(this.backgroundLayer);
-
-  //   const { dock, englishText, frenchVocab, phonetic } = this.createDock();
-  //   this.dock = dock;
-  //   this.englishVocab = englishText;
-  //   this.frenchVocab = frenchVocab;
-  //   this.phonetic = phonetic;
-
-  //   this.group.add(dock, englishText, frenchVocab, phonetic);
-  // }
   private onStartClick: () => void;
 
 
@@ -65,8 +56,8 @@ constructor(
   this.createPopup(); 
 }
 
-
-  private createbackgroundLayer(): Konva.Rect {
+//bacground layer (if background doens't load)
+private createbackgroundLayer(): Konva.Rect {
     return new Konva.Rect({
       x: 0,
       y: 0,
@@ -77,6 +68,7 @@ constructor(
       strokeWidth: 1,
     });
   }
+  //Load background from png
   loadBackground(imageUrl: string): void {
     Konva.Image.fromURL(imageUrl, (imgNode) => {
       imgNode.setAttrs({
@@ -96,80 +88,7 @@ constructor(
       this.group.getLayer()?.draw();
     });
   }
-
-  showItem(items: Item[], onItemClick: (itemName: string) => void): void {
-    for (const item of items) {
-      Konva.Image.fromURL(item.image, (imgNode) => {
-        imgNode.setAttrs({
-          x: item.x,
-          y: item.y,
-          width: 60,
-          height: 60,
-          name: item.name,
-          image: imgNode.image(),
-        });
-
-        imgNode.on("click", () => {
-          // Add item to dictionary (English → French) if not already added
-          if (!globals.dictionary[item.english]) {
-            globals.dictionary[item.english] = item.french;
-            console.log(globals.dictionary);
-
-          }
-
-          // Call external click callback
-          onItemClick(item.name);
-        });
-
-        this.itemImages[item.name] = imgNode;
-        this.group.add(imgNode);
-
-        this.dock.moveToTop();
-        this.englishVocab.moveToTop();
-        this.frenchVocab.moveToTop();
-        this.phonetic.moveToTop();
-
-        this.group.getLayer()?.draw();
-      });
-    }
-  }
-
-  // showClerk(imageUrl: string, x: number, y: number, width: number, height: number): void {
-  //   Konva.Image.fromURL(imageUrl, (imgNode) => {
-  //     imgNode.setAttrs({
-  //       x,
-  //       y,
-  //       width,
-  //       height,
-  //       image: imgNode.image(),
-  //     });
-  //     this.clerkImage = imgNode;
-  //     this.group.add(imgNode);
-  //     this.group.getLayer()?.draw();
-  //   });
-  // }
-  showClerk(imageUrl: string, x: number, y: number, width: number, height: number): void {
-    Konva.Image.fromURL(imageUrl, (imgNode) => {
-      imgNode.setAttrs({
-        x,
-        y,
-        width,
-        height,
-        image: imgNode.image(),
-      });
-  
-      this.clerkImage = imgNode;
-      this.group.add(imgNode);
-  
-      imgNode.on("click", () => {
-        this.showDialogueFromJSON("clerk");
-      });
-  
-      this.group.getLayer()?.draw();
-       this.popupGroup?.moveToTop();
-    });
-  }
-
+  //creates dock
   private createDock() {
     const dockHeight = 75;
     const dockWidth = STAGE_WIDTH * 0.8;
@@ -223,6 +142,75 @@ constructor(
 
     return { dock, englishText, frenchVocab, phonetic };
   }
+  //show items from json file
+  showItem(items: Item[], onItemClick: (itemName: string) => void): void {
+    for (const item of items) {
+      Konva.Image.fromURL(item.image, (imgNode) => {
+        imgNode.setAttrs({
+          x: item.x,
+          y: item.y,
+          width: 60,
+          height: 60,
+          name: item.name,
+          image: imgNode.image(),
+        });
+        
+        //dictionary implentation when clicking on item
+        imgNode.on("click", () => {
+          if (!globals.dictionary[item.english]) {
+            globals.dictionary[item.english] = item.french;
+            console.log(globals.dictionary);
+
+          }
+          onItemClick(item.name);
+        });
+
+        this.itemImages[item.name] = imgNode;
+        this.group.add(imgNode);
+        
+        //puts dock on top of images, top layer
+        this.dock.moveToTop();
+        this.englishVocab.moveToTop();
+        this.frenchVocab.moveToTop();
+        this.phonetic.moveToTop();
+
+        this.group.getLayer()?.draw();
+      });
+    }
+  }
+  //updateDock when new item clicked
+  updateDock(item: Item): void {
+    this.englishVocab.text(item.english);
+    this.frenchVocab.text(item.french);
+    this.phonetic.text(item.phonetic);
+    this.group.getLayer()?.draw();
+  }
+
+  //display character
+  showClerk(imageUrl: string, x: number, y: number, width: number, height: number): void {
+    Konva.Image.fromURL(imageUrl, (imgNode) => {
+      imgNode.setAttrs({
+        x,
+        y,
+        width,
+        height,
+        image: imgNode.image(),
+      });
+  
+      this.clerkImage = imgNode;
+      this.group.add(imgNode);
+  
+      //when clicked on, show dialogue from json function called 
+      imgNode.on("click", () => {
+        this.showDialogue("clerk");
+      });
+  
+      this.group.getLayer()?.draw();
+       this.popupGroup?.moveToTop();
+    });
+  }
+  
+  //suppose to be scene switcher (doesn't currently work)
   private createRestaurantButton(): void {
     const btnX = STAGE_WIDTH - 240;
     const btnY = 50;
@@ -256,58 +244,7 @@ constructor(
     this.group.add(button, label);
   }
 
-  updateDock(item: Item): void {
-    this.englishVocab.text(item.english);
-    this.frenchVocab.text(item.french);
-    this.phonetic.text(item.phonetic);
-    this.group.getLayer()?.draw();
-  }
-
-  // private createPopup(): void {
-  //   const popupWidth = 350;
-  //   const popupHeight = 180;
-  //   const x = (STAGE_WIDTH - popupWidth) / 2;
-  //   const y = (STAGE_HEIGHT - popupHeight) / 2;
-  
-  //   const group = new Konva.Group({
-  //     x,
-  //     y,
-  //     visible: false
-  //   });
-  
-  //   const background = new Konva.Rect({
-  //     width: popupWidth,
-  //     height: popupHeight,
-  //     fill: "#ffffff",
-  //     stroke: "#000",
-  //     strokeWidth: 2,
-  //     cornerRadius: 10
-  //   });
-  
-  //   const text = new Konva.Text({
-  //     x: 20,
-  //     y: 20,
-  //     width: popupWidth - 40,
-  //     height: popupHeight - 40,
-  //     fontSize: 20,
-  //     fontFamily: "Arial",
-  //     fill: "#000",
-  //     align: "left",
-  //   });
-  
-  //   // Close popup when clicked
-  //   background.on("click", () => {
-  //     group.visible(false);
-  //     this.group.getLayer()?.draw();
-  //   });
-  
-  //   group.add(background, text);
-  //   this.group.add(group);
-  //   group.moveToTop();
-  
-  //   this.popupGroup = group;
-  //   this.popupText = text;
-  // }
+  //popup for character dialogue
   private createPopup(): void {
     const popupWidth = 250;
     const popupHeight = 150;
@@ -335,19 +272,18 @@ constructor(
       x: 20,
       y: 20,
       width: popupWidth - 40,
-      height: popupHeight - 60, // leave space for "Next →"
+      height: popupHeight - 60, 
       fontSize: 20,
       fontFamily: "Arial",
       fill: "#000",
       align: "left",
     });
   
-    // Hint for user
+    //switches to next line when clicked 
     const nextLine = new Konva.Text({
       x: 0,
       y: popupHeight - 35,
       width: popupWidth - 20,
-      //text: "Next →",
       fontSize: 14,
       fontFamily: "Arial",
       fill: "#555",
@@ -360,60 +296,52 @@ constructor(
       this.popupDialogueIndex++;
   
       if (this.popupDialogueIndex >= this.currentDialogue.length) {
-        // End of dialogue
         this.currentDialogue = [];
         this.popupDialogueIndex = 0;
-        group.visible(false); // hide when done
+        group.visible(false); 
       } else {
-        // Show next line
         text.text(this.currentDialogue[this.popupDialogueIndex]);
       }
   
-      group.moveToTop(); // ensure popup stays above everything
+      group.moveToTop(); 
       this.group.getLayer()?.draw();
     });
   
   
-    // Click handler: step through dialogue
+    //allowing the background of the dialogue to change to next sentence too
     background.on("click", () => {
       if (!this.currentDialogue.length) return;
   
       this.popupDialogueIndex++;
   
       if (this.popupDialogueIndex >= this.currentDialogue.length) {
-        // End of dialogue
-        //group.visible = false;
         this.currentDialogue = [];
         this.popupDialogueIndex = 0;
       } else {
-        // Show next line
         text.text(this.currentDialogue[this.popupDialogueIndex]);
       }
   
-      group.moveToTop(); // ensure popup stays above everything
+      group.moveToTop(); 
       this.group.getLayer()?.draw();
     });
   
-    // Add elements to group and group to main layer
+
     group.add(background, text, nextLine);
     this.group.add(group);
-    group.moveToTop(); // popup starts at top
-  
-    // Save references
+    group.moveToTop();
+
     this.popupGroup = group;
     this.popupText = text;
   }
   
-
-  async showDialogueFromJSON(characterName: string): Promise<void> {
+  //show dialgoue from json file
+  async showDialogue(characterName: string): Promise<void> {
     const response = await fetch("Public/ItemImage/Store/dialogue.json");
     const data = await response.json();
   
-    // load dialogue array for character
     this.currentDialogue = data[characterName]?.greeting || ["(No dialogue found)"];
     this.popupDialogueIndex = 0;
   
-    // show first line
     this.popupText?.text(this.currentDialogue[this.popupDialogueIndex]);
     this.popupGroup?.visible(true);
     this.popupGroup?.moveToTop();
@@ -422,7 +350,7 @@ constructor(
   }
   
   
-
+  //for scene switching
   show(): void {
     this.group.visible(true);
   }
