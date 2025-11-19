@@ -47,10 +47,10 @@ constructor(
   
 
   this.group.add(dock, englishText, frenchVocab, phonetic);
-  dock.moveToTop();
-  englishText.moveToTop();
-  frenchVocab.moveToTop();
-  phonetic.moveToTop();
+  // dock.moveToTop();
+  // englishText.moveToTop();
+  // frenchVocab.moveToTop();
+  // phonetic.moveToTop();
 
   this.createRestaurantButton(); // <-- new button
   this.createPopup(); 
