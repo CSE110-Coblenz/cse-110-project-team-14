@@ -26,6 +26,15 @@
       "image": "/ItemImage/Classroom/table.png",
       "x": 560,
       "y": 200
+    },
+    {
+      "name": "chair",
+      "english": "Chair",
+      "french": "La chaise",
+      "phonetic": "lah shez",
+      "image": "/ItemImage/Classroom/CHAIR.jpeg",
+      "x": 780,
+      "y": 180
     }
   ],
   "person": {

@@ -6,26 +6,28 @@ import { ClassroomMinigameModel } from "./ClassroomMinigameModel";
 import { ClassroomMinigameView } from "./ClassroomMinigameView";
 
 interface BasketData {
-  name: string;       // French label
-  imageSrc: string;
+  name: string;       // French label or English name
+  imageSrc: string;   // Basket image
 }
 
 export class ClassroomMinigameController extends ScreenController {
   private model: ClassroomMinigameModel;
   private view: ClassroomMinigameView;
 
-  private baskets: BasketData[] = [
-    { name: "Le crayon", imageSrc: "ItemImage/Classroom/basket.png" },
-    { name: "La table", imageSrc: "ItemImage/Classroom/basket.png" },
-    { name: "Le livre", imageSrc: "ItemImage/Classroom/basket.png" },
-  ];
-
+  private baskets: BasketData[] = [];  // will be dynamically generated
   private onComplete?: () => void;
 
   constructor(stage: Stage, layer: Layer, items: Item[]) {
     super();
     this.model = new ClassroomMinigameModel(items);
     this.view = new ClassroomMinigameView(stage, layer);
+
+    // Dynamically create baskets from items
+    // Using item.french as basket name
+    this.baskets = items.map(item => ({
+      name: item.french,
+      imageSrc: "ItemImage/Classroom/basket.png"  // or customize per item if needed
+    }));
   }
 
   getView(): ClassroomMinigameView {
