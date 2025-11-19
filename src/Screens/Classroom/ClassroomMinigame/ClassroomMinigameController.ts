@@ -1,6 +1,7 @@
 import type { Layer } from "konva/lib/Layer";
 import type { Stage } from "konva/lib/Stage";
 import type { Item } from "../../../types";
+import { ScreenController } from "../../../types";
 import { ClassroomMinigameModel } from "./ClassroomMinigameModel";
 import { ClassroomMinigameView } from "./ClassroomMinigameView";
 
@@ -9,7 +10,7 @@ interface BasketData {
   imageSrc: string;
 }
 
-export class ClassroomMinigameController {
+export class ClassroomMinigameController extends ScreenController {
   private model: ClassroomMinigameModel;
   private view: ClassroomMinigameView;
 
@@ -22,6 +23,7 @@ export class ClassroomMinigameController {
   private onComplete?: () => void;
 
   constructor(stage: Stage, layer: Layer, items: Item[]) {
+    super();
     this.model = new ClassroomMinigameModel(items);
     this.view = new ClassroomMinigameView(stage, layer);
   }

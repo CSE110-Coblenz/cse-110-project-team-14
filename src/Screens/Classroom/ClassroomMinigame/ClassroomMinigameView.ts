@@ -24,7 +24,6 @@ export class ClassroomMinigameView implements View {
   private basketLabels: Konva.Text[] = [];
 
   private _feedbackGroup?: Konva.Group;
-  private _returnButton?: Konva.Group;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -144,11 +143,6 @@ export class ClassroomMinigameView implements View {
       this._feedbackGroup.destroy();
       this._feedbackGroup = undefined;
     }
-
-    if (this._returnButton) {
-      this._returnButton.destroy();
-      this._returnButton = undefined;
-    }
   }
 
   private addBackground() {
@@ -178,44 +172,49 @@ export class ClassroomMinigameView implements View {
     });
   }
 
-  
-
   /** -----------------------------------
    * Show floating feedback message in a cloud
    * ----------------------------------- */
   showFeedback(message: string, correct: boolean) {
+    // Remove previous feedback
     if (this._feedbackGroup) {
       this._feedbackGroup.destroy();
       this._feedbackGroup = undefined;
     }
 
     const group = new Konva.Group();
-    const padding = 20;
 
+    // Create background rectangle (cloud)
+    const padding = 20;
+    const rect = new Konva.Rect({
+      x: this.stage.width() / 2,
+      y: this.stage.height() / 2 - 50,
+      width: 0, // will adjust later
+      height: 60,
+      fill: correct ? "rgba(0,200,0,0.85)" : "rgba(200,0,0,0.85)",
+      cornerRadius: 20,
+      opacity: 0,
+    });
+
+    // Create text
     const text = new Konva.Text({
       text: message,
       fontSize: 28,
       fontFamily: "Calibri",
       fill: "#fff",
       align: "center",
-    });
-
-    const rect = new Konva.Rect({
-      width: text.width() + padding * 2,
-      height: text.height() + padding,
-      fill: correct ? "rgba(0,200,0,0.85)" : "rgba(200,0,0,0.85)",
-      cornerRadius: 20,
-      x: this.stage.width() / 2 - (text.width() + padding * 2) / 2,
-      y: this.stage.height() / 2 - (text.height() + padding) / 2 - 20,
       opacity: 0,
     });
 
-    text.x(rect.x() + padding);
+    text.x(this.stage.width() / 2 - text.width() / 2);
     text.y(rect.y() + (rect.height() - text.height()) / 2);
+
+    // Adjust rectangle width to fit text
+    rect.width(text.width() + padding * 2);
+    rect.x(this.stage.width() / 2 - rect.width() / 2);
 
     group.add(rect);
     group.add(text);
-
     this.layer.add(group);
     this._feedbackGroup = group;
     this.layer.draw();
@@ -224,6 +223,7 @@ export class ClassroomMinigameView implements View {
     rect.to({ opacity: 1, duration: 0.25 });
     text.to({ opacity: 1, duration: 0.25 });
 
+    // Fade out after 700ms
     setTimeout(() => {
       rect.to({
         opacity: 0,
@@ -237,53 +237,4 @@ export class ClassroomMinigameView implements View {
       text.to({ opacity: 0, duration: 0.25 });
     }, 700);
   }
-
-  /** -----------------------------------
-   * Add Return Button
-   * ----------------------------------- */
-  addReturnButton(onClick: () => void) {
-    if (this._returnButton) {
-      this._returnButton.destroy();
-    }
-
-    const group = new Konva.Group({ x: 20, y: 20 });
-
-    const rect = new Konva.Rect({
-      width: 120,
-      height: 50,
-      fill: "#3498db",
-      cornerRadius: 10,
-      shadowColor: "black",
-      shadowBlur: 4,
-      shadowOffset: { x: 2, y: 2 },
-      shadowOpacity: 0.4,
-      cursor: "pointer",
-    });
-
-    const text = new Konva.Text({
-      text: "Return",
-      fontSize: 20,
-      fontFamily: "Arial",
-      fill: "#fff",
-      width: rect.width(),
-      height: rect.height(),
-      align: "center",
-      verticalAlign: "middle",
-    });
-
-    group.add(rect);
-    group.add(text);
-
-    // Hover effect
-    group.on("mouseover", () => rect.fill("#2980b9"));
-    group.on("mouseout", () => rect.fill("#3498db"));
-    group.on("click", onClick);
-
-    // Add button to the layer and bring to top
-    this.layer.add(group);
-    group.moveToTop(); // <<< Ensure button is on top of everything
-    this._returnButton = group;
-    this.layer.draw();
-}
-
 }

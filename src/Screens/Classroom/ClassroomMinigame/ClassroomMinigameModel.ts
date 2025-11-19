@@ -6,29 +6,23 @@ import type { Item } from "../../../types";
 export class ClassroomMinigameModel {
   private items: Item[];
   private baskets: { [key: string]: Item[] } = {};
-  private placedItems: Set<string> = new Set(); // Track item placement
-  private selectedItem: Item | null = null;
+  private placedItems: Set<string> = new Set();
 
   constructor(items: Item[]) {
     this.items = items;
+  }
+
+  /** Initialize from JSON */
+  static async fromJSON(url: string): Promise<ClassroomMinigameModel> {
+    const res = await fetch(url);
+    const data = await res.json();
+    return new ClassroomMinigameModel(data.items);
   }
 
   getItems(): Item[] {
     return this.items;
   }
 
-  selectItem(name: string): void {
-    this.selectedItem = this.items.find((item) => item.name === name) ?? null;
-  }
-
-  getSelectedItem(): Item | null {
-    return this.selectedItem;
-  }
-
-  /**
-   * Place an item in a basket.
-   * Returns true if placed in the correct basket (basketName matches item.french).
-   */
   placeItemInBasket(itemName: string, basketName: string): boolean {
     const item = this.items.find((i) => i.name === itemName);
     if (!item) return false;
@@ -57,7 +51,11 @@ export class ClassroomMinigameModel {
 
   reset(): void {
     this.baskets = {};
-    this.selectedItem = null;
     this.placedItems.clear();
+  }
+
+  /** Get unique basket names from items */
+  getBasketNames(): string[] {
+    return Array.from(new Set(this.items.map((i) => i.french)));
   }
 }
