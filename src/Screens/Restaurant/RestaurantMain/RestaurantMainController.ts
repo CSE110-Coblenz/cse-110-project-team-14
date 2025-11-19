@@ -1,19 +1,25 @@
 import { RestaurantMainModel } from './RestaurantMainModel';
 import { RestaurantMainView } from './RestaurantMainView';
-//import type {ScreenSwitcher} from "../../../types.ts";
+import type {ScreenSwitcher} from "../../../types.ts";
+import { ScreenController } from "../../../types";
 
-export class RestaurantMainController {
+export class RestaurantMainController extends ScreenController {
 
   private model: RestaurantMainModel;
   private view: RestaurantMainView;
-  private screenSwitcher?: {ScreenSwitcher: (name: string) => void };
+  private screenSwitcher: ScreenSwitcher;
 
-  constructor(screenSwitcher?: {ScreenSwitcher: (name: string) => void }) {
+  constructor(screenSwitcher: ScreenSwitcher) {
+    super();
     this.screenSwitcher = screenSwitcher;
     this.model = new RestaurantMainModel();
-    this.view = new RestaurantMainView((itemName) => this.handleItemClick(itemName));
+    this.view = new RestaurantMainView(
+      (itemName) => this.handleItemClick(itemName), 
+      () => this.switchToAssessment()
+    );
   }
 
+  //Load background and items
   async start(): Promise<void> {
     await this.model.load_items("/ItemImage/Restaurant/items.json");
     const items = this.model.get_items();
@@ -32,8 +38,20 @@ export class RestaurantMainController {
 
   }
 
+  private switchToAssessment(): void{
+    this.screenSwitcher.switchToScreen({type: "RestaurantAssessment"});
+  }
+
   getView() : RestaurantMainView {
     return this.view;
+  }
+
+  show(): void{
+    this.view.show();
+  }
+
+  hide(): void{
+    this.view.hide();
   }
 
   //public initialize(): void {

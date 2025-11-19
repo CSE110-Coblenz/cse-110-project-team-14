@@ -1,6 +1,8 @@
 import type { Group } from 'konva/lib/Group';
 import { globals } from './constants.js';
 
+export type Question = MCProblem | TypingProblem;
+
 export interface View {
     getGroup(): Group;
     show(): void;
@@ -28,7 +30,7 @@ export type Screen =
 
 
 export interface ScreenSwitcher {
-    switchToScreen(screenName: string): void;
+    switchToScreen(screenName: Screen): void;
 }
 
 export abstract class ScreenController {
@@ -43,6 +45,7 @@ export abstract class ScreenController {
 	}
 }
 
+//Interface for Items in json
 export interface Item {
     name: string;
     english: string;
@@ -53,13 +56,24 @@ export interface Item {
     y: number;
 }
 
+//Interface for Assessment portion
 export interface Assessment {
-    questions: string;
-    answers: string[];
-    correctAnswerIndex: number;
+    question: string;
 }
 
+export interface MCProblem extends Assessment{
+    type: "mcq";
+    options: string[];
+    answerIndex: number;
+}
 
+export interface TypingProblem extends Assessment{
+    type: "type";
+    answer: string;
+    characterLimit: number;
+}
+
+//Interface for npcs
 export interface Person {
     name: string;
     role: string;
