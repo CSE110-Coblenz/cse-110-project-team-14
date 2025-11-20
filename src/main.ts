@@ -9,10 +9,11 @@ class App implements ScreenSwitcher {
   private stage: Konva.Stage;
   private layer: Konva.Layer;
 
-  private RestaurantController: RestaurantMainController;
-  private RestaurantAssessment: RestaurantAssessmentController;
+  private storeController: StoreMainController;
+  private restaurantController: RestaurantMainController;
+  private restaurantAssessment: RestaurantAssessmentController;
 
-  constructor(container: string){
+  constructor(container: string) {
     this.stage = new Konva.Stage({
       container,
       width: STAGE_WIDTH,
@@ -22,37 +23,58 @@ class App implements ScreenSwitcher {
     this.layer = new Konva.Layer();
     this.stage.add(this.layer);
 
-    this.RestaurantController = new RestaurantMainController(this);
-    this.RestaurantAssessment = new RestaurantAssessmentController(this);
+    // Initialize controllers
+    this.storeController = new StoreMainController(this);
+    this.restaurantController = new RestaurantMainController(this);
+    this.restaurantAssessment = new RestaurantAssessmentController(this);
 
-    this.layer.add(this.RestaurantController.getView().getGroup());
-    this.layer.add(this.RestaurantAssessment.getView().getGroup());
+    // Add screens' groups to the layer
+    this.layer.add(this.storeController.getView().getGroup());
+    this.layer.add(this.restaurantController.getView().getGroup());
+    this.layer.add(this.restaurantAssessment.getView().getGroup());
 
-    this.RestaurantController.hide();
-    this.RestaurantAssessment.hide();
+    // Initially hide all
+    this.storeController.hide();
+    this.restaurantController.hide();
+    this.restaurantAssessment.hide();
   }
 
+  /** Start the application */
   async start(): Promise<void> {
-    await this.RestaurantController.start();
+    await this.storeController.start();
+    await this.restaurantController.start();
 
-    this.RestaurantController.show();
+    // Show the store screen first (or change as needed)
+    this.storeController.show();
     this.layer.draw();
   }
 
+  /** Implement screen switching */
   switchToScreen(screen: Screen): void {
-    this.RestaurantController.hide();
-    this.RestaurantAssessment.hide();
+    // Hide all screens first
+    this.storeController.hide();
+    this.restaurantController.hide();
+    this.restaurantAssessment.hide();
 
-    switch(screen.type){
+    // Show the requested screen
+    switch (screen.type) {
+      case "Store":
+        this.storeController.show();
+        break;
       case "Restaurant":
-        this.RestaurantController.show();
-        break;
+        this.restaurantController.show();
+        break;        
       case "RestaurantAssessment":
-        this.RestaurantAssessment.start();
-        break;
+        this.restaurantAssessment.start();
+      default:
+        console.warn("Unknown screen type:", screen.type);
     }
+
+    // Redraw layer
+    this.layer.draw();
   }
 }
 
+// Initialize the app
 const app = new App("container");
 app.start();

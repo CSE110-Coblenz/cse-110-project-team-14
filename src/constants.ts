@@ -13,7 +13,7 @@ export const IMAGE_DIMENSIONS = {
     height: 200,
 };
 
-// Stage dimensions
+// Stage dimension
 export const STAGE_WIDTH = 800;
 export const STAGE_HEIGHT = 600;
 

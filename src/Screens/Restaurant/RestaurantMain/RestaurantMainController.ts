@@ -3,8 +3,8 @@ import { RestaurantMainView } from './RestaurantMainView';
 import type {ScreenSwitcher} from "../../../types.ts";
 import { ScreenController } from "../../../types";
 
+// export class RestaurantMainController extends ScreenController {
 export class RestaurantMainController extends ScreenController {
-
   private model: RestaurantMainModel;
   private view: RestaurantMainView;
   private screenSwitcher: ScreenSwitcher;
@@ -24,7 +24,7 @@ export class RestaurantMainController extends ScreenController {
     await this.model.load_items("/ItemImage/Restaurant/items.json");
     const items = this.model.get_items();
     this.view.addItems(items, (itemName) => this.handleItemClick(itemName));
-    this.view.show();
+    //this.view.show();
   }
 
   //Interaction between clicking item and updating dock
@@ -36,6 +36,9 @@ export class RestaurantMainController extends ScreenController {
     }
     this.view.updateDock(selected);
 
+  }
+  private switchToRestaurant(): void {
+    this.screenSwitcher.switchToScreen({ type: "Restaurant" });
   }
 
   private switchToAssessment(): void{
@@ -54,7 +57,4 @@ export class RestaurantMainController extends ScreenController {
     this.view.hide();
   }
 
-  //public initialize(): void {
-  //  this.view.render();
-  //}
 }
