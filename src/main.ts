@@ -1,74 +1,80 @@
 import Konva from "konva";
-import type { ScreenSwitcher, Screen } from "./types.ts";
+import { STAGE_HEIGHT, STAGE_WIDTH } from "./constants";
+import { ClassroomAssessmentController } from "./Screens/Classroom/ClassroomAssessment/ClassroomAssessmentController";
+import { ClassroomMinigameController } from "./Screens/Classroom/ClassroomMinigame/ClassroomMinigameController";
 import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
 import { StoreMainController } from "./Screens/Store/StoreMain/StoreMainController";
-import { STAGE_WIDTH, STAGE_HEIGHT } from "./constants";
+import type { Item } from "./types";
+import { ProgressTracker } from "./utils/ProgressTracker";
 
-class App implements ScreenSwitcher {
-  private stage: Konva.Stage;
-  private layer: Konva.Layer;
+async function main() {
+  // --- Stage and Layer ---
+  const stage = new Konva.Stage({
+    container: "container",
+    width: STAGE_WIDTH,
+    height: STAGE_HEIGHT,
+  });
+  const layer = new Konva.Layer();
+  stage.add(layer);
 
-  private storeController: StoreMainController;
-  private restaurantController: RestaurantMainController;
+  const tracker = new ProgressTracker();
 
-  constructor(container: string) {
-    this.stage = new Konva.Stage({
-      container,
-      width: STAGE_WIDTH,
-      height: STAGE_HEIGHT,
-    });
+  // --- STORE ---
+  const storeController = new StoreMainController({
+    switchToScreen: (screen: string) => console.log("Switch screen skipped for test:", screen),
+  } as any);
+  await storeController.start();
+  const storeGroup = storeController.getView().getGroup();
+  layer.add(storeGroup);
+  storeGroup.hide();
 
-    this.layer = new Konva.Layer();
-    this.stage.add(this.layer);
+  // --- RESTAURANT ---
+  const restaurantController = new RestaurantMainController(
+    tracker,
+    () => switchScene("classroom")
+  );
+  await restaurantController.start();
+  const restaurantGroup = restaurantController.getView().getGroup();
+  layer.add(restaurantGroup);
+  restaurantGroup.hide();
 
-    // Initialize controllers
-    this.storeController = new StoreMainController(this);
-    this.restaurantController = new RestaurantMainController(this);
+  // --- CLASSROOM ---
+  const classroomController = new ClassroomAssessmentController(
+    stage,
+    layer,
+    tracker,
+    () => switchScene("restaurant"),
+    () => switchScene("minigame")
+  );
+  await classroomController.start();
+  const classroomGroup = classroomController.getView().getGroup();
+  layer.add(classroomGroup);
+  classroomGroup.hide();
 
-    // Add screens' groups to the layer
-    this.layer.add(this.storeController.getView().getGroup());
-    this.layer.add(this.restaurantController.getView().getGroup());
+  // --- MINIGAME ---
+  const minigameController = new ClassroomMinigameController(
+    stage,
+    layer,
+    classroomController["model"].getItems() as Item[]
+  );
+  await minigameController.start();
+  const minigameGroup = minigameController.getView().getGroup();
+  layer.add(minigameGroup);
+  minigameGroup.hide();
 
-    // Initially hide all
-    this.storeController.hide();
-    this.restaurantController.hide();
+  layer.draw();
+
+  // --- Scene Switcher ---
+  function switchScene(target: "store" | "restaurant" | "classroom" | "minigame") {
+    storeGroup.visible(target === "store");
+    restaurantGroup.visible(target === "restaurant");
+    classroomGroup.visible(target === "classroom");
+    minigameGroup.visible(target === "minigame");
+    layer.batchDraw();
   }
 
-  /** Start the application */
-  async start(): Promise<void> {
-    await this.storeController.start();
-    await this.restaurantController.start();
-
-    // Show the store screen first (or change as needed)
-    this.storeController.show();
-    this.layer.draw();
-  }
-
-  /** Implement screen switching */
-  switchToScreen(screen: Screen): void {
-    // Hide all screens first
-    this.storeController.hide();
-    this.restaurantController.hide();
-
-    // Show the requested screen
-    switch (screen.type) {
-      case "Store":
-        this.storeController.show();
-        break;
-
-      case "Restaurant":
-        this.restaurantController.show();
-        break;
-
-      default:
-        console.warn("Unknown screen type:", screen.type);
-    }
-
-    // Redraw layer
-    this.layer.draw();
-  }
+  // --- Start with STORE ---
+  switchScene("classroom");
 }
 
-// Initialize the app
-const app = new App("container");
-app.start();
+main().catch(err => console.error("Failed to start scenes:", err));
