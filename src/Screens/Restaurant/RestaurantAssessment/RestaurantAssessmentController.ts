@@ -1,27 +1,26 @@
 import { RestaurantAssessmentModel } from './RestaurantAssessmentModel';
 import { RestaurantAssessmentView } from './RestaurantAssessmentView';
+import type {ScreenSwitcher} from "../../../types.ts";
+import { ScreenController } from "../../../types";
 
-export class RestaurantAssessmentController {
+export class RestaurantAssessmentController extends ScreenController {
   private model: RestaurantAssessmentModel;
   private view: RestaurantAssessmentView;
-  private screenSwitcher?: {ScreenSwitcher: (name: string) => void };
+  private screenSwitcher: ScreenSwitcher;
   private typingBuffer = "";
 
-  constructor(screenSwitcher?: {ScreenSwitcher: (name: string) => void }) {
-      this.screenSwitcher = screenSwitcher;
-      this.model = new RestaurantAssessmentModel();
-      this.view = new RestaurantAssessmentView();
-      this.setupTypingHandler();
-    }
+  constructor(screenSwitcher: ScreenSwitcher) {
+    super();
+    this.screenSwitcher = screenSwitcher;
+    this.model = new RestaurantAssessmentModel();
+    this.view = new RestaurantAssessmentView(() => this.switchToRestaurant());
+    this.setupTypingHandler();
+  }
 
     async start(): Promise<void>{
       await this.model.load_questions("/ItemImage/Restaurant/questions.json");
       this.view.show();
       this.showQuestionHandler();
-    }
-
-    getView(): RestaurantAssessmentView{
-      return this.view;
     }
 
     private showQuestionHandler(): void{
@@ -71,6 +70,23 @@ export class RestaurantAssessmentController {
         return;
       }
       this.showQuestionHandler();
+    }
+
+    private switchToRestaurant(): void{
+      this.model.reset();
+      this.screenSwitcher.switchToScreen({type: "Restaurant"});
+    }
+
+    getView() : RestaurantAssessmentView {
+      return this.view;
+    }
+    
+    show(): void{
+      this.view.show();
+    }
+    
+    hide(): void{
+      this.view.hide();
     }
  
 }

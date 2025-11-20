@@ -11,7 +11,7 @@ export class RestaurantAssessmentModel {
         const totalQuestions = (await response.json()) as Question[];
 
         //Shuffles question bank and outputs 7 problems
-        this.questions = totalQuestions.sort(() => Math.random() - .5).slice(0,7);
+        this.questions = totalQuestions.sort(() => Math.random() - .5).slice(0,1);
     }
 
     //Returns the question that the player is on
@@ -57,5 +57,10 @@ export class RestaurantAssessmentModel {
     //Returns number of questions in total given
     getTotal():number{
         return this.questions.length;
+    }
+
+    reset():void{
+        this.index = 0;
+        this.score = 0;
     }
 }

@@ -8,8 +8,12 @@ import { STAGE_WIDTH, STAGE_HEIGHT } from "../../../constants";
 export class RestaurantAssessmentView {
   private group: Konva.Group = new Konva.Group({ visible: false });
   private typingTest?: Konva.Text;
+  private onRestaurant: () => void;
 
-  constructor() {
+  constructor(onRestaurant: () => void) {
+    this.group = new Konva.Group({visible: false});
+    this.onRestaurant = onRestaurant;
+    
     // Background
     const background = new Konva.Rect({
       x: 0,
@@ -85,6 +89,8 @@ export class RestaurantAssessmentView {
     this.group.getLayer()?.draw();
   }
 
+  
+
   updateTypingText(typed: string): void {
     if (this.typingTest) {
       this.typingTest.text(typed);
@@ -116,6 +122,39 @@ export class RestaurantAssessmentView {
     });
     this.group.add(text);
     this.group.getLayer()?.draw();
+
+    //Restaurant Button
+    const buttonWidth = 180;
+    const buttonHeight = 50;
+
+    const button = new Konva.Rect({
+      x: STAGE_WIDTH - buttonWidth - 40,
+      y: 40,
+      width: buttonWidth,
+      height: buttonHeight,
+      fill: "#8bc34aff",
+      cornerRadius: 10,
+      stroke: "black",
+      strokeWidth: 2,
+    });
+
+    const buttonText = new Konva.Text({
+      x: STAGE_WIDTH - buttonWidth - 40 + 20,
+      y: 40 + 12,
+      text: "Restaurant",
+      fontSize: 18,
+      fontFamily: "Arial",
+      fill: "black",
+    });
+
+    // Button click event
+
+    const handler = () => this.onRestaurant();
+    button.on("click", handler);
+    buttonText.on("click", handler);
+  
+    this.group.add(button, buttonText);
+    
   }
 
   show(): void {
