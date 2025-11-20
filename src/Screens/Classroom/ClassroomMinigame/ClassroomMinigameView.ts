@@ -14,9 +14,7 @@ interface BasketData {
   imageSrc: string;
 }
 
-/**
- * Shuffle helper to randomize basket order
- */
+/** Helper to shuffle array for random basket placement */
 function shuffleArray<T>(array: T[]): T[] {
   return array
     .map((value) => ({ value, sort: Math.random() }))
@@ -33,6 +31,7 @@ export class ClassroomMinigameView implements View {
   private baskets: KonvaImage[] = [];
   private basketLabels: Konva.Text[] = [];
   private _feedbackGroup?: Konva.Group;
+  private _titleNode?: Konva.Text;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -41,7 +40,6 @@ export class ClassroomMinigameView implements View {
     this.addBackground();
   }
 
-  /** Return the main group for adding to the layer */
   getGroup(): Group {
     return this.group;
   }
@@ -56,12 +54,7 @@ export class ClassroomMinigameView implements View {
     this.layer.batchDraw();
   }
 
-  /**
-   * Render all items and baskets in the scene
-   * @param items - draggable items
-   * @param baskets - basket data
-   * @param onItemDrop - callback when item is dropped into basket
-   */
+  /** Render all items and baskets */
   async renderScene(
     items: Item[],
     baskets: BasketData[],
@@ -69,14 +62,17 @@ export class ClassroomMinigameView implements View {
   ) {
     this.clearScene();
 
-    // Randomize basket order
+    // --- Add title ---
+    this.addTitle("Put the items in the right Basket");
+
+    // --- Randomize baskets ---
     const randomizedBaskets = shuffleArray(baskets);
 
-    // --- Basket dimensions & spacing ---
-    const basketWidth = IMAGE_DIMENSIONS.width * 0.8;   // slightly smaller than item
+    // --- Basket sizing & spacing ---
+    const basketWidth = IMAGE_DIMENSIONS.width * 0.8;   // slightly smaller than items
     const basketHeight = IMAGE_DIMENSIONS.height * 0.8;
     const basketSpacing = STAGE_WIDTH / (randomizedBaskets.length + 1);
-    const basketY = STAGE_HEIGHT - basketHeight - 150;
+    const basketY = STAGE_HEIGHT - basketHeight - 150; // moved up for spacing
 
     // Render baskets
     for (let i = 0; i < randomizedBaskets.length; i++) {
@@ -99,7 +95,7 @@ export class ClassroomMinigameView implements View {
         width: basketWidth,
         align: "center",
         text: basketData.name,
-        fontSize: 25,
+        fontSize: 30,
         fontFamily: "Times New Roman",
         fill: "#000",
       });
@@ -107,11 +103,11 @@ export class ClassroomMinigameView implements View {
       this.basketLabels.push(labelNode);
     }
 
-    // --- Item dimensions & spacing ---
+    // --- Item sizing & spacing ---
     const itemWidth = IMAGE_DIMENSIONS.width;
     const itemHeight = IMAGE_DIMENSIONS.height;
     const itemSpacing = STAGE_WIDTH / (items.length + 1);
-    const itemY = 100;
+    const itemY = 170;
 
     // Render draggable items
     await Promise.all(
@@ -155,17 +151,25 @@ export class ClassroomMinigameView implements View {
     this.layer.batchDraw();
   }
 
-  /** Destroy all nodes from previous scene */
+  /** Destroy previous scene nodes */
   private clearScene() {
     this.itemNodes.forEach((n) => n.destroy());
     this.itemNodes = [];
+
     this.baskets.forEach((b) => b.destroy());
     this.baskets = [];
+
     this.basketLabels.forEach((t) => t.destroy());
     this.basketLabels = [];
+
     if (this._feedbackGroup) {
       this._feedbackGroup.destroy();
       this._feedbackGroup = undefined;
+    }
+
+    if (this._titleNode) {
+      this._titleNode.destroy();
+      this._titleNode = undefined;
     }
   }
 
@@ -188,7 +192,7 @@ export class ClassroomMinigameView implements View {
     img.src = MINIGAME_BG;
   }
 
-  /** Load an image from a URL */
+  /** Load image from URL */
   private loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new window.Image();
@@ -198,7 +202,28 @@ export class ClassroomMinigameView implements View {
     });
   }
 
-  /** Show floating feedback message */
+  /** Add title text at the top */
+  private addTitle(text: string) {
+    if (this._titleNode) {
+      this._titleNode.destroy();
+      this._titleNode = undefined;
+    }
+
+    const titleNode = new Konva.Text({
+      text,
+      fontSize: 50,
+      fontFamily: "Times New Roman",
+      fill: "#000000ff",
+      width: STAGE_WIDTH,
+      align: "center",
+      y: 75,
+    });
+
+    this.group.add(titleNode);
+    this._titleNode = titleNode;
+  }
+
+  /** Show feedback cloud */
   showFeedback(message: string, correct: boolean) {
     if (this._feedbackGroup) {
       this._feedbackGroup.destroy();
