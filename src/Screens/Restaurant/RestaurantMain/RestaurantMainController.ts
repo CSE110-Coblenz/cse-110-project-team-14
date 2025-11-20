@@ -1,51 +1,83 @@
-import { RestaurantMainModel } from "./RestaurantMainModel";
-import { RestaurantMainView } from "./RestaurantMainView";
-import { ProgressTracker } from "../../../utils/ProgressTracker";
+import type { ScreenSwitcher } from "../../../types";
+import { ScreenController } from "../../../types";
+import { RestaurantMainModel } from './RestaurantMainModel';
+import { RestaurantMainView } from './RestaurantMainView';
 
-/**
- * Restaurant controller mirrors the classroom controller so both scenes share
- * the same progress tracking behavior.
- */
-export class RestaurantMainController {
-  private readonly model = new RestaurantMainModel();
-  private readonly view = new RestaurantMainView();
-  private readonly tracker: ProgressTracker;
-  private readonly switchToClassroom?: () => void;
-  private unsubscribeProgress?: () => void;
+// export class RestaurantMainController extends ScreenController {
+//   private model: RestaurantMainModel;
+//   private view: StoreMainView;
+//   private screenSwitcher: ScreenSwitcher;
 
-  constructor(tracker: ProgressTracker, switchToClassroom?: () => void) {
-    this.tracker = tracker;
-    this.switchToClassroom = switchToClassroom;
-  }
+//   constructor(screenSwitcher: ScreenSwitcher) {
+//     private model: RestruantMainModel;
+//     private view: StoreMainView;
+//     super();
+//     this.screenSwitcher = screenSwitcher;
 
-  async start(): Promise<void> {
-    await this.model.load_items("/ItemImage/Restaurant/items.json");
+//     this.model = new ResturantMainModel();
+
+//     this.view = new ResturantMainView(
+//       (itemName) => this.handleItemClick(itemName),
+//       () => this.switchToRestaurant()
+//     );
+//   }
+export class RestaurantMainController extends ScreenController {
+  private model: RestaurantMainModel;
+  private view: RestaurantMainView;
+  private screenSwitcher: ScreenSwitcher;
+
+  // constructor(screenSwitcher: ScreenSwitcher) {
+  //   super();
+  //   this.screenSwitcher = screenSwitcher;
+
+  //   this.model = new RestaurantMainModel();
+
+  //   this.view = new RestaurantMainView(
+  //     (itemName) => this.handleItemClick(itemName),
+  //     //this.view = new RestaurantMainView((itemName) => this.handleItemClick(itemName));
+  //     () => this.screenSwitcher("RestaurantMain") 
+      
+  //   );
+
+    constructor(screenSwitcher: ScreenSwitcher) {
+      super();
+      this.screenSwitcher = screenSwitcher;
+  
+      this.model = new RestaurantMainModel();
+  
+      this.view = new RestaurantMainView(
+        (itemName) => this.handleItemClick(itemName),
+       // () => this.switchToRestaurant()
+      );
+      this.start();
+    }
+  //async start(): Promise<void> {
+  start(): void {
+    this.model.load_items("/ItemImage/Restaurant/items.json");
     const items = this.model.get_items();
-
-    const ids = items.map((item) => `restaurant:${item.name}`);
-    this.tracker.registerItems(ids);
-
-    this.view.addItems(items, (name) => this.handleItemClick(name));
-    this.view.setOnSwitchToClassroom(() => this.switchToClassroom?.());
-
-    this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {
-      this.view.updateProgress(found, total);
-    });
-
-    this.view.resetPanel();
+    this.view.addItems(items, (itemName) => this.handleItemClick(itemName));
+    //this.view.show();
   }
 
-  getView(): RestaurantMainView {
+  //Interaction between clicking item and updating dock
+  private handleItemClick(itemName: string) : void{
+    this.model.select_item(itemName);
+    const selected = this.model.get_selected_item();
+    if(!selected){
+      return;
+    }
+    this.view.updateDock(selected);
+
+  }
+  private switchToRestaurant(): void {
+    this.screenSwitcher.switchToScreen({ type: "Restaurant" });
+  }
+
+  getView() : RestaurantMainView {
     return this.view;
   }
 
-  private handleItemClick(name: string): void {
-    this.model.select_item(name);
-    const selected = this.model.get_selected_item();
-    if (!selected) {
-      return;
-    }
-    this.tracker.markFound(`restaurant:${name}`);
-    this.view.updatePanel(selected);
-  }
+  //public initialize(): void {
+  //  this.view.render();
+  //}
 }

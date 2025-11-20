@@ -29,7 +29,7 @@ export type Screen =
 
 
 export interface ScreenSwitcher {
-    switchToScreen(screenName: string): void;
+    switchToScreen(screenName: Screen): void;
 }
 
 export abstract class ScreenController {
