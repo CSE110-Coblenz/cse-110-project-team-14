@@ -1,0 +1,5 @@
+{
+  "clerk": {
+    "greeting": ["Hello!", "How are you?", "Can I help you with something?"]
+  }
+}

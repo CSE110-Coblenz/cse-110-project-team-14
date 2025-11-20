@@ -1,5 +1,5 @@
 import Konva from "konva";
-import type {Item} from "./RestaurantMainModel";
+import type { Item } from "../../../types"; 
 import { STAGE_WIDTH, STAGE_HEIGHT } from "../../../constants";
 //import type { View } from "../../types.ts";
 
@@ -86,6 +86,7 @@ export class RestaurantMainView {
     this.dockPhonetic.text(`${item.phonetic}`);
     this.group.getLayer()?.draw();
   }
+
 
   show(): void {
     this.group.visible(true);

@@ -1,0 +1,39 @@
+{
+    "clerk": {
+      "name": "Clerk",
+      "role": "storekeeper",
+      "dialogue": {
+        "start": {
+          "id": "start",
+          "speaker": "clerk",
+          "text": "Bonjour! Can you find the tomato?",
+          "action": "expectItem",
+          "expectedItem": "tomato",
+          "onCorrect": "correctTomato",
+          "onWrong": "wrongItem"
+        },
+        "correctTomato": {
+          "id": "correctTomato",
+          "speaker": "clerk",
+          "text": "Très bien! That's the tomato. Now, can you find the baguette?",
+          "action": "expectItem",
+          "expectedItem": "baguette",
+          "onCorrect": "end",
+          "onWrong": "wrongItem"
+        },
+        "wrongItem": {
+          "id": "wrongItem",
+          "speaker": "clerk",
+          "text": "Non, that’s not it! Try again!",
+          "next": "start"
+        },
+        "end": {
+          "id": "end",
+          "speaker": "clerk",
+          "text": "Excellent! You know your French foods!",
+          "next": null
+        }
+      }
+    }
+  }
+  

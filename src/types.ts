@@ -28,7 +28,7 @@ export type Screen =
 
 
 export interface ScreenSwitcher {
-    switchToScreen(screenName: string): void;
+    switchToScreen(screenName: Screen): void;
 }
 
 export abstract class ScreenController {
@@ -43,6 +43,14 @@ export abstract class ScreenController {
 	}
 }
 
+// export interface Item {
+//     name: string;
+//     isCorrect: boolean;
+//     itemImageSrc: string;
+//     x?: number;  // optional
+//     y?: number;  // optional
+    
+// }
 export interface Item {
     name: string;
     english: string;
@@ -53,6 +61,7 @@ export interface Item {
     y: number;
 }
 
+
 export interface Assessment {
     questions: string;
     answers: string[];
@@ -60,10 +69,27 @@ export interface Assessment {
 }
 
 
+// export interface Person {
+//     name: string;
+//     role: string;
+//     dialogue: string[];
+// }
+
+export interface DialogueNode {
+    id: string;
+    speaker: string;
+    text: string;
+    action?: "expectItem";         // currently only supporting item expectation
+    expectedItem?: string;
+    onCorrect?: string;            // next dialogue ID if correct
+    onWrong?: string;              // next dialogue ID if wrong
+    next?: string | null;          // next dialogue ID for simple progression
+}
+
 export interface Person {
     name: string;
     role: string;
-    dialogue: string[];
+    dialogue: Record<string, DialogueNode>;
 }
 
 export interface Minigame {

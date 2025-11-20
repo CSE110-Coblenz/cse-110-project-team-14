@@ -1,24 +1,77 @@
+// //import { RestaurantMainModel } from './RestaurantMainModel';
+// import { RestaurantMainView } from './RestaurantMainView';
+// //import type {ScreenSwitcher} from "../../../types.ts";
+// import { ScreenController } from "../../../types";
+// import type { ScreenSwitcher } from "../../../types";
 import { RestaurantMainModel } from './RestaurantMainModel';
 import { RestaurantMainView } from './RestaurantMainView';
-//import type {ScreenSwitcher} from "../../../types.ts";
+import { ScreenController } from "../../../types";
+import type { ScreenSwitcher } from "../../../types";
 
-export class RestaurantMainController {
+// export class RestaurantMainController extends ScreenController {
 
+//   // private model: RestaurantMainModel;
+//   // private view: RestaurantMainView;
+
+//   // private screenSwitcher: ScreenSwitcher;
+//   private model: RestaurantMainModel;
+//   private view: StoreMainView;
+//   private screenSwitcher: ScreenSwitcher;
+
+//   // constructor(screenSwitcher?: {ScreenSwitcher: (name: string) => void }) {
+//   //   this.screenSwitcher = screenSwitcher;
+//   //   this.model = new RestaurantMainModel();
+//   //   this.view = new RestaurantMainView((itemName) => this.handleItemClick(itemName));
+//   // }
+//   constructor(screenSwitcher: ScreenSwitcher) {
+//     private model: RestruantMainModel;
+//     private view: StoreMainView;
+//     super();
+//     this.screenSwitcher = screenSwitcher;
+
+//     this.model = new ResturantMainModel();
+
+//     this.view = new ResturantMainView(
+//       (itemName) => this.handleItemClick(itemName),
+//       () => this.switchToRestaurant()
+//     );
+//   }
+export class RestaurantMainController extends ScreenController {
   private model: RestaurantMainModel;
   private view: RestaurantMainView;
-  private screenSwitcher?: {ScreenSwitcher: (name: string) => void };
+  private screenSwitcher: ScreenSwitcher;
 
-  constructor(screenSwitcher?: {ScreenSwitcher: (name: string) => void }) {
-    this.screenSwitcher = screenSwitcher;
-    this.model = new RestaurantMainModel();
-    this.view = new RestaurantMainView((itemName) => this.handleItemClick(itemName));
-  }
+  // constructor(screenSwitcher: ScreenSwitcher) {
+  //   super();
+  //   this.screenSwitcher = screenSwitcher;
 
-  async start(): Promise<void> {
-    await this.model.load_items("/ItemImage/Restaurant/items.json");
+  //   this.model = new RestaurantMainModel();
+
+  //   this.view = new RestaurantMainView(
+  //     (itemName) => this.handleItemClick(itemName),
+  //     //this.view = new RestaurantMainView((itemName) => this.handleItemClick(itemName));
+  //     () => this.screenSwitcher("RestaurantMain") 
+      
+  //   );
+
+    constructor(screenSwitcher: ScreenSwitcher) {
+      super();
+      this.screenSwitcher = screenSwitcher;
+  
+      this.model = new RestaurantMainModel();
+  
+      this.view = new RestaurantMainView(
+        (itemName) => this.handleItemClick(itemName),
+       // () => this.switchToRestaurant()
+      );
+      this.start();
+    }
+  //async start(): Promise<void> {
+  start(): void {
+    this.model.load_items("/ItemImage/Restaurant/items.json");
     const items = this.model.get_items();
     this.view.addItems(items, (itemName) => this.handleItemClick(itemName));
-    this.view.show();
+    //this.view.show();
   }
 
   //Interaction between clicking item and updating dock
@@ -30,6 +83,9 @@ export class RestaurantMainController {
     }
     this.view.updateDock(selected);
 
+  }
+  private switchToRestaurant(): void {
+    this.screenSwitcher.switchToScreen({ type: "Restaurant" });
   }
 
   getView() : RestaurantMainView {
