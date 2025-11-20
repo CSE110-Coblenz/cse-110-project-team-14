@@ -26,7 +26,8 @@ export type Screen =
     | { type: "StoreAssessment" }
     | { type: "ClassroomAssessment" }
     | { type: "RestaurantAssessment" }
-    | { type: "Outro" };
+    | { type: "Outro" }
+    | { type: "ClassroomMinigame" } ;
 
 
 export interface ScreenSwitcher {
@@ -88,6 +89,9 @@ export interface DialogueNode {
 export interface Person {
     name: string;
     role: string;
+    image: string;
+    x: number;
+    y: number;
     dialogue: Record<string, DialogueNode>;
 }
 
