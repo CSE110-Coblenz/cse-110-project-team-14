@@ -3,7 +3,7 @@ import type { Group } from "konva/lib/Group";
 import type { Layer } from "konva/lib/Layer";
 import type { Image as KonvaImage } from "konva/lib/shapes/Image";
 import type { Stage } from "konva/lib/Stage";
-import { IMAGE_DIMENSIONS } from "../../../constants";
+import { IMAGE_DIMENSIONS, STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
 import type { Item } from "../../../types";
 import { View } from "../../../types";
 
@@ -15,10 +15,15 @@ interface BasketData {
 }
 
 /**
- * View for Classroom Minigame.
- * - Renders items and baskets using Konva
- * - Handles drag & drop, snapping, and feedback
+ * Shuffle helper to randomize basket order
  */
+function shuffleArray<T>(array: T[]): T[] {
+  return array
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+}
+
 export class ClassroomMinigameView implements View {
   private stage: Stage;
   private layer: Layer;
@@ -36,6 +41,7 @@ export class ClassroomMinigameView implements View {
     this.addBackground();
   }
 
+  /** Return the main group for adding to the layer */
   getGroup(): Group {
     return this.group;
   }
@@ -51,10 +57,10 @@ export class ClassroomMinigameView implements View {
   }
 
   /**
-   * Render all items and baskets.
-   * @param items Array of draggable items
-   * @param baskets Array of basket definitions
-   * @param onItemDrop Callback when an item is dropped into a basket
+   * Render all items and baskets in the scene
+   * @param items - draggable items
+   * @param baskets - basket data
+   * @param onItemDrop - callback when item is dropped into basket
    */
   async renderScene(
     items: Item[],
@@ -63,19 +69,25 @@ export class ClassroomMinigameView implements View {
   ) {
     this.clearScene();
 
-    const spacing = this.stage.width() / (baskets.length + 1);
-    const basketY = this.stage.height() - 200;
+    // Randomize basket order
+    const randomizedBaskets = shuffleArray(baskets);
 
-    // Render baskets and labels
-    for (let i = 0; i < baskets.length; i++) {
-      const basketData = baskets[i];
+    // --- Basket dimensions & spacing ---
+    const basketWidth = IMAGE_DIMENSIONS.width * 0.8;   // slightly smaller than item
+    const basketHeight = IMAGE_DIMENSIONS.height * 0.8;
+    const basketSpacing = STAGE_WIDTH / (randomizedBaskets.length + 1);
+    const basketY = STAGE_HEIGHT - basketHeight - 150;
+
+    // Render baskets
+    for (let i = 0; i < randomizedBaskets.length; i++) {
+      const basketData = randomizedBaskets[i];
       const img = await this.loadImage(basketData.imageSrc);
 
       const basketNode = new Konva.Image({
-        x: spacing * (i + 1) - 60,
+        x: basketSpacing * (i + 1) - basketWidth / 2,
         y: basketY,
-        width: 120,
-        height: 120,
+        width: basketWidth,
+        height: basketHeight,
         image: img,
       });
       this.group.add(basketNode);
@@ -83,8 +95,8 @@ export class ClassroomMinigameView implements View {
 
       const labelNode = new Konva.Text({
         x: basketNode.x(),
-        y: basketNode.y() + 125,
-        width: 120,
+        y: basketNode.y() + basketHeight + 5,
+        width: basketWidth,
         align: "center",
         text: basketData.name,
         fontSize: 25,
@@ -95,58 +107,61 @@ export class ClassroomMinigameView implements View {
       this.basketLabels.push(labelNode);
     }
 
-    // Render draggable items
-    const itemSpacing = this.stage.width() / (items.length + 1);
+    // --- Item dimensions & spacing ---
+    const itemWidth = IMAGE_DIMENSIONS.width;
+    const itemHeight = IMAGE_DIMENSIONS.height;
+    const itemSpacing = STAGE_WIDTH / (items.length + 1);
     const itemY = 100;
 
-    await Promise.all(items.map(async (item, idx) => {
-      const img = await this.loadImage(item.image);
-      const node = new Konva.Image({
-        x: itemSpacing * (idx + 1) - IMAGE_DIMENSIONS.width / 2,
-        y: itemY,
-        width: IMAGE_DIMENSIONS.width,
-        height: IMAGE_DIMENSIONS.height,
-        image: img,
-        draggable: true,
-      });
+    // Render draggable items
+    await Promise.all(
+      items.map(async (item, idx) => {
+        const img = await this.loadImage(item.image);
+        const node = new Konva.Image({
+          x: itemSpacing * (idx + 1) - itemWidth / 2,
+          y: itemY,
+          width: itemWidth,
+          height: itemHeight,
+          image: img,
+          draggable: true,
+        });
 
-      // Drag & drop detection
-      node.on("dragend", () => {
-        const basketIndex = this.baskets.findIndex(
-          b =>
-            node.x() + node.width() / 2 > b.x() &&
-            node.x() + node.width() / 2 < b.x() + b.width() &&
-            node.y() + node.height() / 2 > b.y() &&
-            node.y() + node.height() / 2 < b.y() + b.height()
-        );
+        // Drag & drop logic
+        node.on("dragend", () => {
+          const basketIndex = this.baskets.findIndex(
+            (b) =>
+              node.x() + node.width() / 2 > b.x() &&
+              node.x() + node.width() / 2 < b.x() + b.width() &&
+              node.y() + node.height() / 2 > b.y() &&
+              node.y() + node.height() / 2 < b.y() + b.height()
+          );
 
-        if (basketIndex !== -1) {
-          const basketName = baskets[basketIndex].name;
+          if (basketIndex !== -1) {
+            const basketName = randomizedBaskets[basketIndex].name;
+            // Snap to basket
+            node.position({
+              x: this.baskets[basketIndex].x() + this.baskets[basketIndex].width() / 2 - node.width() / 2,
+              y: this.baskets[basketIndex].y() + this.baskets[basketIndex].height() / 2 - node.height() / 2,
+            });
+            onItemDrop(item, basketName);
+          }
+        });
 
-          // Snap item to basket center
-          node.position({
-            x: this.baskets[basketIndex].x() + this.baskets[basketIndex].width() / 2 - node.width() / 2,
-            y: this.baskets[basketIndex].y() + this.baskets[basketIndex].height() / 2 - node.height() / 2,
-          });
-
-          onItemDrop(item, basketName);
-        }
-      });
-
-      this.group.add(node);
-      this.itemNodes.push(node);
-    }));
+        this.group.add(node);
+        this.itemNodes.push(node);
+      })
+    );
 
     this.layer.batchDraw();
   }
 
-  /** Clear all previous nodes from the scene */
+  /** Destroy all nodes from previous scene */
   private clearScene() {
-    this.itemNodes.forEach(n => n.destroy());
+    this.itemNodes.forEach((n) => n.destroy());
     this.itemNodes = [];
-    this.baskets.forEach(b => b.destroy());
+    this.baskets.forEach((b) => b.destroy());
     this.baskets = [];
-    this.basketLabels.forEach(t => t.destroy());
+    this.basketLabels.forEach((t) => t.destroy());
     this.basketLabels = [];
     if (this._feedbackGroup) {
       this._feedbackGroup.destroy();
@@ -154,7 +169,7 @@ export class ClassroomMinigameView implements View {
     }
   }
 
-  /** Add static background image */
+  /** Add background image */
   private addBackground() {
     const img = new window.Image();
     img.onload = () => {
@@ -162,8 +177,8 @@ export class ClassroomMinigameView implements View {
         image: img,
         x: 0,
         y: 0,
-        width: this.stage.width(),
-        height: this.stage.height(),
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
         listening: false,
       });
       this.group.add(bg);
@@ -173,7 +188,7 @@ export class ClassroomMinigameView implements View {
     img.src = MINIGAME_BG;
   }
 
-  /** Load an image from a URL/path */
+  /** Load an image from a URL */
   private loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new window.Image();
@@ -183,10 +198,7 @@ export class ClassroomMinigameView implements View {
     });
   }
 
-  /**
-   * Display a floating feedback message in a colored cloud.
-   * Green for correct, red for incorrect.
-   */
+  /** Show floating feedback message */
   showFeedback(message: string, correct: boolean) {
     if (this._feedbackGroup) {
       this._feedbackGroup.destroy();
@@ -197,9 +209,9 @@ export class ClassroomMinigameView implements View {
     const padding = 20;
 
     const rect = new Konva.Rect({
-      x: this.stage.width() / 2,
-      y: this.stage.height() / 2 - 50,
-      width: 0, // will adjust to fit text
+      x: STAGE_WIDTH / 2,
+      y: STAGE_HEIGHT / 2 - 50,
+      width: 0,
       height: 60,
       fill: correct ? "rgba(0,200,0,0.85)" : "rgba(200,0,0,0.85)",
       cornerRadius: 20,
@@ -215,11 +227,11 @@ export class ClassroomMinigameView implements View {
       opacity: 0,
     });
 
-    text.x(this.stage.width() / 2 - text.width() / 2);
+    text.x(STAGE_WIDTH / 2 - text.width() / 2);
     text.y(rect.y() + (rect.height() - text.height()) / 2);
 
     rect.width(text.width() + padding * 2);
-    rect.x(this.stage.width() / 2 - rect.width() / 2);
+    rect.x(STAGE_WIDTH / 2 - rect.width() / 2);
 
     group.add(rect);
     group.add(text);
@@ -227,11 +239,9 @@ export class ClassroomMinigameView implements View {
     this._feedbackGroup = group;
     this.layer.draw();
 
-    // Animate fade in
     rect.to({ opacity: 1, duration: 0.25 });
     text.to({ opacity: 1, duration: 0.25 });
 
-    // Fade out after 700ms
     setTimeout(() => {
       rect.to({
         opacity: 0,
