@@ -1,6 +1,5 @@
-import type { Layer } from "konva/lib/Layer";
-import type { Stage } from "konva/lib/Stage";
-import type { Item } from "../../../types";
+import type { Item, ScreenController } from "../../../types";
+import { ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
 import { ClassroomAssessmentView } from "./ClassroomAssessmentView";
@@ -9,25 +8,19 @@ import { ClassroomAssessmentView } from "./ClassroomAssessmentView";
  * Controller: wires the classroom model and view together while sharing progress
  * with the rest of the app via ProgressTracker.
  */
-export class ClassroomAssessmentController {
+export class ClassroomAssessmentController extends ScreenController {
   private readonly model = new ClassroomAssessmentModel();
   private readonly view: ClassroomAssessmentView;
   private readonly tracker: ProgressTracker;
-  private readonly switchToRestaurant?: () => void;
-  private readonly switchToMinigame?: () => void;
+  private screenSwitcher: ScreenSwitcher;
   private unsubscribeProgress?: () => void;
 
-  constructor(
-    stage: Stage,
-    layer: Layer,
-    tracker: ProgressTracker,
-    switchToRestaurant?: () => void
-    , switchToMinigame?: () => void
-  ) {
+  constructor(screenSwitcher: ScreenSwitcher,) {
+    super();
     this.view = new ClassroomAssessmentView(stage, layer);
-    this.tracker = tracker;
-    this.switchToRestaurant = switchToRestaurant;
-    this.switchToMinigame = switchToMinigame;
+    this.tracker = new ProgressTracker();
+    this.model = new ClassroomAssessmentModel();
+    this.screenSwitcher = screenSwitcher;
   }
 
 async start(): Promise<void> {
