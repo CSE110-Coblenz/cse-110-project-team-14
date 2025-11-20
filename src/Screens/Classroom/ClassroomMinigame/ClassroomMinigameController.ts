@@ -41,6 +41,10 @@ export class ClassroomMinigameController extends ScreenController {
     return this.view;
   }
 
+  getItems(): Item[] {
+    return this.model.getItems();
+  }
+
   /** Start the minigame by rendering items and baskets */
   async start(): Promise<void> {
     await this.view.renderScene(
