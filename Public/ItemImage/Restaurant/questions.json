@@ -1,0 +1,44 @@
+[
+  {
+    "type": "mcq",
+    "question": "What is the French word for 'apple'?",
+    "options": ["le chien", "la pomme", "le lait", "la table"],
+    "answerIndex": 1
+  },
+  {
+    "type": "mcq",
+    "question": "Which one means 'bread'?",
+    "options": ["le pain", "la porte", "le livre", "le chocolat"],
+    "answerIndex": 0
+  },
+  {
+    "type": "mcq",
+    "question": "Choose the correct translation for 'the chair'.",
+    "options": ["la chaise", "le chat", "la chemise", "le fromage"],
+    "answerIndex": 0
+  },
+  {
+    "type": "type",
+    "question": "Type the French word for 'le lait'.",
+    "answer": "milk",
+    "characterLimit": 15
+  },
+  {
+    "type": "type",
+    "question": "Type the French word for 'le chat'.",
+    "answer": "cat",
+    "characterLimit": 15
+  },
+  {
+    "type": "mcq",
+    "question": "Which word means 'the book'?",
+    "options": ["le livre", "la fenêtre", "le jardin", "la cuisine"],
+    "answerIndex": 0
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'le fromage'.",
+    "answer": "cheese",
+    "characterLimit": 15
+  }
+]
