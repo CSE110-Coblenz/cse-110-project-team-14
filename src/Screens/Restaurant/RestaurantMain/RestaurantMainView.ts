@@ -1,6 +1,6 @@
 import Konva from "konva";
-import type { Item } from "../../../types"; 
-import { STAGE_WIDTH, STAGE_HEIGHT } from "../../../constants";
+import { STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
+import type { Item } from "../../../types";
 //import type { View } from "../../types.ts";
 
 

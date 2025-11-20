@@ -1,28 +1,13 @@
-// //import { RestaurantMainModel } from './RestaurantMainModel';
-// import { RestaurantMainView } from './RestaurantMainView';
-// //import type {ScreenSwitcher} from "../../../types.ts";
-// import { ScreenController } from "../../../types";
-// import type { ScreenSwitcher } from "../../../types";
+import type { ScreenSwitcher } from "../../../types";
+import { ScreenController } from "../../../types";
 import { RestaurantMainModel } from './RestaurantMainModel';
 import { RestaurantMainView } from './RestaurantMainView';
-import { ScreenController } from "../../../types";
-import type { ScreenSwitcher } from "../../../types";
 
 // export class RestaurantMainController extends ScreenController {
-
-//   // private model: RestaurantMainModel;
-//   // private view: RestaurantMainView;
-
-//   // private screenSwitcher: ScreenSwitcher;
 //   private model: RestaurantMainModel;
 //   private view: StoreMainView;
 //   private screenSwitcher: ScreenSwitcher;
 
-//   // constructor(screenSwitcher?: {ScreenSwitcher: (name: string) => void }) {
-//   //   this.screenSwitcher = screenSwitcher;
-//   //   this.model = new RestaurantMainModel();
-//   //   this.view = new RestaurantMainView((itemName) => this.handleItemClick(itemName));
-//   // }
 //   constructor(screenSwitcher: ScreenSwitcher) {
 //     private model: RestruantMainModel;
 //     private view: StoreMainView;
