@@ -160,7 +160,6 @@ private createbackgroundLayer(): Konva.Rect {
           if (!globals.dictionary[item.english]) {
             globals.dictionary[item.english] = item.french;
             console.log(globals.dictionary);
-
           }
           onItemClick(item.name);
         });

@@ -87,6 +87,7 @@ export class RestaurantMainView {
     this.group.getLayer()?.draw();
   }
 
+
   show(): void {
     this.group.visible(true);
   }

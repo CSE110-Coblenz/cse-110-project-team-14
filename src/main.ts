@@ -9,7 +9,7 @@ class App implements ScreenSwitcher {
   private layer: Konva.Layer;
 
   private storeController: StoreMainController;
-  //private restaurantController: RestaurantMainController;
+  private restaurantController: RestaurantMainController;
 
   constructor(container: string) {
     this.stage = new Konva.Stage({
@@ -23,21 +23,21 @@ class App implements ScreenSwitcher {
 
     // Initialize controllers
     this.storeController = new StoreMainController(this);
-    //this.restaurantController = new RestaurantMainController(this);
+    this.restaurantController = new RestaurantMainController(this);
 
     // Add screens' groups to the layer
     this.layer.add(this.storeController.getView().getGroup());
-    //this.layer.add(this.restaurantController.getView().getGroup());
+    this.layer.add(this.restaurantController.getView().getGroup());
 
     // Initially hide all
     this.storeController.hide();
-    //this.restaurantController.hide();
+    this.restaurantController.hide();
   }
 
   /** Start the application */
   async start(): Promise<void> {
     await this.storeController.start();
-    //await this.restaurantController.start();
+    await this.restaurantController.start();
 
     // Show the store screen first (or change as needed)
     this.storeController.show();
@@ -48,7 +48,7 @@ class App implements ScreenSwitcher {
   switchToScreen(screen: Screen): void {
     // Hide all screens first
     this.storeController.hide();
-    //this.restaurantController.hide();
+    this.restaurantController.hide();
 
     // Show the requested screen
     switch (screen.type) {
@@ -56,9 +56,9 @@ class App implements ScreenSwitcher {
         this.storeController.show();
         break;
 
-      // case "Restaurant":
-      //   this.restaurantController.show();
-      //   break;
+      case "Restaurant":
+        this.restaurantController.show();
+        break;
 
       default:
         console.warn("Unknown screen type:", screen.type);
