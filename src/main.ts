@@ -3,6 +3,7 @@ import { STAGE_HEIGHT, STAGE_WIDTH } from "./constants";
 import { ClassroomAssessmentController } from "./Screens/Classroom/ClassroomAssessment/ClassroomAssessmentController";
 import { ClassroomMinigameController } from "./Screens/Classroom/ClassroomMinigame/ClassroomMinigameController";
 import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
+import { StoreMainController } from "./Screens/Store/StoreMain/StoreMainController";
 import type { Item } from "./types";
 import { ProgressTracker } from "./utils/ProgressTracker";
 
@@ -16,6 +17,16 @@ async function main() {
   const layer = new Konva.Layer();
   stage.add(layer);
 
+  // Create controller (dummy switcher)
+  const restaurantScreen = new RestaurantMainController({
+    switchToScreen: () => console.log("Screen switching skipped for test."),
+  } as any);
+  const storeScreen = new StoreMainController({
+    switchToScreen: () => console.log("Screen switching skipped for test."),
+  } as any);
+
+  await storeScreen.start();
+  await restaurantScreen.start();
   const tracker = new ProgressTracker();
 
   // ⬇️ RESTAURANT
@@ -52,6 +63,7 @@ async function main() {
   await minigameController.start();
   minigameGroup.hide();
 
+  //layer.add(storeScreen.getView().getGroup());
   layer.draw();
 
   function switchScene(target: "classroom" | "restaurant" | "minigame") {
