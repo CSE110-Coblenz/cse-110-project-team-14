@@ -16,6 +16,7 @@
     "konva": "^10.0.9"
   },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.1",
     "vitest": "^4.0.13"
