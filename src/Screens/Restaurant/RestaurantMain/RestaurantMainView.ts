@@ -1,5 +1,5 @@
 import Konva from "konva";
-import { STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
+import { STAGE_HEIGHT, STAGE_WIDTH, globals } from "../../../constants";
 import type { Item } from '../../../types';
 
 export class RestaurantMainView {
@@ -107,7 +107,14 @@ export class RestaurantMainView {
           name: item.name,
           image: imgNode.image()
         });
-        imgNode.on("click", () => onItemClick(item.name));
+        //imgNode.on("click", () => onItemClick(item.name));
+        imgNode.on("click", () => {
+          if (!globals.dictionary[item.english]) {
+            globals.dictionary[item.english] = item.french;
+            console.log(globals.dictionary);
+          }
+          onItemClick(item.name);
+        });
         this.itemImages[item.name] = imgNode;
         this.group.add(imgNode);
         this.group.getLayer()?.batchDraw();

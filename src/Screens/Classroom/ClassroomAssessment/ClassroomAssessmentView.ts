@@ -8,6 +8,7 @@ import type { Stage } from "konva/lib/Stage";
 
 import { IMAGE_DIMENSIONS } from "../../../constants";
 import type { Item, Person } from "../../../types";
+import { globals } from "../../../constants";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
 
@@ -149,7 +150,16 @@ export class ClassroomAssessmentView {
         image: img,
         draggable: true,
       });
-      node.on("click tap", () => onItemClick(item));
+      //node.on("click tap", () => onItemClick(item));
+      node.on("click tap", () => {
+        // Add to dictionary if missing
+        if (!globals.dictionary[item.english]) {
+          globals.dictionary[item.english] = item.french;
+          console.log("Dictionary updated:", globals.dictionary);
+        }
+      
+        onItemClick(item);
+      });
       node.on("mouseenter", () => this.setCursor("pointer"));
       node.on("mouseleave", () => this.setCursor("default"));
       this.backgroundGroup.add(node);
