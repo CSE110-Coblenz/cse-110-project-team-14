@@ -1,80 +1,119 @@
 import Konva from "konva";
-import { STAGE_HEIGHT, STAGE_WIDTH } from "./constants";
+import { STAGE_HEIGHT, STAGE_WIDTH } from "./constants.js";
+import type { Screen, ScreenSwitcher } from "./types";
+
+// Controllers
 import { ClassroomAssessmentController } from "./Screens/Classroom/ClassroomAssessment/ClassroomAssessmentController";
 import { ClassroomMinigameController } from "./Screens/Classroom/ClassroomMinigame/ClassroomMinigameController";
+import { IntroScreenController } from "./Screens/Intro/IntroScreenController";
+import { RestaurantAssessmentController } from "./Screens/Restaurant/RestaurantAssessment/RestaurantAssessmentController";
 import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
 import { StoreMainController } from "./Screens/Store/StoreMain/StoreMainController";
-import type { Item } from "./types";
-import { ProgressTracker } from "./utils/ProgressTracker";
 
-async function main() {
-  // --- Stage and Layer ---
-  const stage = new Konva.Stage({
-    container: "container",
-    width: STAGE_WIDTH,
-    height: STAGE_HEIGHT,
-  });
-  const layer = new Konva.Layer();
-  stage.add(layer);
+export class App implements ScreenSwitcher {
+  private stage: Konva.Stage;
+  private layer: Konva.Layer;
 
-  const tracker = new ProgressTracker();
+  private introController: IntroScreenController;
+  private storeController: StoreMainController;
+  private restaurantController: RestaurantMainController;
+  private restaurantAssessmentController: RestaurantAssessmentController;
+  private classroomController: ClassroomAssessmentController;
+  private minigameController: ClassroomMinigameController;
 
-  // --- STORE ---
-  const storeController = new StoreMainController({
-    switchToScreen: (screen: string) => console.log("Switch screen skipped for test:", screen),
-  } as any);
-  await storeController.start();
-  const storeGroup = storeController.getView().getGroup();
-  layer.add(storeGroup);
-  storeGroup.hide();
+  constructor(container: string) {
+    this.stage = new Konva.Stage({
+      container,
+      width: STAGE_WIDTH,
+      height: STAGE_HEIGHT,
+    });
+    this.layer = new Konva.Layer();
+    this.stage.add(this.layer);
 
-  // --- RESTAURANT ---
-  const restaurantController = new RestaurantMainController(
-    tracker,
-    () => switchScene("classroom")
-  );
-  await restaurantController.start();
-  const restaurantGroup = restaurantController.getView().getGroup();
-  layer.add(restaurantGroup);
-  restaurantGroup.hide();
+    // --- Initialize controllers ---
+    this.introController = new IntroScreenController(this);
+    this.storeController = new StoreMainController(this);
+    this.restaurantController = new RestaurantMainController(this);
+    this.restaurantAssessmentController = new RestaurantAssessmentController(this);
+    this.classroomController = new ClassroomAssessmentController(
+      this.stage,
+      this.layer,
+      this
+    );
+    this.minigameController = {} as ClassroomMinigameController; // placeholder, initialized after classroom items are loaded
 
-  // --- CLASSROOM ---
-  const classroomController = new ClassroomAssessmentController(
-    stage,
-    layer,
-    tracker,
-    () => switchScene("restaurant"),
-    () => switchScene("minigame")
-  );
-  await classroomController.start();
-  const classroomGroup = classroomController.getView().getGroup();
-  layer.add(classroomGroup);
-  classroomGroup.hide();
-
-  // --- MINIGAME ---
-  const minigameController = new ClassroomMinigameController(
-    stage,
-    layer,
-    classroomController["model"].getItems() as Item[]
-  );
-  await minigameController.start();
-  const minigameGroup = minigameController.getView().getGroup();
-  layer.add(minigameGroup);
-  minigameGroup.hide();
-
-  layer.draw();
-
-  // --- Scene Switcher ---
-  function switchScene(target: "store" | "restaurant" | "classroom" | "minigame") {
-    storeGroup.visible(target === "store");
-    restaurantGroup.visible(target === "restaurant");
-    classroomGroup.visible(target === "classroom");
-    minigameGroup.visible(target === "minigame");
-    layer.batchDraw();
+    this.initScreens();
   }
 
-  // --- Start with STORE ---
-  switchScene("classroom");
+  private async initScreens() {
+    // --- Intro Screen ---
+    await this.introController.start();
+    this.layer.add(this.introController.getView().getGroup());
+    this.introController.getView().loadBackground("Public/Background/intro.webp");
+
+    // --- Store ---
+    await this.storeController.start();
+    this.layer.add(this.storeController.getView().getGroup());
+
+    // --- Restaurant ---
+    await this.restaurantController.start();
+    this.layer.add(this.restaurantController.getView().getGroup());
+
+    // --- Restaurant Assessment ---
+    await this.restaurantAssessmentController.start();
+    this.layer.add(this.restaurantAssessmentController.getView().getGroup());
+
+    // --- Classroom ---
+    await this.classroomController.start();
+    this.layer.add(this.classroomController.getView().getGroup());
+
+    // --- Minigame (after classroom items loaded) ---
+    const classroomItems = this.classroomController.getItems();
+    this.minigameController = new ClassroomMinigameController(
+      this.stage,
+      this.layer,
+      classroomItems
+    );
+    await this.minigameController.start();
+    this.layer.add(this.minigameController.getView().getGroup());
+
+    // --- Start with Intro Screen ---
+    this.switchToScreen({ type: "Intro" });
+    this.layer.draw();
+  }
+
+  switchToScreen(screenName: Screen): void {
+    // --- Hide all screens first ---
+    this.introController.hide();
+    this.storeController.hide();
+    this.restaurantController.hide();
+    this.restaurantAssessmentController.hide();
+    this.classroomController.hide();
+    this.minigameController.hide();
+
+    // --- Show selected screen ---
+    switch (screenName.type) {
+      case "Intro":
+        this.introController.show();
+        break;
+      case "Store":
+        this.storeController.show();
+        break;
+      case "Restaurant":
+        this.restaurantController.show();
+        break;
+      case "RestaurantAssessment":
+        this.restaurantAssessmentController.show();
+        break;
+      case "Classroom":
+        this.classroomController.show();
+        break;
+      case "ClassroomMinigame":
+        this.minigameController.show();
+        break;
+    }
+  }
 }
 
-main().catch(err => console.error("Failed to start scenes:", err));
+// Launch the app
+new App("container");
