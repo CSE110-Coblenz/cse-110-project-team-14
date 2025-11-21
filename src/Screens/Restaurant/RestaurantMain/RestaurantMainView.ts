@@ -105,6 +105,7 @@ export class RestaurantMainView {
           width: 200,
           height: 200,
           name: item.name,
+          image: imgNode.image()
         });
         imgNode.on("click", () => onItemClick(item.name));
         this.itemImages[item.name] = imgNode;
@@ -133,4 +134,5 @@ export class RestaurantMainView {
   getGroup(): Konva.Group {
     return this.group;
   }
+  
 }
