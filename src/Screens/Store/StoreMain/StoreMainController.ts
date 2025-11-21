@@ -1,7 +1,7 @@
+import type { ScreenSwitcher } from "../../../types";
+import { ScreenController } from "../../../types";
 import { StoreMainModel } from './StoreMainModel';
 import { StoreMainView } from './StoreMainView';
-import { ScreenController } from "../../../types";
-import type { ScreenSwitcher } from "../../../types";
 
 export class StoreMainController extends ScreenController {
   private model: StoreMainModel;

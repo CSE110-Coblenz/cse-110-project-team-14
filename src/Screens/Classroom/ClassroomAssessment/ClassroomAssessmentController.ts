@@ -1,76 +1,91 @@
-import type { Layer } from "konva/lib/Layer";
-import type { Stage } from "konva/lib/Stage";
 import type { Item } from "../../../types";
+import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
 import { ClassroomAssessmentView } from "./ClassroomAssessmentView";
 
 /**
- * Controller: wires the classroom model and view together while sharing progress
- * with the rest of the app via ProgressTracker.
+ * Controller: connects model ↔ view and communicates progress
+ * with other game areas using a shared ScreenSwitcher.
  */
-export class ClassroomAssessmentController {
-  private readonly model = new ClassroomAssessmentModel();
+export class ClassroomAssessmentController extends ScreenController {
+  private readonly model: ClassroomAssessmentModel;
   private readonly view: ClassroomAssessmentView;
   private readonly tracker: ProgressTracker;
-  private readonly switchToRestaurant?: () => void;
-  private readonly switchToMinigame?: () => void;
+  private readonly screenSwitcher: ScreenSwitcher;
   private unsubscribeProgress?: () => void;
 
-  constructor(
-    stage: Stage,
-    layer: Layer,
-    tracker: ProgressTracker,
-    switchToRestaurant?: () => void
-    , switchToMinigame?: () => void
-  ) {
-    this.view = new ClassroomAssessmentView(stage, layer);
-    this.tracker = tracker;
-    this.switchToRestaurant = switchToRestaurant;
-    this.switchToMinigame = switchToMinigame;
+  constructor(stage: Konva.Stage, layer: Konva.Layer, screenSwitcher: ScreenSwitcher) {
+    super();
+    this.screenSwitcher = screenSwitcher;
+
+    this.model = new ClassroomAssessmentModel();
+    this.view = new ClassroomAssessmentView(stage, layer); // <-- pass stage + layer
+    this.tracker = new ProgressTracker();
   }
 
-async start(): Promise<void> {
-  await this.model.loadScene();
-  const items = this.model.getItems();
-  const person = this.model.getPerson();
+  /**
+   * Start the scene: load assets, connect click handlers, show UI
+   */
+  async start(): Promise<void> {
+    await this.model.loadScene();
 
-  const ids = items.map((item) => `classroom:${item.name}`);
-  this.tracker.registerItems(ids);
+    const items = this.model.getItems();
+    const person = this.model.getPerson();
 
-  this.view.renderScene(items, person, (item) => this.handleItemClick(item));
+    // Register progress IDs (classroom:itemname)
+    const ids = items.map((item) => `classroom:${item.name}`);
+    this.tracker.registerItems(ids);
 
-  // Existing handlers
-  this.view.setOnSwitchToRestaurant(() => this.switchToRestaurant?.());
-  this.view.setOnReset(() => this.handleReset());
+    // Render scene into View
+    this.view.renderScene(items, person, (item) => this.handleItemClick(item));
 
-  // --- New handler for minigame ---
-  this.view.setOnSwitchToMinigame(() => this.switchToMinigame?.());
-  // ----------------------------------
+    // Wire top buttons
+    this.view.setOnSwitchToRestaurant(() => this.screenSwitcher.switchToScreen({ type: "Restaurant" }));
+    this.view.setOnReset(() => this.handleReset());
+    this.view.setOnSwitchToMinigame(() => this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" }));
 
-  this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {
-    this.view.updateProgress(found, total);
-  });
+    // Update progress text whenever tracker changes
+    this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {
+      this.view.updateProgress(found, total);
+    });
 
-  this.view.resetPanel();
-  this.view.show();
-}
+    // Initialize panel
+    this.view.resetPanel();
 
+    // Finally show the view
+    this.view.show();
+  }
+
+  /**
+   * Expose the view to parent controller (scene manager)
+   */
   getView(): ClassroomAssessmentView {
     return this.view;
   }
 
+  /**
+   * When an item is tapped
+   */
   private handleItemClick(item: Item): void {
     this.model.selectItem(item.name);
     const selected = this.model.getSelectedItem();
-    if (!selected) {
-      return;
-    }
+    if (!selected) return;
 
+    // mark as found
     this.tracker.markFound(`classroom:${item.name}`);
+
+    // update info panel
     this.view.updatePanel(selected);
   }
 
+  getItems(): Item[] {
+    return this.model.getItems();
+  }
+
+  /**
+   * Reset room progress
+   */
   private handleReset(): void {
     this.tracker.reset();
     this.view.resetPanel();
