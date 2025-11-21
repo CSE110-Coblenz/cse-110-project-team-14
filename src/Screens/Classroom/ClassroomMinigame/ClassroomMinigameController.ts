@@ -84,4 +84,11 @@ export class ClassroomMinigameController extends ScreenController {
   setOnComplete(handler: () => void) {
     this.onComplete = handler;
   }
+
+  hide(): void {
+    this.view.hide();
+  }
+  show(): void {
+    this.view.show();
+  }
 }
