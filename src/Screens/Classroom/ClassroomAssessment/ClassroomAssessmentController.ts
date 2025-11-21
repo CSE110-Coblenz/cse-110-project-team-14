@@ -3,6 +3,7 @@ import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
 import { ClassroomAssessmentView } from "./ClassroomAssessmentView";
+import Konva from "konva";
 
 /**
  * Controller: connects model ↔ view and communicates progress
