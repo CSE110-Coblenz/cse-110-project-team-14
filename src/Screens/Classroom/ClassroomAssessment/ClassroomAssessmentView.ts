@@ -1,3 +1,191 @@
+// import Konva from "konva";
+// import type { Group } from "konva/lib/Group";
+// import type { Layer } from "konva/lib/Layer";
+// import type { Image as KonvaImage } from "konva/lib/shapes/Image";
+// import type { Rect } from "konva/lib/shapes/Rect";
+// import type { Text } from "konva/lib/shapes/Text";
+// import type { Stage } from "konva/lib/Stage";
+
+// import { IMAGE_DIMENSIONS } from "../../../constants";
+// import type { Item, Person } from "../../../types";
+// import { globals } from "../../../constants";
+
+// const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
+
+// type ItemSelectHandler = (item: Item) => void;
+
+// export class ClassroomAssessmentView {
+//   private readonly stage: Stage;
+//   private readonly layer: Layer;
+
+//   private readonly backgroundGroup: Group;
+//   private readonly dialogueOverlay: Group;
+
+//   private readonly bottomPanel: Rect;
+//   private readonly frenchText: Text;
+//   private readonly phoneticText: Text;
+//   private readonly englishText: Text;
+//   private readonly progressText: Text;
+
+//   private readonly switchButton: Group;
+//   private readonly resetButton: Group;
+//   private readonly minigameButton: Group;
+
+//   private readonly overlayScrim: Rect;
+//   private readonly overlayCharacter: KonvaImage;
+//   private readonly speechBubble: Rect;
+//   private readonly speechText: Text;
+//   private readonly leftArrow: Group;
+//   private readonly rightArrow: Group;
+
+//   private itemImages: KonvaImage[] = [];
+//   private personIcon?: KonvaImage;
+//   private personData?: Person;
+//   private dialogueLines: string[] = [];
+//   private currentDialogueIndex = 0;
+
+//   private switchHandler?: () => void;
+//   private resetHandler?: () => void;
+//   private minigameHandler?: () => void;
+
+//   constructor(stage: Stage, layer: Layer) {
+//     this.stage = stage;
+//     this.layer = layer;
+
+//     // Groups
+//     this.backgroundGroup = new Konva.Group({ visible: false });
+//     this.dialogueOverlay = new Konva.Group({ visible: false });
+
+//     this.layer.add(this.backgroundGroup);
+//     this.layer.add(this.dialogueOverlay);
+
+//     this.addBackground();
+//     this.bottomPanel = this.createBottomPanel();
+//     this.backgroundGroup.add(this.bottomPanel);
+
+//     // Text panels
+//     this.frenchText = this.createText(26, "bold", "#1D3557", this.bottomPanel.y() + 16);
+//     this.phoneticText = this.createText(22, "italic", "#475569", this.bottomPanel.y() + 50);
+//     this.englishText = this.createText(24, "normal", "#0F172A", this.bottomPanel.y() + 84, "Tap an item to learn the word.");
+//     this.progressText = this.createText(22, "normal", "#0F172A", 20, "0 / 0 found", "right");
+
+//     this.backgroundGroup.add(this.frenchText, this.phoneticText, this.englishText, this.progressText);
+
+//     // Buttons
+//     this.switchButton = this.createButton("Switch to Store", 30, 24, () => this.switchHandler?.());
+//     this.resetButton = this.createButton("Reset", 210, 24, () => this.resetHandler?.());
+//     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () => this.minigameHandler?.());
+//     this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton);
+
+//     // Dialogue overlay
+//     this.overlayScrim = new Konva.Rect({
+//       x: 0,
+//       y: 0,
+//       width: stage.width(),
+//       height: stage.height(),
+//       fill: "rgba(0,0,0,0.45)",
+//     });
+//     this.overlayScrim.on("click tap", () => this.closeDialogue());
+
+//     this.overlayCharacter = new Konva.Image({
+//       x: stage.width() * 0.08,
+//       y: stage.height() * 0.2,
+//       width: 220,
+//       height: 220,
+//       opacity: 0,
+//       image: new Image(),
+//     });
+//     this.overlayCharacter.on("click tap", (evt) => evt.cancelBubble = true);
+
+//     const bubbleWidth = stage.width() * 0.55;
+//     const bubbleHeight = stage.height() * 0.45;
+//     this.speechBubble = new Konva.Rect({
+//       x: stage.width() * 0.35,
+//       y: stage.height() * 0.2,
+//       width: bubbleWidth,
+//       height: bubbleHeight,
+//       fill: "#FFFFFF",
+//       cornerRadius: 32,
+//       shadowColor: "rgba(0,0,0,0.25)",
+//       shadowBlur: 20,
+//       shadowOffsetY: 10,
+//     });
+//     this.speechBubble.on("click tap", (evt) => evt.cancelBubble = true);
+
+//     this.speechText = new Konva.Text({
+//       x: this.speechBubble.x() + 32,
+//       y: this.speechBubble.y() + 32,
+//       width: this.speechBubble.width() - 64,
+//       fontSize: 24,
+//       fontFamily: "Arial",
+//       lineHeight: 1.3,
+//       fill: "#0F172A",
+//       text: "",
+//     });
+//     this.speechText.on("click tap", (evt) => evt.cancelBubble = true);
+
+//     this.leftArrow = this.createArrowControl("left", () => this.showPreviousDialogue());
+//     this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
+
+//     this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
+//   }
+
+//   /** Render all items and person asynchronously */
+//   async renderScene(items: Item[], person: Person, onItemClick: ItemSelectHandler) {
+//     this.personData = person;
+//     this.dialogueLines = person.dialogue ?? [];
+//     this.resetPanel();
+//     this.clearScene();
+
+//     const spacing = this.stage.width() / (items.length + 2);
+//     const targetY = this.stage.height() * 0.2;
+
+//     await Promise.all(items.map(async (item, i) => {
+//       const img = await this.loadImage(item.image);
+//       const node = new Konva.Image({
+//         x: spacing * (i + 1) - IMAGE_DIMENSIONS.width / 2,
+//         y: targetY,
+//         width: IMAGE_DIMENSIONS.width,
+//         height: IMAGE_DIMENSIONS.height,
+//         image: img,
+//         draggable: true,
+//       });
+//       //node.on("click tap", () => onItemClick(item));
+//       node.on("click tap", () => {
+//         // Add to dictionary if missing
+//         if (!globals.dictionary[item.english]) {
+//           globals.dictionary[item.english] = item.french;
+//           console.log("Dictionary updated:", globals.dictionary);
+//         }
+      
+//         onItemClick(item);
+//       });
+//       node.on("mouseenter", () => this.setCursor("pointer"));
+//       node.on("mouseleave", () => this.setCursor("default"));
+//       this.backgroundGroup.add(node);
+//       this.itemImages.push(node);
+//     }));
+
+//     const personImg = await this.loadImage(person.image);
+//     const personNode = new Konva.Image({
+//       x: spacing * (items.length + 1) - IMAGE_DIMENSIONS.width / 2,
+//       y: targetY,
+//       width: IMAGE_DIMENSIONS.width,
+//       height: IMAGE_DIMENSIONS.height,
+//       image: personImg,
+//     });
+//     personNode.on("click tap", () => this.openDialogue());
+//     personNode.on("mouseenter", () => this.setCursor("pointer"));
+//     personNode.on("mouseleave", () => this.setCursor("default"));
+//     this.personIcon = personNode;
+//     this.backgroundGroup.add(personNode);
+
+//     // Overlay portrait
+//     this.overlayCharacter.image(personImg);
+//     this.overlayCharacter.opacity(1);
+
+//     this.layer.batchDraw();
+//   }
 import Konva from "konva";
 import type { Group } from "konva/lib/Group";
 import type { Layer } from "konva/lib/Layer";
@@ -6,9 +194,8 @@ import type { Rect } from "konva/lib/shapes/Rect";
 import type { Text } from "konva/lib/shapes/Text";
 import type { Stage } from "konva/lib/Stage";
 
-import { IMAGE_DIMENSIONS } from "../../../constants";
+import { IMAGE_DIMENSIONS, globals } from "../../../constants";
 import type { Item, Person } from "../../../types";
-import { globals } from "../../../constants";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
 
@@ -30,6 +217,7 @@ export class ClassroomAssessmentView {
   private readonly switchButton: Group;
   private readonly resetButton: Group;
   private readonly minigameButton: Group;
+  private readonly dictionaryButton: Group;
 
   private readonly overlayScrim: Rect;
   private readonly overlayCharacter: KonvaImage;
@@ -44,6 +232,9 @@ export class ClassroomAssessmentView {
   private dialogueLines: string[] = [];
   private currentDialogueIndex = 0;
 
+  private dictionaryPopupGroup?: Konva.Group;
+  private dictionaryText?: Konva.Text;
+
   private switchHandler?: () => void;
   private resetHandler?: () => void;
   private minigameHandler?: () => void;
@@ -55,10 +246,9 @@ export class ClassroomAssessmentView {
     // Groups
     this.backgroundGroup = new Konva.Group({ visible: false });
     this.dialogueOverlay = new Konva.Group({ visible: false });
+    this.layer.add(this.backgroundGroup, this.dialogueOverlay);
 
-    this.layer.add(this.backgroundGroup);
-    this.layer.add(this.dialogueOverlay);
-
+    // Background
     this.addBackground();
     this.bottomPanel = this.createBottomPanel();
     this.backgroundGroup.add(this.bottomPanel);
@@ -75,7 +265,10 @@ export class ClassroomAssessmentView {
     this.switchButton = this.createButton("Switch to Store", 30, 24, () => this.switchHandler?.());
     this.resetButton = this.createButton("Reset", 210, 24, () => this.resetHandler?.());
     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () => this.minigameHandler?.());
-    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton);
+    this.dictionaryButton = this.createButton("Dictionary", 570, 24, () => this.showDictionaryPopup());
+    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton, this.dictionaryButton);
+
+    this.createDictionaryPopup(); // prepare the popup
 
     // Dialogue overlay
     this.overlayScrim = new Konva.Rect({
@@ -95,7 +288,7 @@ export class ClassroomAssessmentView {
       opacity: 0,
       image: new Image(),
     });
-    this.overlayCharacter.on("click tap", (evt) => evt.cancelBubble = true);
+    this.overlayCharacter.on("click tap", (evt) => (evt.cancelBubble = true));
 
     const bubbleWidth = stage.width() * 0.55;
     const bubbleHeight = stage.height() * 0.45;
@@ -110,7 +303,7 @@ export class ClassroomAssessmentView {
       shadowBlur: 20,
       shadowOffsetY: 10,
     });
-    this.speechBubble.on("click tap", (evt) => evt.cancelBubble = true);
+    this.speechBubble.on("click tap", (evt) => (evt.cancelBubble = true));
 
     this.speechText = new Konva.Text({
       x: this.speechBubble.x() + 32,
@@ -122,12 +315,81 @@ export class ClassroomAssessmentView {
       fill: "#0F172A",
       text: "",
     });
-    this.speechText.on("click tap", (evt) => evt.cancelBubble = true);
+    this.speechText.on("click tap", (evt) => (evt.cancelBubble = true));
 
     this.leftArrow = this.createArrowControl("left", () => this.showPreviousDialogue());
     this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
 
-    this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
+    this.dialogueOverlay.add(
+      this.overlayScrim,
+      this.overlayCharacter,
+      this.speechBubble,
+      this.speechText,
+      this.leftArrow,
+      this.rightArrow
+    );
+  }
+
+  /** Dictionary popup */
+  private createDictionaryPopup(): void {
+    const width = 300;
+    const height = 300;
+    const x = this.stage.width() / 2 - width / 2;
+    const y = this.stage.height() / 2 - height / 2;
+
+    const group = new Konva.Group({ x, y, visible: false, clip: { x: 0, y: 0, width, height } });
+    const background = new Konva.Rect({ width, height, fill: "#fff", stroke: "#000", strokeWidth: 2, cornerRadius: 10 });
+    const text = new Konva.Text({
+      x: 20,
+      y: 20,
+      width: width - 40,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#000",
+      align: "left",
+      wrap: "word",
+      text: "",
+    });
+
+    group.add(background, text);
+    this.backgroundGroup.add(group);
+    this.dictionaryPopupGroup = group;
+    this.dictionaryText = text;
+
+    let scrollOffset = 0;
+    const updateScroll = (dy: number) => {
+      if (!this.dictionaryText) return;
+      scrollOffset -= dy;
+      const minY = Math.min(height - 40 - text.height(), 0);
+      const maxY = 20;
+      scrollOffset = Math.max(minY, Math.min(scrollOffset, maxY));
+      this.dictionaryText.y(scrollOffset);
+      this.layer.batchDraw();
+    };
+
+    group.on("wheel", (e) => {
+      e.evt.preventDefault();
+      updateScroll(e.evt.deltaY);
+    });
+
+    this.backgroundGroup.on("mousedown", (e) => {
+      if (!this.dictionaryPopupGroup?.visible()) return;
+      if (!e.target.isAncestorOf(this.dictionaryPopupGroup)) {
+        this.dictionaryPopupGroup.visible(false);
+        this.layer.batchDraw();
+      }
+    });
+  }
+
+  private showDictionaryPopup(): void {
+    if (!this.dictionaryPopupGroup || !this.dictionaryText) return;
+
+    const entries = Object.entries(globals.dictionary);
+    this.dictionaryText.text(entries.map(([eng, fr]) => `${eng} / ${fr}`).join("\n") || "No words found");
+    this.dictionaryText.y(20);
+    this.dictionaryPopupGroup.visible(true);
+    this.dictionaryPopupGroup.moveToTop();
+    this.layer.batchDraw();
   }
 
   /** Render all items and person asynchronously */
@@ -140,31 +402,27 @@ export class ClassroomAssessmentView {
     const spacing = this.stage.width() / (items.length + 2);
     const targetY = this.stage.height() * 0.2;
 
-    await Promise.all(items.map(async (item, i) => {
-      const img = await this.loadImage(item.image);
-      const node = new Konva.Image({
-        x: spacing * (i + 1) - IMAGE_DIMENSIONS.width / 2,
-        y: targetY,
-        width: IMAGE_DIMENSIONS.width,
-        height: IMAGE_DIMENSIONS.height,
-        image: img,
-        draggable: true,
-      });
-      //node.on("click tap", () => onItemClick(item));
-      node.on("click tap", () => {
-        // Add to dictionary if missing
-        if (!globals.dictionary[item.english]) {
-          globals.dictionary[item.english] = item.french;
-          console.log("Dictionary updated:", globals.dictionary);
-        }
-      
-        onItemClick(item);
-      });
-      node.on("mouseenter", () => this.setCursor("pointer"));
-      node.on("mouseleave", () => this.setCursor("default"));
-      this.backgroundGroup.add(node);
-      this.itemImages.push(node);
-    }));
+    await Promise.all(
+      items.map(async (item, i) => {
+        const img = await this.loadImage(item.image);
+        const node = new Konva.Image({
+          x: spacing * (i + 1) - IMAGE_DIMENSIONS.width / 2,
+          y: targetY,
+          width: IMAGE_DIMENSIONS.width,
+          height: IMAGE_DIMENSIONS.height,
+          image: img,
+          draggable: true,
+        });
+        node.on("click tap", () => {
+          if (!globals.dictionary[item.english]) globals.dictionary[item.english] = item.french;
+          onItemClick(item);
+        });
+        node.on("mouseenter", () => this.setCursor("pointer"));
+        node.on("mouseleave", () => this.setCursor("default"));
+        this.backgroundGroup.add(node);
+        this.itemImages.push(node);
+      })
+    );
 
     const personImg = await this.loadImage(person.image);
     const personNode = new Konva.Image({
@@ -180,10 +438,8 @@ export class ClassroomAssessmentView {
     this.personIcon = personNode;
     this.backgroundGroup.add(personNode);
 
-    // Overlay portrait
     this.overlayCharacter.image(personImg);
     this.overlayCharacter.opacity(1);
-
     this.layer.batchDraw();
   }
 
