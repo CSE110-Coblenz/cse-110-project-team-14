@@ -18,6 +18,9 @@ export class StoreMainView {
   private itemImages: Record<string, Konva.Image> = {};
 
   private clerkImage?: Konva.Image;
+
+  private dictionaryPopupGroup?: Konva.Group;
+  private dictionaryText?: Konva.Text;
  
 
   //popup for character
@@ -54,6 +57,9 @@ constructor(
 
   this.createRestaurantButton(); // <-- new button
   this.createPopup(); 
+
+  this.createDictionaryButton();
+    this.createDictionaryPopup();
 }
 
 //bacground layer (if background doens't load)
@@ -114,8 +120,8 @@ private createbackgroundLayer(): Konva.Rect {
       y: textY,
       width: sectionWidth,
       align: "center",
-      fontSize: 24,
-      fontFamily: "Times New Roman",
+      fontSize: 27,
+      fontFamily: "Arial",
       fill: "#000",
     });
 
@@ -124,8 +130,8 @@ private createbackgroundLayer(): Konva.Rect {
       y: textY,
       width: sectionWidth,
       align: "center",
-      fontSize: 24,
-      fontFamily: "Times New Roman",
+      fontSize: 27,
+      fontFamily: "Arial",
       fill: "#000",
     });
 
@@ -134,9 +140,9 @@ private createbackgroundLayer(): Konva.Rect {
       y: textY,
       width: sectionWidth,
       align: "center",
-      fontSize: 20,
-      fontFamily: "Times New Roman",
-      fill: "#555",
+      fontSize: 25,
+      fontFamily: "Arial",
+      fill: "#333",
     });
     
 
@@ -149,10 +155,10 @@ private createbackgroundLayer(): Konva.Rect {
         imgNode.setAttrs({
           x: item.x,
           y: item.y,
-          width: 60,
-          height: 60,
+          width: 90,
+          height: 90,
           name: item.name,
-          image: imgNode.image(),
+          image: imgNode.image(), 
         });
         
         //dictionary implentation when clicking on item
@@ -209,45 +215,47 @@ private createbackgroundLayer(): Konva.Rect {
     });
   }
   
-  //suppose to be scene switcher (doesn't currently work)
+  //switching to restaurant
   private createRestaurantButton(): void {
-    const btnX = STAGE_WIDTH - 240;
-    const btnY = 50;
+    const buttonWidth = 180;
+    const buttonHeight = 50;
+    const buttonX = STAGE_WIDTH - buttonWidth - 40;
+    const buttonY = 40;
   
     const button = new Konva.Rect({
-      x: btnX,
-      y: btnY,
-      width: 100,
-      height: 30,
-      fill: "#ffffff",
-      stroke: "#000",
-      strokeWidth: 2
+      x: buttonX,
+      y: buttonY,
+      width: buttonWidth,
+      height: buttonHeight,
+      fill: "#8bc34aff",      
+      cornerRadius: 10,       
+      stroke: "black",
+      strokeWidth: 2,
     });
   
-    const label = new Konva.Text({
-      x: btnX,
-      y: btnY + 10,
-      width: 100,
-      align: "center",
+    const buttonText = new Konva.Text({
+      x: buttonX,
+      y: buttonY + (buttonHeight - 20) / 2, 
+      width: buttonWidth,
+      align: "center",                   
       text: "Restaurant",
-      fontSize: 16,
+      fontSize: 18,
       fontFamily: "Arial",
-      fill: "#000000"
+      fill: "black",
     });
   
-    // Both text & button respond to click
     const handler = () => this.onStartClick();
     button.on("click", handler);
-    label.on("click", handler);
+    buttonText.on("click", handler);
   
-    this.group.add(button, label);
+    this.group.add(button, buttonText);
   }
 
   //popup for character dialogue
   private createPopup(): void {
-    const popupWidth = 250;
-    const popupHeight = 150;
-    const x = 375;
+    const popupWidth = 350;
+    const popupHeight = 250;
+    const x = 700;
     const y = 100;
   
     const group = new Konva.Group({
@@ -267,23 +275,26 @@ private createbackgroundLayer(): Konva.Rect {
     });
   
     // Text inside popup
+
     const text = new Konva.Text({
       x: 20,
       y: 20,
-      width: popupWidth - 40,
+      width: popupWidth - 40,   
       height: popupHeight - 60, 
-      fontSize: 20,
+      fontSize: 28,             
       fontFamily: "Arial",
       fill: "#000",
-      align: "left",
+      align: "center",         
+      verticalAlign: "middle",  
+      wrap: "word"              
     });
   
-    //switches to next line when clicked 
     const nextLine = new Konva.Text({
       x: 0,
       y: popupHeight - 35,
       width: popupWidth - 20,
       fontSize: 14,
+      text: ">>",    
       fontFamily: "Arial",
       fill: "#555",
       align: "right",
@@ -347,9 +358,107 @@ private createbackgroundLayer(): Konva.Rect {
   
     this.group.getLayer()?.draw();
   }
+
+  //dictionary button
+  private createDictionaryButton(): void {
+    const buttonWidth = 150;
+    const buttonHeight = 50;
+    const buttonX = 40; // left side
+    const buttonY = 40;
+
+    const button = new Konva.Rect({
+      x: buttonX,
+      y: buttonY,
+      width: buttonWidth,
+      height: buttonHeight,
+      fill: "#2196f3",
+      cornerRadius: 10,
+      stroke: "black",
+      strokeWidth: 2,
+    });
+
+    const buttonText = new Konva.Text({
+      x: buttonX,
+      y: buttonY + (buttonHeight - 20) / 2,
+      width: buttonWidth,
+      align: "center",
+      text: "Dictionary",
+      fontSize: 18,
+      fontFamily: "Arial",
+      fill: "white",
+    });
+
+    const handler = () => this.showDictionaryPopup();
+    button.on("click", handler);
+    buttonText.on("click", handler);
+
+    this.group.add(button, buttonText);
+  }
+
+  //popup when dictionary button clicked
+  private createDictionaryPopup(): void {
+    const popupWidth = 300;
+    const popupHeight = 300;
+    const x = STAGE_WIDTH / 2 - popupWidth / 2;
+    const y = STAGE_HEIGHT / 2 - popupHeight / 2;
   
+    const group = new Konva.Group({
+      x,
+      y,
+      visible: false,
+    });
   
-  //for scene switching
+    const background = new Konva.Rect({
+      width: popupWidth,
+      height: popupHeight,
+      fill: "#ffffff",
+      stroke: "#000",
+      strokeWidth: 2,
+      cornerRadius: 10,
+    });
+  
+    const text = new Konva.Text({
+      x: 20,
+      y: 20,
+      width: popupWidth - 40,
+      height: popupHeight - 40,
+      fontSize: 24,
+      fontFamily: "Arial",
+      fill: "#000",
+      align: "left",
+      verticalAlign: "top",
+      wrap: "word",
+    });
+  
+    group.add(background, text);
+    this.group.add(group);
+  
+    this.dictionaryPopupGroup = group;
+    this.dictionaryText = text;
+  
+    this.group.on("mousedown", (e) => {
+      if (!this.dictionaryPopupGroup?.visible()) return;
+  
+      if (!e.target.hasName("dictionaryPopup")) {
+        this.dictionaryPopupGroup.visible(false);
+        this.group.getLayer()?.draw();
+      }
+    });
+  
+    group.name("dictionaryPopup");
+  }
+  //show dictionary popup
+  private showDictionaryPopup(): void {
+    if (!this.dictionaryPopupGroup || !this.dictionaryText) return;
+
+    const entries = Object.entries(globals.dictionary);
+    const textContent = entries.map(([english, french]) => `${english} / ${french}`).join("\n");
+
+    this.dictionaryText.text(textContent || "No Words Found!");
+    this.dictionaryPopupGroup.visible(true);
+    this.dictionaryPopupGroup.moveToTop();
+    this.group.getLayer()?.draw();
+  }
   show(): void {
     this.group.visible(true);
   }

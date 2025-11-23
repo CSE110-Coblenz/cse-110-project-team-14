@@ -72,7 +72,7 @@ export class ClassroomAssessmentView {
     this.backgroundGroup.add(this.frenchText, this.phoneticText, this.englishText, this.progressText);
 
     // Buttons
-    this.switchButton = this.createButton("Switch to Restaurant", 30, 24, () => this.switchHandler?.());
+    this.switchButton = this.createButton("Switch to Store", 30, 24, () => this.switchHandler?.());
     this.resetButton = this.createButton("Reset", 210, 24, () => this.resetHandler?.());
     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () => this.minigameHandler?.());
     this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton);
@@ -188,7 +188,7 @@ export class ClassroomAssessmentView {
   }
 
   /** Setters for buttons */
-  setOnSwitchToRestaurant(handler: () => void) { this.switchHandler = handler; }
+  setOnSwitchToStore(handler: () => void) { this.switchHandler = handler; }
   setOnReset(handler: () => void) { this.resetHandler = handler; }
   setOnSwitchToMinigame(handler: () => void) { this.minigameHandler = handler; }
 

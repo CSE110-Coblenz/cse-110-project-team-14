@@ -42,7 +42,7 @@ export class ClassroomAssessmentController extends ScreenController {
     this.view.renderScene(items, person, (item) => this.handleItemClick(item));
 
     // Wire top buttons
-    this.view.setOnSwitchToRestaurant(() => this.screenSwitcher.switchToScreen({ type: "Restaurant" }));
+    this.view.setOnSwitchToStore(() => this.screenSwitcher.switchToScreen({ type: "Store" }));
     this.view.setOnReset(() => this.handleReset());
     this.view.setOnSwitchToMinigame(() => this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" }));
 
