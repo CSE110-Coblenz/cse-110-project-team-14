@@ -2,10 +2,7 @@ import Konva from "konva";
 import type { Item } from "../../../types"; 
 import { STAGE_WIDTH, STAGE_HEIGHT, globals } from "../../../constants"; // import globals
 import type { Person, DialogueNode } from "../../../types";
-<<<<<<< Updated upstream
-=======
 import { FrenchTTS } from "../../../utils/texttospeech";
->>>>>>> Stashed changes
 
 export class StoreMainView {
   //Background / main group
@@ -166,11 +163,8 @@ private createbackgroundLayer(): Konva.Rect {
             console.log(globals.dictionary);
           }
           onItemClick(item.name);
-<<<<<<< Updated upstream
-=======
           // Speak French word and definition
           FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
->>>>>>> Stashed changes
         });
 
         this.itemImages[item.name] = imgNode;
@@ -211,15 +205,12 @@ private createbackgroundLayer(): Konva.Rect {
       //when clicked on, show dialogue from json function called 
       imgNode.on("click", () => {
         this.showDialogue("clerk");
-<<<<<<< Updated upstream
-=======
         // Speak first dialogue line in French (async)
         setTimeout(async () => {
           const response = await fetch("Public/ItemImage/Store/dialogue.json");
           const data = await response.json();
           const lines = data["clerk"]?.greeting || [];
         }, 300);
->>>>>>> Stashed changes
       });
   
       this.group.getLayer()?.draw();
@@ -309,22 +300,19 @@ private createbackgroundLayer(): Konva.Rect {
 
     group.on("click", () => {
       if (!this.currentDialogue.length) return;
-  
+
       this.popupDialogueIndex++;
-  
+
       if (this.popupDialogueIndex >= this.currentDialogue.length) {
         this.currentDialogue = [];
         this.popupDialogueIndex = 0;
         group.visible(false); 
       } else {
         text.text(this.currentDialogue[this.popupDialogueIndex]);
-<<<<<<< Updated upstream
-=======
         // Speak new dialogue line
         FrenchTTS.speak(this.currentDialogue[this.popupDialogueIndex], "en-US");
->>>>>>> Stashed changes
       }
-  
+
       group.moveToTop(); 
       this.group.getLayer()?.draw();
     });
@@ -333,21 +321,18 @@ private createbackgroundLayer(): Konva.Rect {
     //allowing the background of the dialogue to change to next sentence too
     background.on("click", () => {
       if (!this.currentDialogue.length) return;
-  
+
       this.popupDialogueIndex++;
-  
+
       if (this.popupDialogueIndex >= this.currentDialogue.length) {
         this.currentDialogue = [];
         this.popupDialogueIndex = 0;
       } else {
         text.text(this.currentDialogue[this.popupDialogueIndex]);
-<<<<<<< Updated upstream
-=======
         // Speak new dialogue line
         FrenchTTS.speak(this.currentDialogue[this.popupDialogueIndex], "en-US");
->>>>>>> Stashed changes
       }
-  
+
       group.moveToTop(); 
       this.group.getLayer()?.draw();
     });
@@ -372,13 +357,9 @@ private createbackgroundLayer(): Konva.Rect {
     this.popupText?.text(this.currentDialogue[this.popupDialogueIndex]);
     this.popupGroup?.visible(true);
     this.popupGroup?.moveToTop();
-<<<<<<< Updated upstream
-  
-=======
     // Speak first dialogue line
     if (this.currentDialogue.length > 0) FrenchTTS.speak(this.currentDialogue[0], "en-US");
 
->>>>>>> Stashed changes
     this.group.getLayer()?.draw();
   }
   
@@ -396,3 +377,4 @@ private createbackgroundLayer(): Konva.Rect {
     return this.group;
   }
 }
+

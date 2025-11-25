@@ -1,6 +1,7 @@
 import Konva from "konva";
 import { STAGE_HEIGHT, STAGE_WIDTH, globals } from "../../../constants";
 import type { Item } from '../../../types';
+import { FrenchTTS } from "../../../utils/texttospeech";
 
 export class RestaurantMainView {
   private group: Konva.Group;
@@ -126,11 +127,6 @@ export class RestaurantMainView {
     this.dockText.text(`${item.english} / ${item.french}`);
     this.dockPhonetic.text(`${item.phonetic}`);
     this.group.getLayer()?.batchDraw();
-<<<<<<< Updated upstream
-=======
-    // Speak French word and definition
-    //FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
->>>>>>> Stashed changes
   }
 
   show(): void {
