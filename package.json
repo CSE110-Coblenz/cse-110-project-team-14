@@ -20,5 +20,17 @@
     "typescript": "^5.9.3",
     "vite": "^7.2.1",
     "vitest": "^4.0.13"
+<<<<<<< Updated upstream
   }
+=======
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CSE110-Coblenz/cse-110-project-team-14.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CSE110-Coblenz/cse-110-project-team-14/issues"
+  },
+  "homepage": "https://github.com/CSE110-Coblenz/cse-110-project-team-14#readme"
+>>>>>>> Stashed changes
 }

@@ -107,13 +107,13 @@ export class RestaurantMainView {
           name: item.name,
           image: imgNode.image()
         });
-        //imgNode.on("click", () => onItemClick(item.name));
         imgNode.on("click", () => {
           if (!globals.dictionary[item.english]) {
             globals.dictionary[item.english] = item.french;
             console.log(globals.dictionary);
           }
           onItemClick(item.name);
+          FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
         });
         this.itemImages[item.name] = imgNode;
         this.group.add(imgNode);
@@ -126,6 +126,11 @@ export class RestaurantMainView {
     this.dockText.text(`${item.english} / ${item.french}`);
     this.dockPhonetic.text(`${item.phonetic}`);
     this.group.getLayer()?.batchDraw();
+<<<<<<< Updated upstream
+=======
+    // Speak French word and definition
+    //FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
+>>>>>>> Stashed changes
   }
 
   show(): void {
