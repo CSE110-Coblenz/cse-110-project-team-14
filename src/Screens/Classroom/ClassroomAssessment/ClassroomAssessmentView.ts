@@ -9,6 +9,7 @@ import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS } from "../../../constants";
 import type { Item, Person } from "../../../types";
 import { globals } from "../../../constants";
+import { FrenchTTS } from "../../../utils/texttospeech";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
 
@@ -150,7 +151,6 @@ export class ClassroomAssessmentView {
         image: img,
         draggable: true,
       });
-<<<<<<< Updated upstream
       //node.on("click tap", () => onItemClick(item));
       node.on("click tap", () => {
         // Add to dictionary if missing
@@ -160,11 +160,7 @@ export class ClassroomAssessmentView {
         }
       
         onItemClick(item);
-=======
-      node.on("click tap", () => {
-        onItemClick(item);
         FrenchTTS.speak(item.french);
->>>>>>> Stashed changes
       });
       node.on("mouseenter", () => this.setCursor("pointer"));
       node.on("mouseleave", () => this.setCursor("default"));
@@ -256,11 +252,8 @@ export class ClassroomAssessmentView {
     this.setArrowState(this.leftArrow, this.currentDialogueIndex > 0);
     this.setArrowState(this.rightArrow, this.currentDialogueIndex < this.dialogueLines.length - 1);
     this.layer.batchDraw();
-<<<<<<< Updated upstream
-=======
     // Speak current dialogue line
     if (this.dialogueLines[this.currentDialogueIndex]) FrenchTTS.speak(this.dialogueLines[this.currentDialogueIndex]);
->>>>>>> Stashed changes
   }
 
   private clearScene() {
