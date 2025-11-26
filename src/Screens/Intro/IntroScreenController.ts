@@ -1,6 +1,6 @@
+import { globals } from "../../constants";
 import { ScreenController, type ScreenSwitcher } from "../../types";
 import { IntroScreenView } from "./IntroScreenView";
-import { globals } from "../../constants";
 export class IntroScreenController extends ScreenController{
   private view: IntroScreenView;
   private screenSwitcher: ScreenSwitcher;
@@ -22,7 +22,8 @@ export class IntroScreenController extends ScreenController{
   }
 
   private handleLoginSuccess(): void {
-    globals.playerName = this.view.getGroup().name();
+    // globals.playerName = this.view.getGroup().name();
+    console.log("Login success:", globals.playerName);
   }
 
   private goToClassroom(): void {
