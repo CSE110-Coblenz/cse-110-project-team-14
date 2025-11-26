@@ -6,7 +6,7 @@ import type { Rect } from "konva/lib/shapes/Rect";
 import type { Text } from "konva/lib/shapes/Text";
 import type { Stage } from "konva/lib/Stage";
 
-import { IMAGE_DIMENSIONS } from "../../../constants";
+import { IMAGE_DIMENSIONS, getPlayerName } from "../../../constants";
 import type { Item, Person } from "../../../types";
 import { globals } from "../../../constants";
 import { FrenchTTS } from "../../../utils/texttospeech";
@@ -134,6 +134,7 @@ export class ClassroomAssessmentView {
     this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
 
     this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
+
   }
 
   /** Dictionary popup */
@@ -198,9 +199,10 @@ export class ClassroomAssessmentView {
     this.layer.batchDraw();
   }
 
-  /** Render all items and person asynchronously */
+  
   async renderScene(items: Item[], person: Person, onItemClick: ItemSelectHandler) {
     this.personData = person;
+    // Keep raw dialogue lines (substitution happens when dialogue opens)
     this.dialogueLines = person.dialogue ?? [];
     this.resetPanel();
     this.clearScene();
@@ -218,7 +220,6 @@ export class ClassroomAssessmentView {
         image: img,
         draggable: true,
       });
-      //node.on("click tap", () => onItemClick(item));
       node.on("click tap", () => {
         // Add to dictionary if missing
         if (!globals.dictionary[item.english]) {
@@ -227,7 +228,7 @@ export class ClassroomAssessmentView {
         }
       
         onItemClick(item);
-        FrenchTTS.speak(item.french);
+        FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
       });
       node.on("mouseenter", () => this.setCursor("pointer"));
       node.on("mouseleave", () => this.setCursor("default"));
@@ -286,7 +287,17 @@ export class ClassroomAssessmentView {
 
   /** Dialogue logic */
   private openDialogue() {
-    if (!this.personData || this.dialogueLines.length === 0) return;
+    const raw = this.personData?.dialogue ?? [];
+    if (!this.personData || raw.length === 0) return;
+    // Re-process raw dialogue lines with current player name in case name was entered
+    const player = getPlayerName();
+    this.dialogueLines = raw.map((line) => {
+      let out = player ? line.replace(/_{2,}/g, player) : line;
+      if (/Very nice to meet you\s*$/i.test(out) && player) {
+        out = out.replace(/\s*$/, "") + " " + player;
+      }
+      return out;
+    });
     this.currentDialogueIndex = 0;
     this.updateDialogueText();
     this.applyBlur();

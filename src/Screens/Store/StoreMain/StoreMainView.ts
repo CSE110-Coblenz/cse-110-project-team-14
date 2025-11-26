@@ -1,6 +1,6 @@
 import Konva from "konva";
 import type { Item } from "../../../types"; 
-import { STAGE_WIDTH, STAGE_HEIGHT, globals } from "../../../constants"; // import globals
+import { STAGE_WIDTH, STAGE_HEIGHT, globals, getPlayerName } from "../../../constants"; // import globals
 import type { Person, DialogueNode } from "../../../types";
 import { FrenchTTS } from "../../../utils/texttospeech";
 
@@ -357,6 +357,7 @@ private createbackgroundLayer(): Konva.Rect {
     const response = await fetch("Public/ItemImage/Store/dialogue.json");
     const data = await response.json();
   
+    // resolve player name from globals or localStorage
     this.currentDialogue = data[characterName]?.greeting || ["(No dialogue found)"];
     this.popupDialogueIndex = 0;
   
