@@ -204,7 +204,16 @@ export class IntroScreenView implements View {
     this.loginGroup.getLayer()?.batchDraw();
 
     // Notify controller
+    
     this.onLoginSuccess();
+    
+    // Broadcast event so other views can update dialogue immediately
+    try {
+      const ev = new CustomEvent("playerNameUpdated", { detail: globals.playerName });
+      window.dispatchEvent(ev);
+    } catch (e) {
+      // ignore
+    }
   } 
 
   private createButton(

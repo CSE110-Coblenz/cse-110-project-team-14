@@ -129,21 +129,31 @@ export class ClassroomAssessmentView {
     this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
 
     this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
-  }
 
-  /** Render all items and person asynchronously */
-  async renderScene(items: Item[], person: Person, onItemClick: ItemSelectHandler) {
-    this.personData = person;
+    // Update open dialogue if player name changes later
+    window.addEventListener("playerNameUpdated", () => {
+      const raw = this.personData?.dialogue ?? [];
       const player = getPlayerName();
-      this.dialogueLines = (person.dialogue ?? []).map((line) => {
-        // Replace runs of underscores with the player's name
+      if (raw.length === 0) return;
+      this.dialogueLines = raw.map((line) => {
         let out = player ? line.replace(/_{2,}/g, player) : line;
-        // If the line ends with a generic greeting like "Very nice to meet you " append the name
         if (/Very nice to meet you\s*$/i.test(out) && player) {
           out = out.replace(/\s*$/, "") + " " + player;
         }
         return out;
       });
+      if (this.dialogueOverlay.visible()) {
+        this.speechText.text(this.dialogueLines[this.currentDialogueIndex] ?? "");
+        this.layer.batchDraw();
+      }
+    });
+  }
+
+  /** Render all items and person asynchronously */
+  async renderScene(items: Item[], person: Person, onItemClick: ItemSelectHandler) {
+    this.personData = person;
+    // Keep raw dialogue lines (substitution happens when dialogue opens)
+    this.dialogueLines = person.dialogue ?? [];
     this.resetPanel();
     this.clearScene();
 
@@ -227,10 +237,11 @@ export class ClassroomAssessmentView {
 
   /** Dialogue logic */
   private openDialogue() {
-    if (!this.personData || this.dialogueLines.length === 0) return;
-    // Re-process dialogue lines with current player name in case name was entered
+    const raw = this.personData?.dialogue ?? [];
+    if (!this.personData || raw.length === 0) return;
+    // Re-process raw dialogue lines with current player name in case name was entered
     const player = getPlayerName();
-    this.dialogueLines = this.dialogueLines.map((line) => {
+    this.dialogueLines = raw.map((line) => {
       let out = player ? line.replace(/_{2,}/g, player) : line;
       if (/Very nice to meet you\s*$/i.test(out) && player) {
         out = out.replace(/\s*$/, "") + " " + player;
