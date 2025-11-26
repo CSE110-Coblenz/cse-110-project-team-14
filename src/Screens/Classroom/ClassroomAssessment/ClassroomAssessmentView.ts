@@ -8,6 +8,8 @@ import type { Stage } from "konva/lib/Stage";
 
 import { IMAGE_DIMENSIONS, globals } from "../../../constants";
 import type { Item, Person } from "../../../types";
+<<<<<<<<< Temporary merge branch 1
+=========
 //import { globals } from "../../../constants";
 import { FrenchTTS } from "../../../utils/texttospeech";
 
