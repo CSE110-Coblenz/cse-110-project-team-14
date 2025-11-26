@@ -1,6 +1,7 @@
 import Konva from "konva";
 import { STAGE_HEIGHT, STAGE_WIDTH, globals } from "../../../constants";
 import type { Item } from '../../../types';
+import { FrenchTTS } from "../../../utils/texttospeech";
 
 export class RestaurantMainView {
   private group: Konva.Group;
@@ -107,13 +108,13 @@ export class RestaurantMainView {
           name: item.name,
           image: imgNode.image()
         });
-        //imgNode.on("click", () => onItemClick(item.name));
         imgNode.on("click", () => {
           if (!globals.dictionary[item.english]) {
             globals.dictionary[item.english] = item.french;
             console.log(globals.dictionary);
           }
           onItemClick(item.name);
+          FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
         });
         this.itemImages[item.name] = imgNode;
         this.group.add(imgNode);

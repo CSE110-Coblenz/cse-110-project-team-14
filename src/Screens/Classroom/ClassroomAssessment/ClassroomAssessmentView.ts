@@ -9,6 +9,7 @@ import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS } from "../../../constants";
 import type { Item, Person } from "../../../types";
 import { globals } from "../../../constants";
+import { FrenchTTS } from "../../../utils/texttospeech";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
 
@@ -159,6 +160,7 @@ export class ClassroomAssessmentView {
         }
       
         onItemClick(item);
+        FrenchTTS.speak(item.french);
       });
       node.on("mouseenter", () => this.setCursor("pointer"));
       node.on("mouseleave", () => this.setCursor("default"));
@@ -250,6 +252,8 @@ export class ClassroomAssessmentView {
     this.setArrowState(this.leftArrow, this.currentDialogueIndex > 0);
     this.setArrowState(this.rightArrow, this.currentDialogueIndex < this.dialogueLines.length - 1);
     this.layer.batchDraw();
+    // Speak current dialogue line
+    if (this.dialogueLines[this.currentDialogueIndex]) FrenchTTS.speak(this.dialogueLines[this.currentDialogueIndex]);
   }
 
   private clearScene() {
