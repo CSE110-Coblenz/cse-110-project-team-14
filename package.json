@@ -11,14 +11,22 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Fresh repository with main branch.",
   "dependencies": {
     "konva": "^10.0.9"
   },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.1",
-    "vitest": "^4.0.10"
-
-  }
+    "vitest": "^4.0.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CSE110-Coblenz/cse-110-project-team-14.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CSE110-Coblenz/cse-110-project-team-14/issues"
+  },
+  "homepage": "https://github.com/CSE110-Coblenz/cse-110-project-team-14#readme"
 }
