@@ -117,7 +117,7 @@ private createbackgroundLayer(): Konva.Rect {
     const textY = dockY + 25;
 
     const englishText = new Konva.Text({
-      x: dockX,
+      x: dockX + sectionWidth,
       y: textY,
       width: sectionWidth,
       align: "center",
@@ -127,7 +127,7 @@ private createbackgroundLayer(): Konva.Rect {
     });
 
     const frenchVocab = new Konva.Text({
-      x: dockX + sectionWidth,
+      x: dockX,
       y: textY,
       width: sectionWidth,
       align: "center",
