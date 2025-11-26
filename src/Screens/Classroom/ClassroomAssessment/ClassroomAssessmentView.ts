@@ -130,26 +130,8 @@ export class ClassroomAssessmentView {
 
     this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
 
-    // Update open dialogue if player name changes later
-    window.addEventListener("playerNameUpdated", () => {
-      const raw = this.personData?.dialogue ?? [];
-      const player = getPlayerName();
-      if (raw.length === 0) return;
-      this.dialogueLines = raw.map((line) => {
-        let out = player ? line.replace(/_{2,}/g, player) : line;
-        if (/Very nice to meet you\s*$/i.test(out) && player) {
-          out = out.replace(/\s*$/, "") + " " + player;
-        }
-        return out;
-      });
-      if (this.dialogueOverlay.visible()) {
-        this.speechText.text(this.dialogueLines[this.currentDialogueIndex] ?? "");
-        this.layer.batchDraw();
-      }
-    });
   }
 
-  /** Render all items and person asynchronously */
   async renderScene(items: Item[], person: Person, onItemClick: ItemSelectHandler) {
     this.personData = person;
     // Keep raw dialogue lines (substitution happens when dialogue opens)
