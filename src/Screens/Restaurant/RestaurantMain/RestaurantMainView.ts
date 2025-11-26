@@ -11,6 +11,8 @@ export class RestaurantMainView {
   private dockPhonetic: Konva.Text;
   private background: Konva.Rect;
   private onAssessment: () => void;
+  private dictionaryPopupGroup?: Konva.Group;
+  private dictionaryText?: Konva.Text;
 
   constructor(
     onItemClick: (itemName: string) => void,
@@ -19,6 +21,8 @@ export class RestaurantMainView {
     this.group = new Konva.Group({ visible: false });
     this.dockGroup = new Konva.Group();
     this.onAssessment = onAssessment;
+
+ 
 
     // Background
     this.background = new Konva.Rect({
@@ -95,6 +99,8 @@ export class RestaurantMainView {
     buttonText.on("click", handler);
 
     this.group.add(button, buttonText);
+    this.createDictionaryButton();
+    this.createDictionaryPopup();
   }
 
   addItems(items: Item[], onItemClick: (itemName: string) => void): void {
@@ -129,6 +135,140 @@ export class RestaurantMainView {
     this.group.getLayer()?.batchDraw();
   }
 
+  
+  //dictionary button
+  private createDictionaryButton(): void {
+    const buttonWidth = 150;
+    const buttonHeight = 50;
+    const buttonX = 40; // left side
+    const buttonY = 40;
+
+    const button = new Konva.Rect({
+      x: buttonX,
+      y: buttonY,
+      width: buttonWidth,
+      height: buttonHeight,
+      fill: "#2196f3",
+      cornerRadius: 10,
+      stroke: "black",
+      strokeWidth: 2,
+    });
+
+    const buttonText = new Konva.Text({
+      x: buttonX,
+      y: buttonY + (buttonHeight - 20) / 2,
+      width: buttonWidth,
+      align: "center",
+      text: "Dictionary",
+      fontSize: 18,
+      fontFamily: "Arial",
+      fill: "white",
+    });
+
+    const handler = () => this.showDictionaryPopup();
+    button.on("click", handler);
+    buttonText.on("click", handler);
+
+    this.group.add(button, buttonText);
+  }
+
+  private createDictionaryPopup(): void {
+    const popupWidth = 300;
+    const popupHeight = 300;
+    const x = STAGE_WIDTH / 2 - popupWidth / 2;
+    const y = STAGE_HEIGHT / 2 - popupHeight / 2;
+  
+    // Group with clipping
+    const group = new Konva.Group({
+      x,
+      y,
+      visible: false,
+      clip: {
+        x: 0,
+        y: 0,
+        width: popupWidth,
+        height: popupHeight,
+      }
+    });
+  
+    const background = new Konva.Rect({
+      width: popupWidth,
+      height: popupHeight,
+      fill: "#ffffff",
+      stroke: "#000",
+      strokeWidth: 2,
+      cornerRadius: 10,
+    });
+  
+    const text = new Konva.Text({
+      x: 20,
+      y: 20,
+      width: popupWidth - 40,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#000",
+      align: "left",
+      wrap: "word",
+    });
+  
+    group.add(background, text);
+    this.group.add(group);
+  
+    this.dictionaryPopupGroup = group;
+    this.dictionaryText = text;
+  
+    // Scroll state
+    let scrollOffset = 0;
+  
+    const updateScroll = (dy: number) => {
+      if (!this.dictionaryText) return;
+  
+      scrollOffset -= dy; // moving wheel down should move text up
+  
+      const minY = Math.min(popupHeight - 40 - text.height(), 0); // bottom limit
+      const maxY = 20; // top limit
+  
+      if (scrollOffset < minY) scrollOffset = minY;
+      if (scrollOffset > maxY) scrollOffset = maxY;
+  
+      this.dictionaryText.y(scrollOffset);
+      this.group.getLayer()?.draw();
+    };
+  
+    // Wheel event
+    group.on("wheel", (e) => {
+      e.evt.preventDefault(); // prevent page scroll
+      updateScroll(e.evt.deltaY);
+    });
+  
+    group.name("dictionaryPopup");
+  
+    // Click outside to closea
+    this.group.on("mousedown", (e) => {
+      if (!this.dictionaryPopupGroup?.visible()) return;
+      if (!e.target.hasName("dictionaryPopup")) {
+        this.dictionaryPopupGroup.visible(false);
+        this.group.getLayer()?.draw();
+      }
+    });
+  }
+  
+  
+  private showDictionaryPopup(): void {
+    if (!this.dictionaryPopupGroup || !this.dictionaryText) return;
+  
+    const entries = Object.entries(globals.dictionary);
+    const textContent = entries.map(([english, french]) => `${english} / ${french}`).join("\n");
+  
+    this.dictionaryText.text(textContent || "No Words Found!");
+  
+    // Reset scroll position
+    this.dictionaryText.y(20);
+  
+    this.dictionaryPopupGroup.visible(true);
+    this.dictionaryPopupGroup.moveToTop();
+    this.group.getLayer()?.draw();
+  }
   show(): void {
     this.group.visible(true);
     this.group.getLayer()?.batchDraw();
