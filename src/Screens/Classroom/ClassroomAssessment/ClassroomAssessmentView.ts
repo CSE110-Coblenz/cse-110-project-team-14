@@ -196,6 +196,8 @@ import type { Stage } from "konva/lib/Stage";
 
 import { IMAGE_DIMENSIONS, globals } from "../../../constants";
 import type { Item, Person } from "../../../types";
+//import { globals } from "../../../constants";
+import { FrenchTTS } from "../../../utils/texttospeech";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
 
@@ -402,27 +404,31 @@ export class ClassroomAssessmentView {
     const spacing = this.stage.width() / (items.length + 2);
     const targetY = this.stage.height() * 0.2;
 
-    await Promise.all(
-      items.map(async (item, i) => {
-        const img = await this.loadImage(item.image);
-        const node = new Konva.Image({
-          x: spacing * (i + 1) - IMAGE_DIMENSIONS.width / 2,
-          y: targetY,
-          width: IMAGE_DIMENSIONS.width,
-          height: IMAGE_DIMENSIONS.height,
-          image: img,
-          draggable: true,
-        });
-        node.on("click tap", () => {
-          if (!globals.dictionary[item.english]) globals.dictionary[item.english] = item.french;
-          onItemClick(item);
-        });
-        node.on("mouseenter", () => this.setCursor("pointer"));
-        node.on("mouseleave", () => this.setCursor("default"));
-        this.backgroundGroup.add(node);
-        this.itemImages.push(node);
-      })
-    );
+    await Promise.all(items.map(async (item, i) => {
+      const img = await this.loadImage(item.image);
+      const node = new Konva.Image({
+        x: spacing * (i + 1) - IMAGE_DIMENSIONS.width / 2,
+        y: targetY,
+        width: IMAGE_DIMENSIONS.width,
+        height: IMAGE_DIMENSIONS.height,
+        image: img,
+        draggable: true,
+      });
+      //node.on("click tap", () => onItemClick(item));
+      node.on("click tap", () => {
+        // Add to dictionary if missing
+        if (!globals.dictionary[item.english]) {
+          globals.dictionary[item.english] = item.french;
+          console.log("Dictionary updated:", globals.dictionary);
+        }
+      
+        onItemClick(item);
+      });
+      node.on("mouseenter", () => this.setCursor("pointer"));
+      node.on("mouseleave", () => this.setCursor("default"));
+      this.backgroundGroup.add(node);
+      this.itemImages.push(node);
+    }));
 
     const personImg = await this.loadImage(person.image);
     const personNode = new Konva.Image({
@@ -506,6 +512,8 @@ export class ClassroomAssessmentView {
     this.setArrowState(this.leftArrow, this.currentDialogueIndex > 0);
     this.setArrowState(this.rightArrow, this.currentDialogueIndex < this.dialogueLines.length - 1);
     this.layer.batchDraw();
+    // Speak current dialogue line
+    if (this.dialogueLines[this.currentDialogueIndex]) FrenchTTS.speak(this.dialogueLines[this.currentDialogueIndex]);
   }
 
   private clearScene() {
