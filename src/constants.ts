@@ -1,5 +1,6 @@
 
 export const globals = {
+    playerName: "",
     dictionary: {} as Record<string, string>,
     progress: {
         numItems: 0,
@@ -7,6 +8,16 @@ export const globals = {
         assessmentScore: 0,
     },
 };
+
+export function getPlayerName(): string {
+    if (globals.playerName && globals.playerName.length > 0) return globals.playerName;
+    try {
+        const stored = localStorage.getItem("playerName");
+        return stored ?? "";
+    } catch (e) {
+        return "";
+    }
+}
 
 export const IMAGE_DIMENSIONS = {
     width: 200,
