@@ -1,5 +1,21 @@
 {
   "clerk": {
-    "greeting": ["Hello!", "How are you?", "Can I help you with something?"]
+    "greeting": [ "Bonjour! Vous parlez français?..",
+    "Pardon me, you must be our new neighbor from America!",
+    "Welcome to the store! In French, that's « Bienvenue au magasin ! ».",
+    "My name is Celine. You may call me Monsieur Celine if you like…",
+    
+    "Here we speak simple French every day.",
+    "For example, to say 'I have', we say « J’ai ».",
+    "Like: « J’ai une pomme » — I have an apple.",
+    
+    "To say 'I like', we say « J’aime ».",
+    "For example: « J’aime le fromage » — I like cheese.",
+    
+    "To say 'I want', we say « Je veux ».",
+    "Like: « Je veux une banane » — I want a banana.",
+    
+    "Very simple, right?",
+    "Have fun learning!"]
   }
 }

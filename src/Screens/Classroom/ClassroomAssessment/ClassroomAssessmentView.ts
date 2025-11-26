@@ -38,6 +38,7 @@ export class ClassroomAssessmentView {
   private readonly speechText: Text;
   private readonly leftArrow: Group;
   private readonly rightArrow: Group;
+  private readonly dictionaryButton: Group;
 
   private itemImages: KonvaImage[] = [];
   private personIcon?: KonvaImage;
@@ -48,6 +49,8 @@ export class ClassroomAssessmentView {
   private switchHandler?: () => void;
   private resetHandler?: () => void;
   private minigameHandler?: () => void;
+  private dictionaryPopupGroup?: Konva.Group;
+  private dictionaryText?: Konva.Text;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -73,10 +76,12 @@ export class ClassroomAssessmentView {
     this.backgroundGroup.add(this.frenchText, this.phoneticText, this.englishText, this.progressText);
 
     // Buttons
-    this.switchButton = this.createButton("Switch to Restaurant", 30, 24, () => this.switchHandler?.());
+    this.switchButton = this.createButton("Switch to Store", 30, 24, () => this.switchHandler?.());
     this.resetButton = this.createButton("Reset", 210, 24, () => this.resetHandler?.());
     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () => this.minigameHandler?.());
-    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton);
+    this.dictionaryButton = this.createButton("Dictionary", 570, 24, () => this.showDictionaryPopup());
+    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton, this.dictionaryButton);
+    this.createDictionaryPopup();
 
     // Dialogue overlay
     this.overlayScrim = new Konva.Rect({
@@ -129,6 +134,68 @@ export class ClassroomAssessmentView {
     this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
 
     this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
+  }
+
+  /** Dictionary popup */
+  private createDictionaryPopup(): void {
+    const width = 300;
+    const height = 300;
+    const x = this.stage.width() / 2 - width / 2;
+    const y = this.stage.height() / 2 - height / 2;
+
+    const group = new Konva.Group({ x, y, visible: false, clip: { x: 0, y: 0, width, height } });
+    const background = new Konva.Rect({ width, height, fill: "#fff", stroke: "#000", strokeWidth: 2, cornerRadius: 10 });
+    const text = new Konva.Text({
+      x: 20,
+      y: 20,
+      width: width - 40,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#000",
+      align: "left",
+      wrap: "word",
+      text: "",
+    });
+
+    group.add(background, text);
+    this.backgroundGroup.add(group);
+    this.dictionaryPopupGroup = group;
+    this.dictionaryText = text;
+
+    let scrollOffset = 0;
+    const updateScroll = (dy: number) => {
+      if (!this.dictionaryText) return;
+      scrollOffset -= dy;
+      const minY = Math.min(height - 40 - text.height(), 0);
+      const maxY = 20;
+      scrollOffset = Math.max(minY, Math.min(scrollOffset, maxY));
+      this.dictionaryText.y(scrollOffset);
+      this.layer.batchDraw();
+    };
+
+    group.on("wheel", (e) => {
+      e.evt.preventDefault();
+      updateScroll(e.evt.deltaY);
+    });
+
+    this.backgroundGroup.on("mousedown", (e) => {
+      if (!this.dictionaryPopupGroup?.visible()) return;
+      if (!e.target.isAncestorOf(this.dictionaryPopupGroup)) {
+        this.dictionaryPopupGroup.visible(false);
+        this.layer.batchDraw();
+      }
+    });
+  }
+
+  private showDictionaryPopup(): void {
+    if (!this.dictionaryPopupGroup || !this.dictionaryText) return;
+
+    const entries = Object.entries(globals.dictionary);
+    this.dictionaryText.text(entries.map(([eng, fr]) => `${eng} / ${fr}`).join("\n") || "No words found");
+    this.dictionaryText.y(20);
+    this.dictionaryPopupGroup.visible(true);
+    this.dictionaryPopupGroup.moveToTop();
+    this.layer.batchDraw();
   }
 
   /** Render all items and person asynchronously */
@@ -190,7 +257,7 @@ export class ClassroomAssessmentView {
   }
 
   /** Setters for buttons */
-  setOnSwitchToRestaurant(handler: () => void) { this.switchHandler = handler; }
+  setOnSwitchToStore(handler: () => void) { this.switchHandler = handler; }
   setOnReset(handler: () => void) { this.resetHandler = handler; }
   setOnSwitchToMinigame(handler: () => void) { this.minigameHandler = handler; }
 

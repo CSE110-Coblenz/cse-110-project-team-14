@@ -1,12 +1,12 @@
 [
     {
         "name": "tomato",
-        "english": "Tomato",
-        "french": "Tomate",
+        "english": "tomato",
+        "french": "tomate",
         "phonetic": "toh-maht",
         "image": "/ItemImage/Store/tomato.png",
-        "x": 40,
-        "y": 325
+        "x": 75,
+        "y": 425
     },
     {
         "name": "brocolli",
@@ -14,26 +14,26 @@
         "french": "brocoli",
         "phonetic": "broh-koh-LEE",
         "image": "/ItemImage/Store/brocolli.png",
-        "x": 40,
-        "y": 450
+        "x": 80,
+        "y": 580
     },
     {
         "name": "apple",
-        "english": "Apple",
-        "french": "Pomme",
+        "english": "apple",
+        "french": "pomme",
         "phonetic": "pom",
         "image": "/ItemImage/Store/apple.png",
-        "x": 35,
-        "y": 120
+        "x": 75,
+        "y": 155
     },
     {
         "name": "banana",
-        "english": "Banana",
-        "french": "Banane",
+        "english": "banana",
+        "french": "banane",
         "phonetic": "bah-nahn",
         "image": "/ItemImage/Store/banana.png",
-        "x": 35,
-        "y": 200
+        "x": 75,
+        "y": 265
     },
     {
         "name": "milk",
@@ -41,8 +41,8 @@
         "french": "lait",
         "phonetic": "leh",
         "image": "/ItemImage/Store/milk.png",
-        "x": 230,
-        "y": 145
+        "x": 450,
+        "y": 180
     },
     {
         "name": "egg",
@@ -50,8 +50,8 @@
         "french": "œuf",
         "phonetic": "uhf",
         "image": "/ItemImage/Store/egg.png",
-        "x": 225,
-        "y": 60
+        "x": 450,
+        "y": 70
     },
     {
         "name": "beef",
@@ -59,8 +59,8 @@
         "french": "bœuf",
         "phonetic": "buff",
         "image": "/ItemImage/Store/beef.png",
-        "x": 250,
-        "y": 320
+        "x": 475,
+        "y": 400
     },
     {
         "name": "fishy",
@@ -68,8 +68,8 @@
         "french": "poisson",
         "phonetic": "pwah-sohn",
         "image": "/ItemImage/Store/fishs.png",
-        "x": 250,
-        "y": 225
+        "x": 470,
+        "y": 285
     },
     {
         "name": "cheese",
@@ -77,8 +77,8 @@
         "french": "fromage",
         "phonetic": "froh-mahzh",
         "image": "ItemImage/Store/cheese.png",
-        "x": 315,
-        "y": 240
+        "x": 600,
+        "y": 300
     }
    
 ]
