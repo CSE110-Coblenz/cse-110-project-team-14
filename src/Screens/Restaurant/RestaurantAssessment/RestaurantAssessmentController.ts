@@ -1,11 +1,10 @@
-import { globals } from "../../../constants.js";
+import type { ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
-import type { ScreenSwitcher } from "../../../types.ts";
-import { RestaurantAssessmentModel } from './RestaurantAssessmentModel';
-import { RestaurantAssessmentView } from './RestaurantAssessmentView';
+import { RestaurantAssessmentModel } from "./RestaurantAssessmentModel";
+import { RestaurantAssessmentView } from "./RestaurantAssessmentView";
 
 export class RestaurantAssessmentController extends ScreenController {
-  private model: RestaurantAssessmentModel;
+  private model = new RestaurantAssessmentModel();
   private view: RestaurantAssessmentView;
   private screenSwitcher: ScreenSwitcher;
   private typingBuffer = "";
@@ -13,60 +12,53 @@ export class RestaurantAssessmentController extends ScreenController {
   constructor(screenSwitcher: ScreenSwitcher) {
     super();
     this.screenSwitcher = screenSwitcher;
-    this.model = new RestaurantAssessmentModel();
 
     this.view = new RestaurantAssessmentView(
       () => this.switchToRestaurant(),
-      () => this.switchToIntro()                     // NEW CONTINUE BUTTON
+      () => this.restart()
     );
 
-    this.setupTypingHandler();
+    this.setupTyping();
   }
 
   async start(): Promise<void> {
     await this.model.load_questions("/ItemImage/Restaurant/questions.json");
-    this.view.show();
     this.showQuestionHandler();
+    this.view.show();
   }
 
   private showQuestionHandler(): void {
     const problem = this.model.getCurrentQuestion();
     if (!problem) return;
 
-    this.view.updateProgress(
-      this.model.getIndex() + 1,
-      this.model.getTotal(),
-      this.model.getScore()
-    );
+    const score = this.model.getCurrentScore();
+    const total = this.model.getTotalCount();
 
     if (problem.type === "mcq") {
-      this.view.showMCQ(problem, (picked) => this.handleMCQ(picked));
+      this.view.showMCQ(problem, score, total, (choice) =>
+        this.handleMCQ(choice)
+      );
     } else {
       this.typingBuffer = "";
-      this.view.showTyping(problem, this.typingBuffer);
+      this.view.showTyping(problem, this.typingBuffer, score, total);
     }
   }
 
-  private handleMCQ(answerIndex: number): void {
-    const correct = this.model.answerMC(answerIndex);
-    this.updateProgress(correct);
-  }
-
-  private updateProgress(correct: boolean) {
-    if (correct) globals.progress.assessmentScore++;
-
+  private handleMCQ(choice: number): void {
+    const correct = this.model.answerMC(choice);
     this.view.showFeedback(correct);
     setTimeout(() => this.advance(), 1200);
   }
 
-  private setupTypingHandler(): void {
+  private setupTyping(): void {
     window.addEventListener("keydown", (e) => {
-      const problem = this.model.getCurrentQuestion();
-      if (!problem || problem.type !== "type") return;
+      const q = this.model.getCurrentQuestion();
+      if (!q || q.type !== "type") return;
 
       if (e.key === "Enter") {
         const correct = this.model.answerTyping(this.typingBuffer);
-        this.updateProgress(correct);
+        this.view.showFeedback(correct);
+        setTimeout(() => this.advance(), 1200);
         return;
       }
 
@@ -82,13 +74,17 @@ export class RestaurantAssessmentController extends ScreenController {
 
   private advance(): void {
     this.model.next();
+
     if (this.model.isFinished()) {
+      this.model.updateBestScore();
       this.view.showResults(
-        this.model.getScore(),
-        this.model.getTotal()
+        this.model.getCurrentScore(),
+        this.model.getTotalCount(),
+        this.model.getBestScore()
       );
       return;
     }
+
     this.showQuestionHandler();
   }
 
@@ -96,11 +92,12 @@ export class RestaurantAssessmentController extends ScreenController {
     this.screenSwitcher.switchToScreen({ type: "Restaurant" });
   }
 
-  private switchToIntro(): void {         // NEW BUTTON CALLBACK
-    this.screenSwitcher.switchToScreen({ type: "Intro" });
+  restart(): void {
+    this.model.reset();
+    this.start(); // reloads questions & starts again
   }
 
-  getView(): RestaurantAssessmentView { return this.view; }
-  show(): void { this.view.show(); }
-  hide(): void { this.view.hide(); }
+  getView() {
+    return this.view;
+  }
 }

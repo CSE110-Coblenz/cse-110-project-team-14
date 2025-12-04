@@ -73,7 +73,8 @@ export class App implements ScreenSwitcher {
     this.minigameController = new ClassroomMinigameController(
       this.stage,
       this.layer,
-      classroomItems
+      classroomItems,
+      this
     );
     await this.minigameController.start();
     this.layer.add(this.minigameController.getView().getGroup());

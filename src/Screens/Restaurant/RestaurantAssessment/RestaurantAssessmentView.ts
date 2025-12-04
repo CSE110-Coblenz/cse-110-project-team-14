@@ -1,176 +1,222 @@
 import Konva from "konva";
 import { STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
-import type { MCProblem, TypingProblem } from '../../../types';
+import type { MCProblem, TypingProblem } from "../../../types";
 
 export class RestaurantAssessmentView {
-  private group = new Konva.Group({ visible: false });
+  private group: Konva.Group = new Konva.Group({ visible: false });
   private typingText?: Konva.Text;
-  private progressText: Konva.Text;
+  private scoreText?: Konva.Text;
   private onRestaurant: () => void;
-  private onIntro: () => void;
+  private onRestart: () => void;
 
-  constructor(onRestaurant: () => void, onIntro: () => void) {
+  constructor(onRestaurant: () => void, onRestart: () => void) {
     this.onRestaurant = onRestaurant;
-    this.onIntro = onIntro;
+    this.onRestart = onRestart;
 
     const bg = new Konva.Rect({
-      x: 0, y: 0, width: STAGE_WIDTH, height: STAGE_HEIGHT,
-      fill: "#f5f1e6"
+      x: 0,
+      y: 0,
+      width: STAGE_WIDTH,
+      height: STAGE_HEIGHT,
+      fill: "#FFF8EB",
     });
     this.group.add(bg);
+  }
 
-    this.progressText = new Konva.Text({
-      x: 40, y: 30, fontSize: 26,
-      fill: "#1b1b1b",
-      fontFamily: "Arial",
-      text: "",
+  // ----------------- QUESTION SCREENS --------------------
+
+  showMCQ(
+    problem: MCProblem,
+    score: number,
+    total: number,
+    callback: (pickedIndex: number) => void
+  ): void {
+    this.clear();
+
+    this.addScore(score, total);
+
+    const question = new Konva.Text({
+      x: 60,
+      y: 120,
+      text: problem.question,
+      fontSize: 32,
+      fill: "#1a1a1a",
+      width: STAGE_WIDTH - 120,
     });
-
-    this.group.add(this.progressText);
-  }
-
-  updateProgress(current: number, total: number, score: number) {
-    this.progressText.text(`Question ${current} / ${total}   Score: ${score}`);
-    this.redraw();
-  }
-
-  showMCQ(problem: MCProblem, callback: (picked: number) => void): void {
-    this.clearExceptProgress();
-    this.group.add(this.createQuestion(problem.question));
+    this.group.add(question);
 
     problem.options.forEach((opt, i) => {
-      const group = new Konva.Group({ x: 120, y: 200 + i * 90 });
-
-      const rect = new Konva.Rect({
-        width: STAGE_WIDTH - 240, height: 70,
-        fill: "#ece2d0", cornerRadius: 12,
-        stroke: "#6b4e14", strokeWidth: 2,
-        shadowColor: "rgba(0,0,0,0.25)",
-        shadowBlur: 8, shadowOffsetY: 4,
-      });
-
-      const text = new Konva.Text({
-        width: STAGE_WIDTH - 240, height: 70,
-        text: opt, align: "center", verticalAlign: "middle",
-        fontSize: 24, fontFamily: "Arial", listening: false
-      });
-
-      group.add(rect, text);
-      group.on("click tap", () => callback(i));
-      this.cursor(group);
-      this.group.add(group);
+      const btn = this.makeButton(80, 240 + i * 90, 700, 70, opt, "#DCE5F2");
+      btn.rect.on("click", () => callback(i));
+      btn.text.on("click", () => callback(i));
     });
 
-    this.redraw();
+    this.group.getLayer()?.draw();
   }
 
-  showTyping(problem: TypingProblem, typed: string): void {
-    this.clearExceptProgress();
+  showTyping(
+    problem: TypingProblem,
+    typed: string,
+    score: number,
+    total: number
+  ): void {
+    this.clear();
 
-    this.group.add(this.createQuestion(problem.question));
+    this.addScore(score, total);
+
+    const q = new Konva.Text({
+      x: 60,
+      y: 120,
+      text: problem.question,
+      fontSize: 32,
+      fill: "#1a1a1a",
+      width: STAGE_WIDTH - 120,
+    });
+    this.group.add(q);
 
     this.typingText = new Konva.Text({
-      x: 120, y: 240, width: STAGE_WIDTH - 240,
-      fontSize: 32, fill: "#004aad",
-      text: typed
+      x: 60,
+      y: 240,
+      text: typed,
+      fontSize: 32,
+      fill: "#004AAD",
     });
-
     this.group.add(this.typingText);
-    this.redraw();
+
+    this.group.getLayer()?.draw();
   }
 
-  updateTypingText(text: string) {
-    if (!this.typingText) return;
-    this.typingText.text(text);
-    this.redraw();
+  updateTypingText(text: string): void {
+    if (this.typingText) {
+      this.typingText.text(text);
+      this.group.getLayer()?.draw();
+    }
   }
 
   showFeedback(correct: boolean): void {
-    this.clearExceptProgress();
+    this.clear();
     const msg = new Konva.Text({
-      x: 0, y: STAGE_HEIGHT / 2 - 40,
-      width: STAGE_WIDTH, align: "center",
-      fontSize: 48, fontFamily: "Arial",
-      fill: correct ? "#2e7d32" : "#c62828",
+      x: 60,
+      y: 240,
       text: correct ? "Correct!" : "Wrong!",
+      fontSize: 46,
+      fill: correct ? "#20A020" : "#D02020",
     });
     this.group.add(msg);
-    this.redraw();
   }
 
-  showResults(score: number, total: number): void {
-    this.clearExceptProgress();
+  // ----------------- RESULTS SCREEN --------------------
 
-    const txt = new Konva.Text({
-      x: 0, y: STAGE_HEIGHT / 2 - 100,
-      width: STAGE_WIDTH, align: "center",
-      fontSize: 42, text: `Final Score: ${score} / ${total}`,
-      fontFamily: "Arial"
+  showResults(score: number, total: number, best: number): void {
+    this.clear();
+
+    const title = new Konva.Text({
+      x: 60,
+      y: 160,
+      text: `Final Score: ${score} / ${total}`,
+      fontSize: 46,
+      fill: "#000",
     });
+    this.group.add(title);
 
-    this.group.add(txt);
+    const bestScore = new Konva.Text({
+      x: 60,
+      y: 240,
+      text: `Best Score: ${best} / ${total}`,
+      fontSize: 40,
+      fill: "#444",
+    });
+    this.group.add(bestScore);
 
-    this.group.add(this.makeGreenButton("Back to Restaurant", () => this.onRestaurant(), -80));
-    this.group.add(this.makeGreenButton("Continue Learning", () => this.onIntro(), 10));
+    // Buttons positioned below score
+    this.makeCenterButton(
+      STAGE_HEIGHT - 220,
+      "Retry Assessment",
+      "#1D4ED8",
+      this.onRestart
+    );
 
-    this.redraw();
+    this.makeCenterButton(
+      STAGE_HEIGHT - 140,
+      "Continue Learning",
+      "#22A853",
+      this.onRestaurant
+    );
+
+    this.group.getLayer()?.draw();
   }
 
-  // Helpers ------------------------------------------------------
+  // ----------------- UI Helpers --------------------
 
-  private createQuestion(text: string): Konva.Text {
-    return new Konva.Text({
-      x: 0, y: 120, width: STAGE_WIDTH,
-      align: "center", fontSize: 32,
-      text, fontFamily: "Arial",
+  private addScore(score: number, total: number) {
+    this.scoreText = new Konva.Text({
+      x: STAGE_WIDTH - 260,
+      y: 40,
+      text: `Score: ${score} / ${total}`,
+      fontSize: 26,
+      fill: "#0F172A",
     });
+    this.group.add(this.scoreText);
   }
 
-  private makeGreenButton(label: string, handler: () => void, offsetY: number): Konva.Group {
-    const width = 340, height = 70;
-    const group = new Konva.Group({
-      x: STAGE_WIDTH / 2 - width / 2,
-      y: STAGE_HEIGHT / 2 + offsetY,
-    });
-
+  private makeButton(x: number, y: number, w: number, h: number, txt: string, color: string) {
     const rect = new Konva.Rect({
-      width, height, fill: "#4CAF50",
-      stroke: "#2E7D32", strokeWidth: 3,
-      cornerRadius: 18,
-      shadowColor: "rgba(0,0,0,0.35)",
-      shadowBlur: 12, shadowOffsetY: 5,
+      x,
+      y,
+      width: w,
+      height: h,
+      fill: color,
+      cornerRadius: 12,
+      stroke: "#222",
+      strokeWidth: 2,
     });
 
     const text = new Konva.Text({
-      width, height, align: "center",
-      verticalAlign: "middle",
-      text: label, fontSize: 24,
-      fontFamily: "Arial", fill: "white", listening: false
+      x,
+      y: y + 18,
+      width: w,
+      align: "center",
+      text: txt,
+      fontSize: 24,
+      fontFamily: "Arial",
+      fill: "#111",
     });
 
-    group.add(rect, text);
-    group.on("click tap", handler);
-    this.cursor(group);
-    return group;
+    this.group.add(rect, text);
+    return { rect, text };
   }
 
-  private cursor(node: Konva.Node) {
-    node.on("mouseenter", () => document.body.style.cursor = "pointer");
-    node.on("mouseleave", () => document.body.style.cursor = "default");
+  private makeCenterButton(y: number, txt: string, color: string, cb: () => void) {
+    const w = 300;
+    const h = 60;
+    const x = (STAGE_WIDTH - w) / 2;
+
+    const { rect, text } = this.makeButton(x, y, w, h, txt, color);
+    rect.on("click", cb);
+    text.on("click", cb);
   }
 
-  private clearExceptProgress() {
-    const keep = this.progressText;
+  clear(): void {
     this.group.destroyChildren();
-    this.group.add(new Konva.Rect({ x: 0, y: 0, width: STAGE_WIDTH, height: STAGE_HEIGHT, fill: "#f5f1e6" }));
-    this.group.add(keep);
+    const bg = new Konva.Rect({
+      x: 0,
+      y: 0,
+      width: STAGE_WIDTH,
+      height: STAGE_HEIGHT,
+      fill: "#FFF8EB",
+    });
+    this.group.add(bg);
   }
 
-  private redraw() {
-    this.group.getLayer()?.batchDraw();
+  show(): void {
+    this.group.visible(true);
   }
 
-  show() { this.group.visible(true); this.redraw(); }
-  hide() { this.group.visible(false); this.redraw(); }
-  getGroup() { return this.group; }
+  hide(): void {
+    this.group.visible(false);
+  }
+
+  getGroup(): Konva.Group {
+    return this.group;
+  }
 }

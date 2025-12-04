@@ -1,42 +1,45 @@
 import type { Layer } from "konva/lib/Layer";
 import type { Stage } from "konva/lib/Stage";
-import type { Item } from "../../../types";
+import type { Item, ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
 import { ClassroomMinigameModel } from "./ClassroomMinigameModel";
 import { ClassroomMinigameView } from "./ClassroomMinigameView";
 
 /**
- * Represents a visual basket in the minigame.
+ * Controller for the Classroom Minigame.
  */
 interface BasketData {
-  name: string;       // French label or English name
-  imageSrc: string;   // Basket image
+  name: string;
+  imageSrc: string;
 }
 
-/**
- * Controller for the Classroom Minigame.
- * - Manages interactions between the model and view
- * - Handles item drops, feedback, and game completion
- */
 export class ClassroomMinigameController extends ScreenController {
   private model: ClassroomMinigameModel;
   private view: ClassroomMinigameView;
-  private baskets: BasketData[] = [];  // dynamically generated from items
-  private onComplete?: () => void;
+  private baskets: BasketData[] = [];
+  private screenSwitcher: ScreenSwitcher;
 
-  constructor(stage: Stage, layer: Layer, items: Item[]) {
+  constructor(stage: Stage, layer: Layer, items: Item[], screenSwitcher: ScreenSwitcher) {
     super();
+    this.screenSwitcher = screenSwitcher;
+
     this.model = new ClassroomMinigameModel(items);
     this.view = new ClassroomMinigameView(stage, layer);
 
-    // Dynamically create baskets from items (one basket per item's French name)
-    this.baskets = items.map(item => ({
-      name: item.french,
-      imageSrc: "ItemImage/Classroom/basket.png" // could be customized per item
+    // one basket per unique French word
+    const uniqueFrench = Array.from(new Set(items.map((i) => i.french)));
+    this.baskets = uniqueFrench.map((fr) => ({
+      name: fr,
+      imageSrc: "ItemImage/Classroom/basket.png",
     }));
+
+    // wire back button
+    this.view.setOnBackToClassroom(() => {
+      this.model.reset();
+      this.screenSwitcher.switchToScreen({ type: "Classroom" });
+    });
   }
 
-  /** Return the view for scene layering */
   getView(): ClassroomMinigameView {
     return this.view;
   }
@@ -45,7 +48,6 @@ export class ClassroomMinigameController extends ScreenController {
     return this.model.getItems();
   }
 
-  /** Start the minigame by rendering items and baskets */
   async start(): Promise<void> {
     await this.view.renderScene(
       this.model.getItems(),
@@ -55,39 +57,20 @@ export class ClassroomMinigameController extends ScreenController {
     this.view.show();
   }
 
-  /** Handle logic when an item is dropped onto a basket */
-  private handleItemDrop(item: Item, basketName: string) {
-    const isCorrect = this.model.placeItemInBasket(item.name, basketName);
-
-    this.showFeedback(item, basketName, isCorrect);
+  private handleItemDrop(item: Item, basketName: string): void {
+    this.model.placeItem(item.name, basketName);
 
     if (this.model.allItemsPlaced()) {
-      this.finishGame();
+      const correct = this.model.getCorrectCount();
+      const total = this.model.getTotal();
+      this.view.showFinalResult(correct, total);
     }
-  }
-
-  /** Show a floating feedback cloud with correctness info */
-  private showFeedback(item: Item, basketName: string, correct: boolean) {
-    const message = correct
-      ? `✔ Correct! ${item.french} goes in ${basketName}.`
-      : `✖ Oops! ${item.french} doesn’t go in ${basketName}.`;
-
-    this.view.showFeedback(message, correct);
-  }
-
-  /** Trigger when all items have been placed correctly */
-  private finishGame() {
-    if (this.onComplete) this.onComplete();
-  }
-
-  /** Allow external code to attach a completion handler */
-  setOnComplete(handler: () => void) {
-    this.onComplete = handler;
   }
 
   hide(): void {
     this.view.hide();
   }
+
   show(): void {
     this.view.show();
   }
