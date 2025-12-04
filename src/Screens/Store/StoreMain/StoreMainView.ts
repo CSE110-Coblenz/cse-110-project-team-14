@@ -311,8 +311,8 @@ private createBackButton(): void {
   private createPopup(): void {
     const popupWidth = 250;
     const popupHeight = 150;
-    const x = 375;
-    const y = 100;
+    const x = 775;
+    const y = 200;
   
     const group = new Konva.Group({
       x,

@@ -25,6 +25,7 @@ export class RestaurantMainController extends ScreenController {
   }
 
   async start(): Promise<void> {
+    this.view.loadBackground("Public/Background/restaurant.png");
     await this.model.load_items("/ItemImage/Restaurant/items.json");
     const items = this.model.get_items();
     this.view.addItems(items, (itemName) => this.handleItemClick(itemName));
