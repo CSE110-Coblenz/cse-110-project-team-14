@@ -6,9 +6,8 @@ import type { Rect } from "konva/lib/shapes/Rect";
 import type { Text } from "konva/lib/shapes/Text";
 import type { Stage } from "konva/lib/Stage";
 
-import { IMAGE_DIMENSIONS, getPlayerName } from "../../../constants";
+import { IMAGE_DIMENSIONS, getPlayerName, globals } from "../../../constants";
 import type { Item, Person } from "../../../types";
-import { globals } from "../../../constants";
 import { FrenchTTS } from "../../../utils/texttospeech";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
@@ -31,6 +30,7 @@ export class ClassroomAssessmentView {
   private readonly switchButton: Group;
   private readonly resetButton: Group;
   private readonly minigameButton: Group;
+  private readonly backButton: Group;
 
   private readonly overlayScrim: Rect;
   private readonly overlayCharacter: KonvaImage;
@@ -49,6 +49,7 @@ export class ClassroomAssessmentView {
   private switchHandler?: () => void;
   private resetHandler?: () => void;
   private minigameHandler?: () => void;
+  private backHandler?: () => void;
   private dictionaryPopupGroup?: Konva.Group;
   private dictionaryText?: Konva.Text;
 
@@ -80,7 +81,8 @@ export class ClassroomAssessmentView {
     this.resetButton = this.createButton("Reset", 210, 24, () => this.resetHandler?.());
     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () => this.minigameHandler?.());
     this.dictionaryButton = this.createButton("Dictionary", 570, 24, () => this.showDictionaryPopup());
-    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton, this.dictionaryButton);
+    this.backButton = this.createButton("Back", 750, 24, () => this.backHandler?.());
+    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton, this.dictionaryButton, this.backButton);
     this.createDictionaryPopup();
 
     // Dialogue overlay
@@ -261,6 +263,7 @@ export class ClassroomAssessmentView {
   setOnSwitchToStore(handler: () => void) { this.switchHandler = handler; }
   setOnReset(handler: () => void) { this.resetHandler = handler; }
   setOnSwitchToMinigame(handler: () => void) { this.minigameHandler = handler; }
+  setOnBack(handler: () => void) { this.backHandler = handler; }
 
   /** Panel updates */
   updatePanel(item: Item) {

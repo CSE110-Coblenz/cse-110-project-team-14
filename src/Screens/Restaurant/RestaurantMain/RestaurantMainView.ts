@@ -11,18 +11,20 @@ export class RestaurantMainView {
   private dockPhonetic: Konva.Text;
   private background: Konva.Rect;
   private onAssessment: () => void;
+  private onBackClick!: () => void;
+
   private dictionaryPopupGroup?: Konva.Group;
   private dictionaryText?: Konva.Text;
 
   constructor(
     onItemClick: (itemName: string) => void,
-    onAssessment: () => void
+    onAssessment: () => void,
+    onBackClick: () => void
   ) {
     this.group = new Konva.Group({ visible: false });
     this.dockGroup = new Konva.Group();
     this.onAssessment = onAssessment;
-
- 
+    this.onBackClick = onBackClick;
 
     // Background
     this.background = new Konva.Rect({
@@ -68,41 +70,114 @@ export class RestaurantMainView {
 
     this.group.add(this.dockGroup);
 
-    // Assessment button
-    const buttonWidth = 180;
-    const buttonHeight = 50;
-    const buttonX = STAGE_WIDTH - buttonWidth - 40;
-    const buttonY = 40;
+    // NAV BAR BUTTONS
+    this.createNavigationButtons();
+    this.createAssessmentButton();
 
-    const button = new Konva.Rect({
-      x: buttonX,
-      y: buttonY,
-      width: buttonWidth,
-      height: buttonHeight,
-      fill: "#8bc34aff",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
-
-    const buttonText = new Konva.Text({
-      x: buttonX + 20,
-      y: buttonY + 12,
-      text: "Start Assessment",
-      fontSize: 18,
-      fontFamily: "Arial",
-      fill: "black",
-    });
-
-    const handler = () => this.onAssessment();
-    button.on("click", handler);
-    buttonText.on("click", handler);
-
-    this.group.add(button, buttonText);
-    this.createDictionaryButton();
+    // Dictionary popup
     this.createDictionaryPopup();
   }
 
+  // -----------------------------
+  // TOP NAV BAR BUTTONS
+  // -----------------------------
+  private createNavigationButtons(): void {
+    const btnY = 24;
+
+    const backBtn = this.createNavButton("Back to Intro", 30, btnY, () => this.onBackClick());
+    this.group.add(backBtn);
+
+    const dictBtn = this.createNavButton("Dictionary", 240, btnY, () => this.showDictionaryPopup());
+    this.group.add(dictBtn);
+  }
+
+  private createNavButton(label: string, x: number, y: number, handler: () => void): Konva.Group {
+    const width = 180;
+    const height = 50;
+
+    const group = new Konva.Group({ x, y });
+
+    const rect = new Konva.Rect({
+      width,
+      height,
+      cornerRadius: 14,
+      fill: "#1D4ED8", // blue nav style
+      stroke: "#0F172A",
+      strokeWidth: 2,
+      shadowColor: "rgba(0,0,0,0.3)",
+      shadowBlur: 8,
+      shadowOffsetY: 3,
+    });
+
+    const text = new Konva.Text({
+      width,
+      height,
+      align: "center",
+      verticalAlign: "middle",
+      text: label,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#FFFFFF",
+      fontStyle: "bold",
+      listening: false,
+    });
+
+    group.add(rect, text);
+    group.on("click tap", handler);
+    group.on("mouseenter", () => document.body.style.cursor = "pointer");
+    group.on("mouseleave", () => document.body.style.cursor = "default");
+
+    return group;
+  }
+
+  // -----------------------------
+  // UPDATED GREEN ASSESSMENT BUTTON
+  // -----------------------------
+  private createAssessmentButton(): void {
+    const width = 200;
+    const height = 50;
+    const x = STAGE_WIDTH - width - 40; // aligns with right edge
+    const y = 24;                       // same line as nav
+
+    const group = new Konva.Group({ x, y });
+
+    const rect = new Konva.Rect({
+      width,
+      height,
+      cornerRadius: 14,
+      fill: "#4CAF50",          // improved green
+      stroke: "#2E7D32",        // darker outline
+      strokeWidth: 2,
+      shadowColor: "rgba(0,0,0,0.3)",
+      shadowBlur: 8,
+      shadowOffsetY: 3,
+    });
+
+    const text = new Konva.Text({
+      width,
+      height,
+      text: "Start Assessment",
+      align: "center",
+      verticalAlign: "middle",
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#FFFFFF",
+      fontStyle: "bold",
+      listening: false,
+    });
+
+    group.add(rect, text);
+    group.on("click tap", () => this.onAssessment());
+    group.on("mouseenter", () => document.body.style.cursor = "pointer");
+    group.on("mouseleave", () => document.body.style.cursor = "default");
+
+    this.group.add(group);
+    group.moveToTop();
+  }
+
+  // -----------------------------
+  // ITEM HANDLING
+  // -----------------------------
   addItems(items: Item[], onItemClick: (itemName: string) => void): void {
     items.forEach((item) => {
       Konva.Image.fromURL(item.image, (imgNode) => {
@@ -114,6 +189,7 @@ export class RestaurantMainView {
           name: item.name,
           image: imgNode.image()
         });
+
         imgNode.on("click", () => {
           if (!globals.dictionary[item.english]) {
             globals.dictionary[item.english] = item.french;
@@ -122,6 +198,7 @@ export class RestaurantMainView {
           onItemClick(item.name);
           FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
         });
+
         this.itemImages[item.name] = imgNode;
         this.group.add(imgNode);
         this.group.getLayer()?.batchDraw();
@@ -135,62 +212,22 @@ export class RestaurantMainView {
     this.group.getLayer()?.batchDraw();
   }
 
-  
-  //dictionary button
-  private createDictionaryButton(): void {
-    const buttonWidth = 150;
-    const buttonHeight = 50;
-    const buttonX = 40; // left side
-    const buttonY = 40;
-
-    const button = new Konva.Rect({
-      x: buttonX,
-      y: buttonY,
-      width: buttonWidth,
-      height: buttonHeight,
-      fill: "#2196f3",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
-
-    const buttonText = new Konva.Text({
-      x: buttonX,
-      y: buttonY + (buttonHeight - 20) / 2,
-      width: buttonWidth,
-      align: "center",
-      text: "Dictionary",
-      fontSize: 18,
-      fontFamily: "Arial",
-      fill: "white",
-    });
-
-    const handler = () => this.showDictionaryPopup();
-    button.on("click", handler);
-    buttonText.on("click", handler);
-
-    this.group.add(button, buttonText);
-  }
-
+  // -----------------------------
+  // DICTIONARY POPUP
+  // -----------------------------
   private createDictionaryPopup(): void {
     const popupWidth = 300;
     const popupHeight = 300;
     const x = STAGE_WIDTH / 2 - popupWidth / 2;
     const y = STAGE_HEIGHT / 2 - popupHeight / 2;
-  
-    // Group with clipping
+
     const group = new Konva.Group({
       x,
       y,
       visible: false,
-      clip: {
-        x: 0,
-        y: 0,
-        width: popupWidth,
-        height: popupHeight,
-      }
+      clip: { x: 0, y: 0, width: popupWidth, height: popupHeight }
     });
-  
+
     const background = new Konva.Rect({
       width: popupWidth,
       height: popupHeight,
@@ -199,7 +236,7 @@ export class RestaurantMainView {
       strokeWidth: 2,
       cornerRadius: 10,
     });
-  
+
     const text = new Konva.Text({
       x: 20,
       y: 20,
@@ -207,68 +244,46 @@ export class RestaurantMainView {
       fontSize: 20,
       fontFamily: "Arial",
       fill: "#000",
-      align: "left",
       wrap: "word",
+      align: "left",
     });
-  
+
     group.add(background, text);
     this.group.add(group);
-  
     this.dictionaryPopupGroup = group;
     this.dictionaryText = text;
-  
-    // Scroll state
+
     let scrollOffset = 0;
-  
-    const updateScroll = (dy: number) => {
-      if (!this.dictionaryText) return;
-  
-      scrollOffset -= dy; // moving wheel down should move text up
-  
-      const minY = Math.min(popupHeight - 40 - text.height(), 0); // bottom limit
-      const maxY = 20; // top limit
-  
-      if (scrollOffset < minY) scrollOffset = minY;
-      if (scrollOffset > maxY) scrollOffset = maxY;
-  
-      this.dictionaryText.y(scrollOffset);
-      this.group.getLayer()?.draw();
-    };
-  
-    // Wheel event
     group.on("wheel", (e) => {
-      e.evt.preventDefault(); // prevent page scroll
-      updateScroll(e.evt.deltaY);
+      e.evt.preventDefault();
+      scrollOffset -= e.evt.deltaY;
+      const minY = Math.min(popupHeight - 40 - text.height(), 0);
+      const maxY = 20;
+      scrollOffset = Math.max(minY, Math.min(scrollOffset, maxY));
+      this.dictionaryText!.y(scrollOffset);
+      this.group.getLayer()?.draw();
     });
-  
-    group.name("dictionaryPopup");
-  
-    // Click outside to closea
+
     this.group.on("mousedown", (e) => {
       if (!this.dictionaryPopupGroup?.visible()) return;
-      if (!e.target.hasName("dictionaryPopup")) {
-        this.dictionaryPopupGroup.visible(false);
-        this.group.getLayer()?.draw();
-      }
+      this.dictionaryPopupGroup.visible(false);
+      this.group.getLayer()?.draw();
     });
   }
-  
-  
+
   private showDictionaryPopup(): void {
     if (!this.dictionaryPopupGroup || !this.dictionaryText) return;
-  
+
     const entries = Object.entries(globals.dictionary);
-    const textContent = entries.map(([english, french]) => `${english} / ${french}`).join("\n");
-  
-    this.dictionaryText.text(textContent || "No Words Found!");
-  
-    // Reset scroll position
+    const text = entries.map(([eng, fr]) => `${eng} / ${fr}`).join("\n");
+    this.dictionaryText.text(text || "No Words Found!");
     this.dictionaryText.y(20);
-  
+
     this.dictionaryPopupGroup.visible(true);
     this.dictionaryPopupGroup.moveToTop();
     this.group.getLayer()?.draw();
   }
+
   show(): void {
     this.group.visible(true);
     this.group.getLayer()?.batchDraw();
@@ -282,5 +297,4 @@ export class RestaurantMainView {
   getGroup(): Konva.Group {
     return this.group;
   }
-  
 }

@@ -16,7 +16,8 @@ export class StoreMainController extends ScreenController {
 
     this.view = new StoreMainView(
       (itemName) => this.handleItemClick(itemName),
-      () => this.switchToRestaurant()
+      () => this.switchToRestaurant(),
+      () => this.switchToIntro()
     );
   }
 
@@ -43,6 +44,11 @@ export class StoreMainController extends ScreenController {
   private switchToRestaurant(): void {
     this.screenSwitcher.switchToScreen({ type: "Restaurant" });
   }
+
+  private switchToIntro(): void {
+  this.screenSwitcher.switchToScreen({ type: "Intro" });
+  }
+
 
   /** Show/hide methods for screen management */
   show(): void {

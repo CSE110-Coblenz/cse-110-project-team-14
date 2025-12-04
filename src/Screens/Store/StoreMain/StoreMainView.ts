@@ -1,7 +1,6 @@
 import Konva from "konva";
-import type { Item } from "../../../types"; 
-import { STAGE_WIDTH, STAGE_HEIGHT, globals, getPlayerName } from "../../../constants"; // import globals
-import type { Person, DialogueNode } from "../../../types";
+import { STAGE_HEIGHT, STAGE_WIDTH, globals } from "../../../constants"; // import globals
+import type { Item } from "../../../types";
 import { FrenchTTS } from "../../../utils/texttospeech";
 
 export class StoreMainView {
@@ -32,14 +31,17 @@ export class StoreMainView {
   private currentDialogue: string[] = []; 
 
   private onStartClick: () => void;
+  private onBackClick!: () => void;
 
 
 constructor(
   onItemClick: (itemName: string) => void,
-  onStartClick: () => void
+  onStartClick: () => void,
+  onBackClick: () => void
 ) {
   this.group = new Konva.Group({ visible: false });
   this.onStartClick = onStartClick;   // <-- store the second callback
+  this.onBackClick = onBackClick;     // <-- store the back button callback
 
   this.backgroundLayer = this.createbackgroundLayer();
   this.group.add(this.backgroundLayer);
@@ -61,6 +63,7 @@ constructor(
   this.createPopup(); 
   this.createDictionaryButton();
   this.createDictionaryPopup();
+  this.createBackButton();
 }
 
 //bacground layer (if background doens't load)
@@ -258,6 +261,52 @@ private createbackgroundLayer(): Konva.Rect {
     this.group.add(button, label);
   }
 
+private createBackButton(): void {
+  const buttonWidth = 180;
+  const buttonHeight = 50;
+  const btnX = 30;     // Left side like classroom
+  const btnY = 24;     // Top bar position
+
+  const group = new Konva.Group({ x: btnX, y: btnY });
+
+  const rect = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    cornerRadius: 14,
+    fill: "#1D4ED8",           // Classroom blue
+    stroke: "#0F172A",
+    strokeWidth: 2,
+    shadowColor: "rgba(0,0,0,0.3)",
+    shadowBlur: 8,
+    shadowOffsetY: 3,
+  });
+
+  const text = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Back to Intro",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    fontStyle: "bold",
+    listening: false
+  });
+
+  // Wire click handler
+  group.on("click tap", () => this.onBackClick());
+  group.on("mouseenter", () => document.body.style.cursor = "pointer");
+  group.on("mouseleave", () => document.body.style.cursor = "default");
+
+  group.add(rect, text);
+  this.group.add(group);
+
+  group.moveToTop(); // ensure visible above everything
+}
+
+
+
   //popup for character dialogue
   private createPopup(): void {
     const popupWidth = 250;
@@ -372,40 +421,50 @@ private createbackgroundLayer(): Konva.Rect {
   
 
   //dictionary button
-  private createDictionaryButton(): void {
-    const buttonWidth = 150;
-    const buttonHeight = 50;
-    const buttonX = 40; // left side
-    const buttonY = 40;
+private createDictionaryButton(): void {
+  const buttonWidth = 180;
+  const buttonHeight = 50;
 
-    const button = new Konva.Rect({
-      x: buttonX,
-      y: buttonY,
-      width: buttonWidth,
-      height: buttonHeight,
-      fill: "#2196f3",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
+  // Position aligned next to Back button
+  const btnX = 300;  // adjust depending on spacing
+  const btnY = 24;
 
-    const buttonText = new Konva.Text({
-      x: buttonX,
-      y: buttonY + (buttonHeight - 20) / 2,
-      width: buttonWidth,
-      align: "center",
-      text: "Dictionary",
-      fontSize: 18,
-      fontFamily: "Arial",
-      fill: "white",
-    });
+  const group = new Konva.Group({ x: btnX, y: btnY });
 
-    const handler = () => this.showDictionaryPopup();
-    button.on("click", handler);
-    buttonText.on("click", handler);
+  const rect = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    cornerRadius: 14,
+    fill: "#1D4ED8",            // Same blue as Back button
+    stroke: "#0F172A",
+    strokeWidth: 2,
+    shadowColor: "rgba(0,0,0,0.3)",
+    shadowBlur: 8,
+    shadowOffsetY: 3,
+  });
 
-    this.group.add(button, buttonText);
-  }
+  const text = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Dictionary",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    fontStyle: "bold",
+    listening: false
+  });
+
+  group.on("click tap", () => this.showDictionaryPopup());
+  group.on("mouseenter", () => document.body.style.cursor = "pointer");
+  group.on("mouseleave", () => document.body.style.cursor = "default");
+
+  group.add(rect, text);
+  this.group.add(group);
+  group.moveToTop();
+}
+
 
   private createDictionaryPopup(): void {
     const popupWidth = 300;
