@@ -5,8 +5,8 @@
     "french": "La soupe",
     "phonetic": "lah soop",
     "image": "/ItemImage/Restaurant/soup.png",
-    "x": 140,
-    "y": 160
+    "x": 460,
+    "y": 380
   },
   {
     "name": "spoon",
@@ -14,8 +14,8 @@
     "french": "La cuillère",
     "phonetic": "lah kwee-yair",
     "image": "/ItemImage/Restaurant/spoon.png",
-    "x": 420,
-    "y": 180
+    "x": 125,
+    "y": 330
   },
   {
     "name": "napkin",
@@ -23,7 +23,16 @@
     "french": "La serviette",
     "phonetic": "lah sair-vyet",
     "image": "/ItemImage/Restaurant/napkin.png",
-    "x": 650,
-    "y": 220
+    "x": 1180,
+    "y": 370
+  },
+  {
+    "name": "plate",
+    "english": "Plate",
+    "french": "L'assiette",
+    "phonetic": "lah ah-syet",
+    "image": "/ItemImage/Restaurant/plate.png",
+    "x": 290,
+    "y": 365
   }
 ]

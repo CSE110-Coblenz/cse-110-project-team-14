@@ -11,7 +11,7 @@
         const all = (await response.json()) as Question[];
 
         // Shuffle and pick 7 random
-        this.questions = all.sort(() => Math.random() - 0.5).slice(0, 7);
+        this.questions = all.sort(() => Math.random() - 0.5).slice(0, 1);
         this.index = 0;
         this.score = 0;
     }

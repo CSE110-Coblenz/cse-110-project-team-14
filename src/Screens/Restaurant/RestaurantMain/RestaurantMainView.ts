@@ -4,12 +4,18 @@ import type { Item } from '../../../types';
 import { FrenchTTS } from "../../../utils/texttospeech";
 
 export class RestaurantMainView {
+  //Background / main group
   private group: Konva.Group;
-  private dockGroup: Konva.Group;
+  private backgroundLayer: Konva.Rect;
+  private backgroundImage?: Konva.Image;
+
+  //dock / images / character
+  private dock: Konva.Rect;
+  private englishVocab: Konva.Text;
+  private frenchVocab: Konva.Text;
+  private phonetic: Konva.Text;
   private itemImages: Record<string, Konva.Image> = {};
-  private dockText: Konva.Text;
-  private dockPhonetic: Konva.Text;
-  private background: Konva.Rect;
+
   private onAssessment: () => void;
   private onBackClick!: () => void;
 
@@ -22,53 +28,20 @@ export class RestaurantMainView {
     onBackClick: () => void
   ) {
     this.group = new Konva.Group({ visible: false });
-    this.dockGroup = new Konva.Group();
     this.onAssessment = onAssessment;
     this.onBackClick = onBackClick;
 
     // Background
-    this.background = new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: STAGE_WIDTH,
-      height: STAGE_HEIGHT,
-      fill: "#d3eaf5ff",
-    });
-    this.group.add(this.background);
-
-    // Dock
-    const dockHeight = 100;
-    const dock = new Konva.Rect({
-      x: 200,
-      y: STAGE_HEIGHT - dockHeight,
-      width: STAGE_WIDTH / 2,
-      height: dockHeight,
-      fill: "#5c471dff",
-      stroke: "black",
-      strokeWidth: 2,
-    });
-    this.dockGroup.add(dock);
-
-    this.dockText = new Konva.Text({
-      x: 300,
-      y: STAGE_HEIGHT - dockHeight + 20,
-      fontSize: 24,
-      fontFamily: "Arial",
-      fill: "black",
-      text: "Click an item",
-    });
-    this.dockGroup.add(this.dockText);
-
-    this.dockPhonetic = new Konva.Text({
-      x: 350,
-      y: STAGE_HEIGHT - dockHeight + 55,
-      fontSize: 20,
-      fontFamily: "Arial",
-      fill: "black",
-    });
-    this.dockGroup.add(this.dockPhonetic);
-
-    this.group.add(this.dockGroup);
+    this.backgroundLayer = this.createbackgroundLayer();
+    this.group.add(this.backgroundLayer);
+    
+    //Dock
+    const { dock, englishText, frenchVocab, phonetic } = this.createDock();
+    this.dock = dock;
+    this.englishVocab = englishText;
+    this.frenchVocab = frenchVocab;
+    this.phonetic = phonetic;
+    this.group.add(dock, englishText, frenchVocab, phonetic);
 
     // NAV BAR BUTTONS
     this.createNavigationButtons();
@@ -77,6 +50,139 @@ export class RestaurantMainView {
     // Dictionary popup
     this.createDictionaryPopup();
   }
+
+
+  // -----------------------------
+  // ITEM HANDLING
+  // -----------------------------
+  addItems(items: Item[], onItemClick: (itemName: string) => void): void {
+    for (const item of items) {
+      Konva.Image.fromURL(item.image, (imgNode) => {
+        imgNode.setAttrs({
+          x: item.x,
+          y: item.y,
+          width: 150,
+          height: 150,
+          name: item.name,
+          image: imgNode.image(),
+        });
+        //dictionary implentation when clicking on item
+                imgNode.on("click", () => {
+                  if (!globals.dictionary[item.english]) {
+                    globals.dictionary[item.english] = item.french;
+                    console.log(globals.dictionary);
+                  }
+                  onItemClick(item.name);
+                });
+        
+                this.itemImages[item.name] = imgNode;
+                this.group.add(imgNode);
+                
+                //puts dock on top of images, top layer
+                this.dock.moveToTop();
+                this.englishVocab.moveToTop();
+                this.frenchVocab.moveToTop();
+                this.phonetic.moveToTop();
+        
+                this.group.getLayer()?.draw();
+      });
+    }
+  }
+  private createbackgroundLayer(): Konva.Rect {
+      return new Konva.Rect({
+        x: 0,
+        y: 0,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        fill: "#ffffff",
+        stroke: "#000000",
+        strokeWidth: 1,
+      });
+    }
+
+
+  //Load background from png
+  loadBackground(imageUrl: string): void {
+    Konva.Image.fromURL(imageUrl, (imgNode) => {
+      imgNode.setAttrs({
+        x: 0,
+        y: 0,
+        width: STAGE_WIDTH,
+        height: STAGE_HEIGHT,
+        image: imgNode.image()
+      });
+  
+      this.backgroundImage = imgNode;
+  
+      this.group.add(imgNode);
+      imgNode.moveToBottom();
+      this.backgroundLayer.moveToBottom();
+  
+      this.group.getLayer()?.draw();
+    });
+  }
+
+  //creates dock
+    private createDock() {
+      const dockHeight = 75;
+      const dockWidth = STAGE_WIDTH * 0.8;
+      const dockX = (STAGE_WIDTH - dockWidth) / 2;
+      const dockY = STAGE_HEIGHT - dockHeight - 40;
+  
+      const dock = new Konva.Rect({
+        x: dockX,
+        y: dockY,
+        width: dockWidth,
+        height: dockHeight,
+        fill: "#fafafa",
+        cornerRadius: 12,
+        stroke: "#000000",
+        strokeWidth: 2,
+      });
+  
+      const sectionWidth = dockWidth / 3;
+      const textY = dockY + 25;
+  
+      const englishText = new Konva.Text({
+        x: dockX,
+        y: textY,
+        width: sectionWidth,
+        align: "center",
+        fontSize: 24,
+        fontFamily: "Times New Roman",
+        fill: "#000",
+      });
+  
+      const frenchVocab = new Konva.Text({
+        x: dockX + sectionWidth,
+        y: textY,
+        width: sectionWidth,
+        align: "center",
+        fontSize: 24,
+        fontFamily: "Times New Roman",
+        fill: "#000",
+      });
+  
+      const phonetic = new Konva.Text({
+        x: dockX + sectionWidth * 2,
+        y: textY,
+        width: sectionWidth,
+        align: "center",
+        fontSize: 20,
+        fontFamily: "Times New Roman",
+        fill: "#555",
+      });
+      
+      return { dock, englishText, frenchVocab, phonetic };
+    }
+
+  updateDock(item: Item): void {
+    this.englishVocab.text(item.english);
+    this.frenchVocab.text(item.french);
+    this.phonetic.text(item.phonetic);
+    this.group.getLayer()?.draw();
+  }
+
 
   // -----------------------------
   // TOP NAV BAR BUTTONS
@@ -173,43 +279,6 @@ export class RestaurantMainView {
 
     this.group.add(group);
     group.moveToTop();
-  }
-
-  // -----------------------------
-  // ITEM HANDLING
-  // -----------------------------
-  addItems(items: Item[], onItemClick: (itemName: string) => void): void {
-    items.forEach((item) => {
-      Konva.Image.fromURL(item.image, (imgNode) => {
-        imgNode.setAttrs({
-          x: item.x,
-          y: item.y,
-          width: 200,
-          height: 200,
-          name: item.name,
-          image: imgNode.image()
-        });
-
-        imgNode.on("click", () => {
-          if (!globals.dictionary[item.english]) {
-            globals.dictionary[item.english] = item.french;
-            console.log(globals.dictionary);
-          }
-          onItemClick(item.name);
-          FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
-        });
-
-        this.itemImages[item.name] = imgNode;
-        this.group.add(imgNode);
-        this.group.getLayer()?.batchDraw();
-      });
-    });
-  }
-
-  updateDock(item: Item): void {
-    this.dockText.text(`${item.english} / ${item.french}`);
-    this.dockPhonetic.text(`${item.phonetic}`);
-    this.group.getLayer()?.batchDraw();
   }
 
   // -----------------------------
