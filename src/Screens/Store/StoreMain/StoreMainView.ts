@@ -235,8 +235,8 @@ private createbackgroundLayer(): Konva.Rect {
     const button = new Konva.Rect({
       x: btnX,
       y: btnY,
-      width: 100,
-      height: 30,
+      width: 0,
+      height: 0,
       fill: "#ffffff",
       stroke: "#000",
       strokeWidth: 2
@@ -247,7 +247,7 @@ private createbackgroundLayer(): Konva.Rect {
       y: btnY + 10,
       width: 100,
       align: "center",
-      text: "Restaurant",
+      text: "",
       fontSize: 16,
       fontFamily: "Arial",
       fill: "#000000"

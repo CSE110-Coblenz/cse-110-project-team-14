@@ -96,92 +96,104 @@ export class IntroScreenView implements View {
     // (moved) hidden input created earlier in constructor
   }
 
-  private createLoginScreen(): Konva.Group {
-    const loginGroup = new Konva.Group();
+private createLoginScreen(): Konva.Group {
+  const loginGroup = new Konva.Group();
 
-    // Title
-    const title = new Konva.Text({
-      x: 0,
-      y: STAGE_HEIGHT / 2 - 150,
-      width: STAGE_WIDTH,
-      align: "center",
-      text: "Placeholder game title",
-      fontSize: 32,
-      fontFamily: "Arial",
-      fontStyle: "bold",
-      fill: "#000",
-    });
-    loginGroup.add(title);
+  // Title
+  const title = new Konva.Text({
+    x: 0,
+    y: STAGE_HEIGHT / 2 - 150,
+    width: STAGE_WIDTH,
+    align: "center",
+    text: "Placeholder game title",
+    fontSize: 32,
+    fontFamily: "Arial",
+    fontStyle: "bold",
+    fill: "#000",
+  });
+  loginGroup.add(title);
 
-    // Subtitle
-    const subtitle = new Konva.Text({
-      x: 0,
-      y: STAGE_HEIGHT / 2 - 80,
-      width: STAGE_WIDTH,
-      align: "center",
-      text: "enter your name to start",
-      fontSize: 20,
-      fontFamily: "Arial",
-      fill: "#555",
-    });
-    loginGroup.add(subtitle);
+  // Subtitle
+  const subtitle = new Konva.Text({
+    x: 0,
+    y: STAGE_HEIGHT / 2 - 80,
+    width: STAGE_WIDTH,
+    align: "center",
+    text: "enter your name to start",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#555",
+  });
+  loginGroup.add(subtitle);
 
-    // Input box (visual representation)
-    const inputBox = new Konva.Rect({
-      x: STAGE_WIDTH / 2 - 150,
-      y: STAGE_HEIGHT / 2 - 20,
-      width: 300,
-      height: 50,
-      fill: "#fff",
-      stroke: "#000",
-      strokeWidth: 2,
-      cornerRadius: 8,
-    });
-    loginGroup.add(inputBox);
+  // === INPUT GROUP (FULLY CLICKABLE) ===
+  const inputGroup = new Konva.Group({
+    x: STAGE_WIDTH / 2 - 150,
+    y: STAGE_HEIGHT / 2 - 20,
+    width: 300,
+    height: 50,
+  });
 
-    // Input label text
-    const inputLabel = new Konva.Text({
-      x: STAGE_WIDTH / 2 - 140,
-      y: STAGE_HEIGHT / 2 - 10,
-      width: 280,
-      height: 50,
-      verticalAlign: "middle",
-      fontSize: 18,
-      fontFamily: "Arial",
-      fill: "#666",
-      text: "Name",
-    });
-    loginGroup.add(inputLabel);
+  const inputBox = new Konva.Rect({
+    width: 300,
+    height: 50,
+    fill: "#fff",
+    stroke: "#000",
+    strokeWidth: 2,
+    cornerRadius: 8,
+  });
 
-    // Submit button
-    const submitBtn = this.createButton(
-      "Start Game",
-      STAGE_WIDTH / 2 - 75,
-      STAGE_HEIGHT / 2 + 60,
-      () => this.handleLoginSubmit()
-    );
-    loginGroup.add(submitBtn);
+  const inputLabel = new Konva.Text({
+    width: 300,
+    height: 50,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Name",
+    fontSize: 18,
+    fontFamily: "Arial",
+    fill: "#666",
+  });
 
-    // Make the input box clickable to focus the real input
-    inputBox.on("click", () => {
-      this.nameInput.focus();
-    });
+  inputGroup.add(inputBox, inputLabel);
+  loginGroup.add(inputGroup);
 
-    // Update visual input when user types (listen on the hidden input)
-    this.nameInput.addEventListener("input", () => {
-      inputLabel.text(this.nameInput.value || "Name");  
-      loginGroup.getLayer()?.batchDraw();
-    });
+  // FOCUS INPUT WHEN CLICKING ANYWHERE ON THE GROUP
+  inputGroup.on("click tap", () => this.nameInput.focus());
 
-    // Allow pressing Enter to submit
-    this.nameInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        this.handleLoginSubmit();
-      }
-    });
+  // Sync HTML input position with Konva box
+  // (so the whole rectangle is active)
+  this.nameInput.style.left = `${inputGroup.x() + inputGroup.width() / 2}px`;
+  this.nameInput.style.top = `${inputGroup.y() + inputGroup.height() / 2}px`;
+  this.nameInput.style.transform = "translate(-50%, -50%)";
+  this.nameInput.style.width = `${inputGroup.width() - 20}px`;
+  this.nameInput.style.height = `${inputGroup.height() - 12}px`;
+  this.nameInput.style.zIndex = "1000";
+  this.nameInput.style.opacity = "0.01"; // invisible but clickable
 
-    return loginGroup;
-  }
+  // Update visual text as the player types
+  this.nameInput.addEventListener("input", () => {
+    inputLabel.text(this.nameInput.value || "Name");
+    loginGroup.getLayer()?.batchDraw();
+  });
+
+  // Press Enter to submit
+  this.nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      this.handleLoginSubmit();
+    }
+  });
+
+  // === SUBMIT BUTTON ===
+  const submitBtn = this.createButton(
+    "Start Game",
+    STAGE_WIDTH / 2 - 75,
+    STAGE_HEIGHT / 2 + 60,
+    () => this.handleLoginSubmit()
+  );
+  loginGroup.add(submitBtn);
+
+  return loginGroup;
+}
 
   private handleLoginSubmit(): void {
     const name = this.nameInput.value.trim();
