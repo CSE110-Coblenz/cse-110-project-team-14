@@ -25,5 +25,14 @@
     "image": "/ItemImage/Restaurant/napkin.png",
     "x": 1180,
     "y": 370
+  },
+  {
+    "name": "plate",
+    "english": "Plate",
+    "french": "L'assiette",
+    "phonetic": "lah ah-syet",
+    "image": "/ItemImage/Restaurant/plate.png",
+    "x": 290,
+    "y": 365
   }
 ]
