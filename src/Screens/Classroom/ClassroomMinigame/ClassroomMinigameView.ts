@@ -178,85 +178,129 @@ export class ClassroomMinigameView implements View {
   }
 
   /** Show end-of-game result: X out of Y correct */
-  showFinalResult(correct: number, total: number): void {
-    if (this.resultGroup) {
-      this.resultGroup.destroy();
-    }
-
-    const allCorrect = correct === total;
-    const title = allCorrect ? "Correct!" : "Wrong!";
-    const color = allCorrect ? "#16a34a" : "#dc2626";
-
-    const group = new Konva.Group();
-    const boxWidth = 500;
-    const boxHeight = 180;
-
-    const rect = new Konva.Rect({
-      x: STAGE_WIDTH / 2 - boxWidth / 2,
-      y: STAGE_HEIGHT / 2 - boxHeight / 2,
-      width: boxWidth,
-      height: boxHeight,
-      fill: "rgba(255,255,255,0.95)",
-      stroke: "#111827",
-      strokeWidth: 3,
-      cornerRadius: 20,
-      shadowColor: "rgba(0,0,0,0.25)",
-      shadowBlur: 16,
-      shadowOffsetY: 6,
-    });
-
-    const text = new Konva.Text({
-      x: rect.x() + 20,
-      y: rect.y() + 24,
-      width: rect.width() - 40,
-      align: "center",
-      text: `${title}\nYou got ${correct} out of ${total} correct.`,
-      fontSize: 28,
-      fontFamily: "Arial",
-      fill: color,
-      lineHeight: 1.4,
-    });
-
-    const buttonWidth = 260;
-    const buttonHeight = 50;
-    const btnX = STAGE_WIDTH / 2 - buttonWidth / 2;
-    const btnY = rect.y() + rect.height() - buttonHeight - 20;
-
-    const button = new Konva.Rect({
-      x: btnX,
-      y: btnY,
-      width: buttonWidth,
-      height: buttonHeight,
-      fill: "#1D4ED8",
-      cornerRadius: 12,
-      stroke: "#0F172A",
-      strokeWidth: 2,
-      shadowColor: "rgba(0,0,0,0.2)",
-      shadowBlur: 10,
-      shadowOffsetY: 4,
-    });
-
-    const btnText = new Konva.Text({
-      x: btnX,
-      y: btnY + 12,
-      width: buttonWidth,
-      align: "center",
-      text: "Back to Classroom",
-      fontSize: 20,
-      fontFamily: "Arial",
-      fill: "#FFFFFF",
-      listening: false,
-    });
-
-    const clickHandler = () => this.onBackToClassroom();
-    button.on("click tap", clickHandler);
-
-    group.add(rect, text, button, btnText);
-    this.group.add(group);
-    this.resultGroup = group;
-
-    this.layer.batchDraw();
+/** Show end-of-game result: X out of Y correct */
+/** Show end-of-game result: X out of Y correct */
+showFinalResult(correct: number, total: number): void {
+  if (this.resultGroup) {
+    this.resultGroup.destroy();
   }
+
+  const allCorrect = correct === total;
+  const title = allCorrect ? "Correct!" : "Wrong!";
+  const color = allCorrect ? "#16a34a" : "#dc2626";
+
+  const group = new Konva.Group();
+  const boxWidth = 500;
+  const boxHeight = 260; // increased height for 2 buttons
+
+  const rect = new Konva.Rect({
+    x: STAGE_WIDTH / 2 - boxWidth / 2,
+    y: STAGE_HEIGHT / 2 - boxHeight / 2,
+    width: boxWidth,
+    height: boxHeight,
+    fill: "rgba(255,255,255,0.95)",
+    stroke: "#111827",
+    strokeWidth: 3,
+    cornerRadius: 20,
+    shadowColor: "rgba(0,0,0,0.25)",
+    shadowBlur: 16,
+    shadowOffsetY: 6,
+  });
+
+  const text = new Konva.Text({
+    x: rect.x() + 20,
+    y: rect.y() + 24,
+    width: rect.width() - 40,
+    align: "center",
+    text: `${title}\nYou got ${correct} out of ${total} correct.`,
+    fontSize: 28,
+    fontFamily: "Arial",
+    fill: color,
+    lineHeight: 1.4,
+  });
+
+  const buttonWidth = 260;
+  const buttonHeight = 50;
+  const btnX = STAGE_WIDTH / 2 - buttonWidth / 2;
+
+  // === PLAY AGAIN BUTTON GROUP ===
+  const playAgainY = rect.y() + boxHeight - buttonHeight * 2 - 30;
+
+  const playAgainGroup = new Konva.Group({
+    x: btnX,
+    y: playAgainY,
+    width: buttonWidth,
+    height: buttonHeight,
+  });
+
+  const playAgainBtn = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    fill: "#16A34A",
+    cornerRadius: 12,
+  });
+
+  const playAgainText = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Play Again",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    listening: false,
+  });
+
+  playAgainGroup.add(playAgainBtn, playAgainText);
+  playAgainGroup.on("click tap", () => this.onResetGame());
+  playAgainGroup.on("mouseenter", () => this.setCursor("pointer"));
+  playAgainGroup.on("mouseleave", () => this.setCursor("default"));
+
+
+  // === BACK TO CLASSROOM BUTTON GROUP ===
+  const backBtnY = playAgainY + buttonHeight + 10;
+
+  const backGroup = new Konva.Group({
+    x: btnX,
+    y: backBtnY,
+    width: buttonWidth,
+    height: buttonHeight,
+  });
+
+  const backBtn = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    fill: "#1D4ED8",
+    cornerRadius: 12,
+  });
+
+  const backText = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Back to Classroom",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    listening: false,
+  });
+
+  backGroup.add(backBtn, backText);
+  backGroup.on("click tap", () => this.onBackToClassroom());
+  backGroup.on("mouseenter", () => this.setCursor("pointer"));
+  backGroup.on("mouseleave", () => this.setCursor("default"));
+
+
+  // Add everything to popup group
+  group.add(rect, text, playAgainGroup, backGroup);
+  this.group.add(group);
+  this.resultGroup = group;
+
+  this.layer.batchDraw();
+}
+
 
   // ----- Helpers -----
 
@@ -369,5 +413,10 @@ export class ClassroomMinigameView implements View {
 
   private setCursor(cursor: string): void {
     this.stage.container().style.cursor = cursor;
+  }
+
+  private onResetGame: () => void = () => {};
+  setOnResetGame(handler: () => void): void {
+    this.onResetGame = handler;
   }
 }

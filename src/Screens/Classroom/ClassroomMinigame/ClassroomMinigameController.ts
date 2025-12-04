@@ -38,7 +38,18 @@ export class ClassroomMinigameController extends ScreenController {
       this.model.reset();
       this.screenSwitcher.switchToScreen({ type: "Classroom" });
     });
+
+    this.view.setOnResetGame(() => this.resetGame());
   }
+
+  private async resetGame(): Promise<void> {
+  this.model.reset();
+  await this.view.renderScene(
+    this.model.getItems(),
+    this.baskets,
+    (item, basketName) => this.handleItemDrop(item, basketName)
+  );
+}
 
   getView(): ClassroomMinigameView {
     return this.view;
