@@ -27,7 +27,6 @@ export class ClassroomAssessmentView {
   private readonly englishText: Text;
   private readonly progressText: Text;
 
-  private readonly switchButton: Group;
   private readonly resetButton: Group;
   private readonly minigameButton: Group;
   private readonly backButton: Group;
@@ -77,12 +76,11 @@ export class ClassroomAssessmentView {
     this.backgroundGroup.add(this.frenchText, this.phoneticText, this.englishText, this.progressText);
 
     // Buttons
-    this.switchButton = this.createButton("Switch to Store", 30, 24, () => this.switchHandler?.());
     this.resetButton = this.createButton("Reset", 210, 24, () => this.resetHandler?.());
     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () => this.minigameHandler?.());
     this.dictionaryButton = this.createButton("Dictionary", 570, 24, () => this.showDictionaryPopup());
     this.backButton = this.createButton("Back to Intro", 750, 24, () => this.backHandler?.());
-    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton, this.dictionaryButton, this.backButton);
+    this.backgroundGroup.add(this.resetButton, this.minigameButton, this.dictionaryButton, this.backButton);
     this.createDictionaryPopup();
 
     // Dialogue overlay
