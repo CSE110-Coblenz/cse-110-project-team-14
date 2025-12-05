@@ -2,6 +2,8 @@ import Konva from "konva";
 import type { Group } from "konva/lib/Group";
 import type { Layer } from "konva/lib/Layer";
 import type { Image as KonvaImage } from "konva/lib/shapes/Image";
+import type { Rect } from "konva/lib/shapes/Rect";
+import type { Text } from "konva/lib/shapes/Text";
 import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS, STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
 import type { Item, View } from "../../../types";
@@ -33,6 +35,11 @@ export class ClassroomMinigameView implements View {
   private titleNode?: Konva.Text;
   private resultGroup?: Konva.Group;
   private backButtonGroup?: Konva.Group;
+  private progressBarGroup!: Group;
+  private progressBarBg!: Konva.Rect;
+  private progressBarFill!: Konva.Rect;
+  private progressHoverText!: Konva.Text;
+  private progressTotals = { found: 0, total: 0 };
 
   private onBackToClassroom: () => void = () => {};
 
@@ -42,6 +49,7 @@ export class ClassroomMinigameView implements View {
     this.group = new Konva.Group({ visible: false });
 
     this.addBackground();
+    this.createProgressBar();
   }
 
   getGroup(): Group {
@@ -68,6 +76,13 @@ export class ClassroomMinigameView implements View {
   }
 
   /** Main render function */
+  updateTotalProgress(found: number, total: number) {
+    this.progressTotals = { found, total };
+    const ratio = total === 0 ? 0 : found / total;
+    this.progressBarFill.width(this.progressBarBg.width() * ratio);
+    this.layer.batchDraw();
+  }
+
   async renderScene(
     items: Item[],
     baskets: BasketData[],
@@ -418,5 +433,56 @@ showFinalResult(correct: number, total: number): void {
   private onResetGame: () => void = () => {};
   setOnResetGame(handler: () => void): void {
     this.onResetGame = handler;
+  }
+  private createProgressBar(): void {
+    const barWidth = 240;
+    const barMargin = 80;
+    this.progressBarGroup = new Konva.Group({
+      x: STAGE_WIDTH - barWidth - barMargin,
+      y: 20,
+    });
+    this.progressBarBg = new Konva.Rect({
+      width: barWidth,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      opacity: 0.25,
+      listening: false,
+    });
+    this.progressBarFill = new Konva.Rect({
+      width: 0,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      listening: false,
+    });
+    this.progressHoverText = new Konva.Text({
+      width: barWidth,
+      height: 18,
+      align: "center",
+      verticalAlign: "middle",
+      fontSize: 12,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      visible: false,
+      listening: false,
+    });
+    this.progressBarGroup.add(
+      this.progressBarBg,
+      this.progressBarFill,
+      this.progressHoverText
+    );
+    this.progressBarGroup.on("mouseenter", () => {
+      this.progressHoverText.text(
+        `${this.progressTotals.found} / ${this.progressTotals.total} tasks`
+      );
+      this.progressHoverText.visible(true);
+      this.layer.batchDraw();
+    });
+    this.progressBarGroup.on("mouseleave", () => {
+      this.progressHoverText.visible(false);
+      this.layer.batchDraw();
+    });
+    this.group.add(this.progressBarGroup);
   }
 }

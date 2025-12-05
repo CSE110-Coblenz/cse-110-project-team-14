@@ -1,4 +1,17 @@
-type ProgressListener = (counts: { found: number; total: number }) => void;
+export type ProgressCategory =
+  | "classroomItems"
+  | "storeItems"
+  | "restaurantItems"
+  | "people"
+  | "minigame"
+  | "assessments";
+
+export type ProgressCounts = Record<
+  ProgressCategory | "total",
+  { found: number; total: number }
+>;
+
+type ProgressListener = (counts: ProgressCounts) => void;
 
 /**
  * Tracks how many unique vocabulary items across all scenes have been discovered.
@@ -7,19 +20,33 @@ type ProgressListener = (counts: { found: number; total: number }) => void;
  * notifies subscribed views whenever counts change.
  */
 export class ProgressTracker {
-  private readonly registered = new Set<string>();
-  private readonly discovered = new Set<string>();
+  private readonly registered: Record<ProgressCategory, Set<string>> = {
+    classroomItems: new Set(),
+    storeItems: new Set(),
+    restaurantItems: new Set(),
+    people: new Set(),
+    minigame: new Set(),
+    assessments: new Set(),
+  };
+  private readonly discovered: Record<ProgressCategory, Set<string>> = {
+    classroomItems: new Set(),
+    storeItems: new Set(),
+    restaurantItems: new Set(),
+    people: new Set(),
+    minigame: new Set(),
+    assessments: new Set(),
+  };
   private readonly listeners = new Set<ProgressListener>();
 
-  registerItems(ids: string[]): void {
-    ids.forEach((id) => this.registered.add(id));
+  registerItems(category: ProgressCategory, ids: string[]): void {
+    ids.forEach((id) => this.registered[category].add(id));
     this.emit();
   }
 
-  markFound(id: string): boolean {
-    const before = this.discovered.size;
-    this.discovered.add(id);
-    const isNew = this.discovered.size !== before;
+  markFound(category: ProgressCategory, id: string): boolean {
+    const before = this.discovered[category].size;
+    this.discovered[category].add(id);
+    const isNew = this.discovered[category].size !== before;
     if (isNew) {
       this.emit();
     }
@@ -27,12 +54,27 @@ export class ProgressTracker {
   }
 
   reset(): void {
-    this.discovered.clear();
+    (Object.keys(this.discovered) as ProgressCategory[]).forEach((category) =>
+      this.discovered[category].clear()
+    );
     this.emit();
   }
 
-  getCounts(): { found: number; total: number } {
-    return { found: this.discovered.size, total: this.registered.size };
+  getCounts(): ProgressCounts {
+    const counts = {} as ProgressCounts;
+    let totalFound = 0;
+    let totalRegistered = 0;
+
+    (Object.keys(this.registered) as ProgressCategory[]).forEach((category) => {
+      const found = this.discovered[category].size;
+      const total = this.registered[category].size;
+      counts[category] = { found, total };
+      totalFound += found;
+      totalRegistered += total;
+    });
+
+    counts.total = { found: totalFound, total: totalRegistered };
+    return counts;
   }
 
   onChange(listener: ProgressListener): () => void {
@@ -44,6 +86,16 @@ export class ProgressTracker {
 
   private emit(): void {
     const counts = this.getCounts();
+    console.log(
+      "[ProgressTracker]",
+      `Classroom: ${counts.classroomItems.found}/${counts.classroomItems.total},`,
+      `Store: ${counts.storeItems.found}/${counts.storeItems.total},`,
+      `Restaurant: ${counts.restaurantItems.found}/${counts.restaurantItems.total},`,
+      `People: ${counts.people.found}/${counts.people.total},`,
+      `Minigame: ${counts.minigame.found}/${counts.minigame.total},`,
+      `Assessments: ${counts.assessments.found}/${counts.assessments.total},`,
+      `Total: ${counts.total.found}/${counts.total.total}`
+    );
     this.listeners.forEach((listener) => listener(counts));
   }
 }

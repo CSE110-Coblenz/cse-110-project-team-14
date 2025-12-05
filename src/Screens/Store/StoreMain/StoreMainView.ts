@@ -32,6 +32,13 @@ export class StoreMainView {
 
   private onStartClick: () => void;
   private onBackClick!: () => void;
+  private dialogueCompleteHandler?: () => void;
+  private dialogueCompleted = false;
+  private progressBarGroup!: Konva.Group;
+  private progressBarBg!: Konva.Rect;
+  private progressBarFill!: Konva.Rect;
+  private progressHoverText!: Konva.Text;
+  private progressTotals = { found: 0, total: 0 };
 
 
 constructor(
@@ -64,6 +71,7 @@ constructor(
   this.createDictionaryButton();
   this.createDictionaryPopup();
   this.createBackButton();
+  this.createProgressBar();
 }
 
 //bacground layer (if background doens't load)
@@ -185,7 +193,7 @@ private createbackgroundLayer(): Konva.Rect {
 
           onItemClick(item.name);
           // Speak French word and definition
-          FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
+          FrenchTTS.speak(item.french, "fr-FR");
         });
 
         this.itemImages[item.name] = imgNode;
@@ -270,8 +278,8 @@ private createbackgroundLayer(): Konva.Rect {
     button.on("click", handler);
     label.on("click", handler);
   
-    this.group.add(button, label);
-  }
+  this.group.add(button, label);
+}
 
 private createBackButton(): void {
   const buttonWidth = 180;
@@ -293,12 +301,12 @@ private createBackButton(): void {
     shadowOffsetY: 3,
   });
 
-  const text = new Konva.Text({
-    width: buttonWidth,
-    height: buttonHeight,
-    align: "center",
-    verticalAlign: "middle",
-    text: "Back to Intro",
+    const text = new Konva.Text({
+      width: buttonWidth,
+      height: buttonHeight,
+      align: "center",
+      verticalAlign: "middle",
+      text: "Change Scenes",
     fontSize: 20,
     fontFamily: "Arial",
     fill: "#FFFFFF",
@@ -365,7 +373,7 @@ private createBackButton(): void {
       align: "right",
     });
 
-    group.on("click", () => {
+    const advanceDialogue = () => {
       if (!this.currentDialogue.length) return;
 
       this.popupDialogueIndex++;
@@ -373,36 +381,25 @@ private createBackButton(): void {
       if (this.popupDialogueIndex >= this.currentDialogue.length) {
         this.currentDialogue = [];
         this.popupDialogueIndex = 0;
-        group.visible(false); 
+        group.visible(false);
+        if (!this.dialogueCompleted) {
+          this.dialogueCompleted = true;
+          this.dialogueCompleteHandler?.();
+        }
       } else {
         text.text(this.currentDialogue[this.popupDialogueIndex]);
-        // Speak new dialogue line
         FrenchTTS.speak(this.currentDialogue[this.popupDialogueIndex], "en-US");
       }
 
-      group.moveToTop(); 
+      group.moveToTop();
       this.group.getLayer()?.draw();
-    });
+    };
+
+    group.on("click", advanceDialogue);
   
   
     //allowing the background of the dialogue to change to next sentence too
-    background.on("click", () => {
-      if (!this.currentDialogue.length) return;
-
-      this.popupDialogueIndex++;
-
-      if (this.popupDialogueIndex >= this.currentDialogue.length) {
-        this.currentDialogue = [];
-        this.popupDialogueIndex = 0;
-      } else {
-        text.text(this.currentDialogue[this.popupDialogueIndex]);
-        // Speak new dialogue line
-        FrenchTTS.speak(this.currentDialogue[this.popupDialogueIndex], "en-US");
-      }
-
-      group.moveToTop(); 
-      this.group.getLayer()?.draw();
-    });
+    background.on("click", advanceDialogue);
   
 
     group.add(background, text, nextLine);
@@ -421,6 +418,7 @@ private createBackButton(): void {
     // resolve player name from globals or localStorage
     this.currentDialogue = data[characterName]?.greeting || ["(No dialogue found)"];
     this.popupDialogueIndex = 0;
+    this.dialogueCompleted = false;
   
     this.popupText?.text(this.currentDialogue[this.popupDialogueIndex]);
     this.popupGroup?.visible(true);
@@ -430,52 +428,113 @@ private createBackButton(): void {
 
     this.group.getLayer()?.draw();
   }
+
+  setOnDialogueComplete(handler: () => void) {
+    this.dialogueCompleteHandler = handler;
+  }
+
+  updateTotalProgress(found: number, total: number) {
+    this.progressTotals = { found, total };
+    const ratio = total === 0 ? 0 : found / total;
+    this.progressBarFill.width(this.progressBarBg.width() * ratio);
+    this.group.getLayer()?.draw();
+  }
+
+  private createProgressBar() {
+    const barWidth = 240;
+    const barMargin = 80;
+    this.progressBarGroup = new Konva.Group({
+      x: STAGE_WIDTH - barWidth - barMargin,
+      y: 20,
+    });
+    this.progressBarBg = new Konva.Rect({
+      width: barWidth,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      opacity: 0.25,
+      listening: false,
+    });
+    this.progressBarFill = new Konva.Rect({
+      width: 0,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      listening: false,
+    });
+    this.progressHoverText = new Konva.Text({
+      width: barWidth,
+      height: 18,
+      align: "center",
+      verticalAlign: "middle",
+      fontSize: 12,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      visible: false,
+      listening: false,
+    });
+    this.progressBarGroup.add(
+      this.progressBarBg,
+      this.progressBarFill,
+      this.progressHoverText
+    );
+    this.progressBarGroup.on("mouseenter", () => {
+      this.progressHoverText.text(
+        `${this.progressTotals.found} / ${this.progressTotals.total} tasks`
+      );
+      this.progressHoverText.visible(true);
+      this.group.getLayer()?.draw();
+    });
+    this.progressBarGroup.on("mouseleave", () => {
+      this.progressHoverText.visible(false);
+      this.group.getLayer()?.draw();
+    });
+    this.group.add(this.progressBarGroup);
+  }
   
 
   //dictionary button
-private createDictionaryButton(): void {
-  const buttonWidth = 180;
-  const buttonHeight = 50;
+  private createDictionaryButton(): void {
+    const buttonWidth = 180;
+    const buttonHeight = 50;
+    const btnX = 300;
+    const btnY = 24;
 
-  // Position aligned next to Back button
-  const btnX = 300;  // adjust depending on spacing
-  const btnY = 24;
+    const group = new Konva.Group({ x: btnX, y: btnY });
 
-  const group = new Konva.Group({ x: btnX, y: btnY });
+    const rect = new Konva.Rect({
+      width: buttonWidth,
+      height: buttonHeight,
+      cornerRadius: 14,
+      fill: "#1D4ED8",
+      stroke: "#0F172A",
+      strokeWidth: 2,
+      shadowColor: "rgba(0,0,0,0.3)",
+      shadowBlur: 8,
+      shadowOffsetY: 3,
+    });
 
-  const rect = new Konva.Rect({
-    width: buttonWidth,
-    height: buttonHeight,
-    cornerRadius: 14,
-    fill: "#1D4ED8",            // Same blue as Back button
-    stroke: "#0F172A",
-    strokeWidth: 2,
-    shadowColor: "rgba(0,0,0,0.3)",
-    shadowBlur: 8,
-    shadowOffsetY: 3,
-  });
+    const text = new Konva.Text({
+      width: buttonWidth,
+      height: buttonHeight,
+      align: "center",
+      verticalAlign: "middle",
+      text: "Dictionary",
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#FFFFFF",
+      fontStyle: "bold",
+      listening: false,
+    });
 
-  const text = new Konva.Text({
-    width: buttonWidth,
-    height: buttonHeight,
-    align: "center",
-    verticalAlign: "middle",
-    text: "Dictionary",
-    fontSize: 20,
-    fontFamily: "Arial",
-    fill: "#FFFFFF",
-    fontStyle: "bold",
-    listening: false
-  });
+    group.on("click tap", () => this.showDictionaryPopup());
+    group.on("mouseenter", () => (document.body.style.cursor = "pointer"));
+    group.on("mouseleave", () => (document.body.style.cursor = "default"));
 
-  group.on("click tap", () => this.showDictionaryPopup());
-  group.on("mouseenter", () => document.body.style.cursor = "pointer");
-  group.on("mouseleave", () => document.body.style.cursor = "default");
-
-  group.add(rect, text);
-  this.group.add(group);
-  group.moveToTop();
-}
+    group.add(rect, text);
+    this.group.add(group);
+    group.moveToTop();
+  }
 
 
   private createDictionaryPopup(): void {
@@ -589,4 +648,3 @@ private createDictionaryButton(): void {
     return this.group;
   }
 }
-

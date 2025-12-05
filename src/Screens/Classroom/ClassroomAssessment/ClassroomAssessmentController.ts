@@ -1,7 +1,7 @@
 import Konva from "konva";
-import type { Item } from "../../../types";
-import { ScreenController, ScreenSwitcher } from "../../../types";
 import { globals } from "../../../constants";
+import type { Item, Person } from "../../../types";
+import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
 import { ClassroomAssessmentView } from "./ClassroomAssessmentView";
@@ -16,15 +16,20 @@ export class ClassroomAssessmentController extends ScreenController {
   private readonly tracker: ProgressTracker;
   private readonly screenSwitcher: ScreenSwitcher;
   private unsubscribeProgress?: () => void;
-  
+  private completionShown = false;
 
-  constructor(stage: Konva.Stage, layer: Konva.Layer, screenSwitcher: ScreenSwitcher) {
+  constructor(
+    stage: Konva.Stage,
+    layer: Konva.Layer,
+    screenSwitcher: ScreenSwitcher,
+    tracker: ProgressTracker
+  ) {
     super();
     this.screenSwitcher = screenSwitcher;
 
     this.model = new ClassroomAssessmentModel();
-    this.view = new ClassroomAssessmentView(stage, layer); // <-- pass stage + layer
-    this.tracker = new ProgressTracker();
+    this.view = new ClassroomAssessmentView(stage, layer);
+    this.tracker = tracker;
   }
 
   /**
@@ -38,20 +43,28 @@ export class ClassroomAssessmentController extends ScreenController {
 
     // Register progress IDs (classroom:itemname)
     const ids = items.map((item) => `classroom:${item.name}`);
-    this.tracker.registerItems(ids);
+    this.tracker.registerItems("classroomItems", ids);
+    this.tracker.registerItems("people", [`classroom:person:${person.name}`]);
 
     // Render scene into View
     this.view.renderScene(items, person, (item) => this.handleItemClick(item));
 
     // Wire top buttons
-    this.view.setOnSwitchToStore(() => this.screenSwitcher.switchToScreen({ type: "Store" }));
     this.view.setOnReset(() => this.handleReset());
-    this.view.setOnSwitchToMinigame(() => this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" }));
+    this.view.setOnSwitchToMinigame(() =>
+      this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" })
+    );
     this.view.setOnBack(() => this.screenSwitcher.switchToScreen({ type: "Intro" }));
+    this.view.setOnDialogueComplete(() => this.handleDialogueComplete(person));
 
     // Update progress text whenever tracker changes
-    this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {
-      this.view.updateProgress(found, total);
+    this.unsubscribeProgress = this.tracker.onChange((counts) => {
+      this.view.updateTotalProgress(counts.total.found, counts.total.total);
+      const { found, total } = counts.total;
+      if (!this.completionShown && total > 0 && found === total) {
+        this.completionShown = true;
+        this.view.showCompletionPopup(() => this.restartExperience());
+      }
     });
 
     // Initialize panel
@@ -77,7 +90,7 @@ export class ClassroomAssessmentController extends ScreenController {
     if (!selected) return;
 
     // mark as found
-    const isNew = this.tracker.markFound(`classroom:${item.name}`);
+    const isNew = this.tracker.markFound("classroomItems", `classroom:${item.name}`);
 
     // Update global progress count when a new item is found
     if (isNew) {
@@ -95,6 +108,11 @@ export class ClassroomAssessmentController extends ScreenController {
     this.view.updatePanel(selected);
   }
 
+  private handleDialogueComplete(person: Person): void {
+    this.tracker.markFound("people", `classroom:person:${person.name}`);
+    this.view.showDialogueCompleted();
+  }
+
   getItems(): Item[] {
     return this.model.getItems();
   }
@@ -105,5 +123,10 @@ export class ClassroomAssessmentController extends ScreenController {
   private handleReset(): void {
     this.tracker.reset();
     this.view.resetPanel();
+    this.completionShown = false;
+  }
+
+  private restartExperience(): void {
+    window.location.reload();
   }
 }

@@ -8,8 +8,9 @@ import { ClassroomMinigameController } from "./Screens/Classroom/ClassroomMiniga
 import { IntroScreenController } from "./Screens/Intro/IntroScreenController";
 import { RestaurantAssessmentController } from "./Screens/Restaurant/RestaurantAssessment/RestaurantAssessmentController";
 import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
-import { StoreMainController } from "./Screens/Store/StoreMain/StoreMainController";
 import { SessionScreenController } from "./Screens/Session/SessionScreenController";
+import { StoreMainController } from "./Screens/Store/StoreMain/StoreMainController";
+import { ProgressTracker } from "./utils/ProgressTracker";
 
 export class App implements ScreenSwitcher {
   private stage: Konva.Stage;
@@ -22,6 +23,7 @@ export class App implements ScreenSwitcher {
   private classroomController: ClassroomAssessmentController;
   private minigameController: ClassroomMinigameController;
   private sessionController: SessionScreenController;
+  private progressTracker: ProgressTracker;
 
   constructor(container: string) {
     this.stage = new Konva.Stage({
@@ -32,15 +34,24 @@ export class App implements ScreenSwitcher {
     this.layer = new Konva.Layer();
     this.stage.add(this.layer);
 
+    this.progressTracker = new ProgressTracker();
+
     // --- Initialize controllers ---
     this.introController = new IntroScreenController(this);
-    this.storeController = new StoreMainController(this);
-    this.restaurantController = new RestaurantMainController(this);
-    this.restaurantAssessmentController = new RestaurantAssessmentController(this);
+    this.storeController = new StoreMainController(this, this.progressTracker);
+    this.restaurantController = new RestaurantMainController(
+      this,
+      this.progressTracker
+    );
+    this.restaurantAssessmentController = new RestaurantAssessmentController(
+      this,
+      this.progressTracker
+    );
     this.classroomController = new ClassroomAssessmentController(
       this.stage,
       this.layer,
-      this
+      this,
+      this.progressTracker
     );
     this.minigameController = {} as ClassroomMinigameController; // placeholder, initialized after classroom items are loaded
     this.sessionController = new SessionScreenController(this);
@@ -52,7 +63,9 @@ export class App implements ScreenSwitcher {
     // --- Intro Screen ---
     this.layer.add(this.introController.getView().getGroup());
     await this.introController.start();
-    this.introController.getView().loadBackground("Public/Background/intro.webp");
+    this.introController
+      .getView()
+      .loadBackground("Public/Background/intro.webp");
     this.layer.draw();
 
     // --- Store ---
@@ -77,7 +90,8 @@ export class App implements ScreenSwitcher {
       this.stage,
       this.layer,
       classroomItems,
-      this
+      this,
+      this.progressTracker
     );
     await this.minigameController.start();
     this.layer.add(this.minigameController.getView().getGroup());

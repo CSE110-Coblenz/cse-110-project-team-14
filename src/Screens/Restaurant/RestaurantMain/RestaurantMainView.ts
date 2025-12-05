@@ -15,6 +15,11 @@ export class RestaurantMainView {
   private frenchVocab: Konva.Text;
   private phonetic: Konva.Text;
   private itemImages: Record<string, Konva.Image> = {};
+  private progressBarGroup!: Konva.Group;
+  private progressBarBg!: Konva.Rect;
+  private progressBarFill!: Konva.Rect;
+  private progressHoverText!: Konva.Text;
+  private progressTotals = { found: 0, total: 0 };
 
   private onAssessment: () => void;
   private onBackClick!: () => void;
@@ -49,6 +54,7 @@ export class RestaurantMainView {
 
     // Dictionary popup
     this.createDictionaryPopup();
+    this.createProgressBar();
   }
 
 
@@ -73,6 +79,7 @@ export class RestaurantMainView {
                     console.log(globals.dictionary);
                   }
                   onItemClick(item.name);
+                  FrenchTTS.speak(item.french, "fr-FR");
                 });
         
                 this.itemImages[item.name] = imgNode;
@@ -176,6 +183,13 @@ export class RestaurantMainView {
       return { dock, englishText, frenchVocab, phonetic };
     }
 
+  updateTotalProgress(found: number, total: number) {
+    this.progressTotals = { found, total };
+    const ratio = total === 0 ? 0 : found / total;
+    this.progressBarFill.width(this.progressBarBg.width() * ratio);
+    this.group.getLayer()?.draw();
+  }
+
   updateDock(item: Item): void {
     this.englishVocab.text(item.english);
     this.frenchVocab.text(item.french);
@@ -190,10 +204,11 @@ export class RestaurantMainView {
   private createNavigationButtons(): void {
     const btnY = 24;
 
-    const backBtn = this.createNavButton("Back to Intro", 30, btnY, () => this.onBackClick());
+    const backBtn = this.createNavButton("Change Scenes", 30, btnY, () => this.onBackClick());
     this.group.add(backBtn);
-
-    const dictBtn = this.createNavButton("Dictionary", 240, btnY, () => this.showDictionaryPopup());
+    const dictBtn = this.createNavButton("Dictionary", 240, btnY, () =>
+      this.showDictionaryPopup()
+    );
     this.group.add(dictBtn);
   }
 
@@ -365,5 +380,57 @@ export class RestaurantMainView {
 
   getGroup(): Konva.Group {
     return this.group;
+  }
+
+  private createProgressBar() {
+    const barWidth = 240;
+    const barMargin = 80;
+    this.progressBarGroup = new Konva.Group({
+      x: STAGE_WIDTH - barWidth - barMargin,
+      y: 20,
+    });
+    this.progressBarBg = new Konva.Rect({
+      width: barWidth,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      opacity: 0.25,
+      listening: false,
+    });
+    this.progressBarFill = new Konva.Rect({
+      width: 0,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      listening: false,
+    });
+    this.progressHoverText = new Konva.Text({
+      width: barWidth,
+      height: 18,
+      align: "center",
+      verticalAlign: "middle",
+      fontSize: 12,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      visible: false,
+      listening: false,
+    });
+    this.progressBarGroup.add(
+      this.progressBarBg,
+      this.progressBarFill,
+      this.progressHoverText
+    );
+    this.progressBarGroup.on("mouseenter", () => {
+      this.progressHoverText.text(
+        `${this.progressTotals.found} / ${this.progressTotals.total} tasks`
+      );
+      this.progressHoverText.visible(true);
+      this.group.getLayer()?.draw();
+    });
+    this.progressBarGroup.on("mouseleave", () => {
+      this.progressHoverText.visible(false);
+      this.group.getLayer()?.draw();
+    });
+    this.group.add(this.progressBarGroup);
   }
 }
