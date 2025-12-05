@@ -6,6 +6,7 @@ import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS, STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
 import type { Item } from "../../../types";
 import { View } from "../../../types";
+import type { ProgressCounts } from "../../../utils/ProgressTracker";
 
 const MINIGAME_BG = "/Background/ClassMinigame.jpg";
 
@@ -32,12 +33,26 @@ export class ClassroomMinigameView implements View {
   private basketLabels: Konva.Text[] = [];
   private _feedbackGroup?: Konva.Group;
   private _titleNode?: Konva.Text;
+  private exitButton: Konva.Group;
+  private exitHandler?: () => void;
+  private progressText: Konva.Text;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
     this.layer = layer;
     this.group = new Konva.Group({ visible: false });
     this.addBackground();
+    this.exitButton = this.createExitButton();
+    this.group.add(this.exitButton);
+    this.progressText = new Konva.Text({
+      x: 40,
+      y: 30,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#FFFFFF",
+      text: "Items 0 / 0 | People 0 / 0 | Minigame 0 / 0",
+    });
+    this.group.add(this.progressText);
   }
 
   getGroup(): Group {
@@ -51,6 +66,18 @@ export class ClassroomMinigameView implements View {
 
   hide(): void {
     this.group.visible(false);
+    this.layer.batchDraw();
+  }
+
+  setOnExit(handler: () => void): void {
+    this.exitHandler = handler;
+  }
+
+  updateProgress(counts: ProgressCounts) {
+    const { items, people, minigames } = counts;
+    this.progressText.text(
+      `Items ${items.found} / ${items.total} | People ${people.found} / ${people.total} | Minigame ${minigames.found} / ${minigames.total}`
+    );
     this.layer.batchDraw();
   }
 
@@ -279,5 +306,39 @@ export class ClassroomMinigameView implements View {
       });
       text.to({ opacity: 0, duration: 0.25 });
     }, 700);
+  }
+
+  private createExitButton(): Konva.Group {
+    const group = new Konva.Group({
+      x: STAGE_WIDTH - 190,
+      y: 40,
+    });
+    const rect = new Konva.Rect({
+      width: 150,
+      height: 44,
+      cornerRadius: 12,
+      fill: "#1D4ED8",
+      stroke: "#0F172A",
+      strokeWidth: 1,
+      shadowColor: "rgba(0,0,0,0.2)",
+      shadowBlur: 8,
+      shadowOffsetY: 3,
+    });
+    const text = new Konva.Text({
+      width: rect.width(),
+      height: rect.height(),
+      align: "center",
+      verticalAlign: "middle",
+      text: "Exit Minigame",
+      fontSize: 18,
+      fontFamily: "Arial",
+      fill: "#FFFFFF",
+      listening: false,
+    });
+    group.add(rect, text);
+    group.on("click tap", () => this.exitHandler?.());
+    group.on("mouseenter", () => this.stage.container().style.cursor = "pointer");
+    group.on("mouseleave", () => this.stage.container().style.cursor = "default");
+    return group;
   }
 }

@@ -1,4 +1,4 @@
-import type { Item } from "../../../types";
+import type { Item, Person } from "../../../types";
 import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
@@ -16,13 +16,18 @@ export class ClassroomAssessmentController extends ScreenController {
   private readonly screenSwitcher: ScreenSwitcher;
   private unsubscribeProgress?: () => void;
 
-  constructor(stage: Konva.Stage, layer: Konva.Layer, screenSwitcher: ScreenSwitcher) {
+  constructor(
+    stage: Konva.Stage,
+    layer: Konva.Layer,
+    screenSwitcher: ScreenSwitcher,
+    tracker: ProgressTracker
+  ) {
     super();
     this.screenSwitcher = screenSwitcher;
 
     this.model = new ClassroomAssessmentModel();
     this.view = new ClassroomAssessmentView(stage, layer); // <-- pass stage + layer
-    this.tracker = new ProgressTracker();
+    this.tracker = tracker;
   }
 
   /**
@@ -36,19 +41,25 @@ export class ClassroomAssessmentController extends ScreenController {
 
     // Register progress IDs (classroom:itemname)
     const ids = items.map((item) => `classroom:${item.name}`);
-    this.tracker.registerItems(ids);
+    this.tracker.registerItems(ids, "items");
+    this.tracker.registerItems([`classroom:${person.name}`], "people");
 
     // Render scene into View
     this.view.renderScene(items, person, (item) => this.handleItemClick(item));
+    this.view.setOnDialogueComplete(() => this.handleDialogueComplete(person));
 
-    // Wire top buttons
-    this.view.setOnSwitchToRestaurant(() => this.screenSwitcher.switchToScreen({ type: "Restaurant" }));
+    // Wire interactions
+    this.view.setOnSwitchToRestaurant(() =>
+      this.screenSwitcher.switchToScreen({ type: "Restaurant" })
+    );
     this.view.setOnReset(() => this.handleReset());
-    this.view.setOnSwitchToMinigame(() => this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" }));
+    this.view.setOnSwitchToMinigame(() =>
+      this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" })
+    );
 
     // Update progress text whenever tracker changes
-    this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {
-      this.view.updateProgress(found, total);
+    this.unsubscribeProgress = this.tracker.onChange((counts) => {
+      this.view.updateProgress(counts);
     });
 
     // Initialize panel
@@ -74,10 +85,15 @@ export class ClassroomAssessmentController extends ScreenController {
     if (!selected) return;
 
     // mark as found
-    this.tracker.markFound(`classroom:${item.name}`);
+    this.tracker.markFound(`classroom:${item.name}`, "items");
 
     // update info panel
     this.view.updatePanel(selected);
+  }
+
+  private handleDialogueComplete(person: Person): void {
+    this.tracker.markFound(`classroom:${person.name}`, "people");
+    this.view.showDialogueCompleted();
   }
 
   getItems(): Item[] {
@@ -88,7 +104,7 @@ export class ClassroomAssessmentController extends ScreenController {
    * Reset room progress
    */
   private handleReset(): void {
-    this.tracker.reset();
+    this.tracker.resetCategory("items", (id) => id.startsWith("classroom:"));
     this.view.resetPanel();
   }
 }

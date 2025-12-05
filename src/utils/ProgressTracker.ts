@@ -1,4 +1,15 @@
-type ProgressListener = (counts: { found: number; total: number }) => void;
+// function that receives [found, total] counts whenever they change
+export type ProgressCategory = "items" | "people" | "minigames";
+
+export type ProgressCounts = Record<
+  ProgressCategory,
+  {
+    found: number;
+    total: number;
+  }
+>;
+
+type ProgressListener = (counts: ProgressCounts) => void;
 
 /**
  * Tracks how many unique vocabulary items across all scenes have been discovered.
@@ -7,32 +18,64 @@ type ProgressListener = (counts: { found: number; total: number }) => void;
  * notifies subscribed views whenever counts change.
  */
 export class ProgressTracker {
-  private readonly registered = new Set<string>();
-  private readonly discovered = new Set<string>();
+  private readonly registered: Record<ProgressCategory, Set<string>> = {
+    items: new Set(),
+    people: new Set(),
+    minigames: new Set(),
+  };
+  private readonly discovered: Record<ProgressCategory, Set<string>> = {
+    items: new Set(),
+    people: new Set(),
+    minigames: new Set(),
+  };
   private readonly listeners = new Set<ProgressListener>();
 
-  registerItems(ids: string[]): void {
-    ids.forEach((id) => this.registered.add(id));
+  registerItems(ids: string[], category: ProgressCategory = "items"): void {
+    ids.forEach((id) => this.registered[category].add(id));
     this.emit();
   }
 
-  markFound(id: string): boolean {
-    const before = this.discovered.size;
-    this.discovered.add(id);
-    const isNew = this.discovered.size !== before;
+  markFound(id: string, category: ProgressCategory = "items"): boolean {
+    const before = this.discovered[category].size;
+    this.discovered[category].add(id);
+    const isNew = this.discovered[category].size !== before;
     if (isNew) {
       this.emit();
     }
     return isNew;
   }
 
-  reset(): void {
-    this.discovered.clear();
+  resetCategory(
+    category: ProgressCategory,
+    predicate?: (id: string) => boolean
+  ): void {
+    if (!predicate) {
+      this.discovered[category].clear();
+    } else {
+      [...this.discovered[category]].forEach((id) => {
+        if (predicate(id)) {
+          this.discovered[category].delete(id);
+        }
+      });
+    }
     this.emit();
   }
 
-  getCounts(): { found: number; total: number } {
-    return { found: this.discovered.size, total: this.registered.size };
+  getCounts(): ProgressCounts {
+    return {
+      items: {
+        found: this.discovered.items.size,
+        total: this.registered.items.size,
+      },
+      people: {
+        found: this.discovered.people.size,
+        total: this.registered.people.size,
+      },
+      minigames: {
+        found: this.discovered.minigames.size,
+        total: this.registered.minigames.size,
+      },
+    };
   }
 
   onChange(listener: ProgressListener): () => void {

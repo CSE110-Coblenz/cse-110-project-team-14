@@ -1,9 +1,10 @@
 import type { Layer } from "konva/lib/Layer";
 import type { Stage } from "konva/lib/Stage";
-import type { Item } from "../../../types";
+import type { Item, ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
 import { ClassroomMinigameModel } from "./ClassroomMinigameModel";
 import { ClassroomMinigameView } from "./ClassroomMinigameView";
+import { ProgressTracker } from "../../../utils/ProgressTracker";
 
 /**
  * Represents a visual basket in the minigame.
@@ -23,9 +24,20 @@ export class ClassroomMinigameController extends ScreenController {
   private view: ClassroomMinigameView;
   private baskets: BasketData[] = [];  // dynamically generated from items
   private onComplete?: () => void;
+  private screenSwitcher: ScreenSwitcher;
+  private tracker: ProgressTracker;
+  private unsubscribeProgress?: () => void;
 
-  constructor(stage: Stage, layer: Layer, items: Item[]) {
+  constructor(
+    stage: Stage,
+    layer: Layer,
+    items: Item[],
+    screenSwitcher: ScreenSwitcher,
+    tracker: ProgressTracker
+  ) {
     super();
+    this.screenSwitcher = screenSwitcher;
+    this.tracker = tracker;
     this.model = new ClassroomMinigameModel(items);
     this.view = new ClassroomMinigameView(stage, layer);
 
@@ -34,6 +46,7 @@ export class ClassroomMinigameController extends ScreenController {
       name: item.french,
       imageSrc: "ItemImage/Classroom/basket.png" // could be customized per item
     }));
+    this.tracker.registerItems(["classroom:minigame"], "minigames");
   }
 
   /** Return the view for scene layering */
@@ -52,6 +65,10 @@ export class ClassroomMinigameController extends ScreenController {
       this.baskets,
       (item, basketName) => this.handleItemDrop(item, basketName)
     );
+    this.unsubscribeProgress = this.tracker.onChange((counts) => {
+      this.view.updateProgress(counts);
+    });
+    this.view.setOnExit(() => this.exitMinigame());
     this.view.show();
   }
 
@@ -77,7 +94,13 @@ export class ClassroomMinigameController extends ScreenController {
 
   /** Trigger when all items have been placed correctly */
   private finishGame() {
+    this.tracker.markFound("classroom:minigame", "minigames");
     if (this.onComplete) this.onComplete();
+  }
+
+  private exitMinigame(): void {
+    this.hide();
+    this.screenSwitcher.switchToScreen({ type: "Classroom" });
   }
 
   /** Allow external code to attach a completion handler */

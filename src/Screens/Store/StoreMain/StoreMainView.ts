@@ -2,6 +2,7 @@ import Konva from "konva";
 import type { Item } from "../../../types"; 
 import { STAGE_WIDTH, STAGE_HEIGHT, globals } from "../../../constants"; // import globals
 import type { Person, DialogueNode } from "../../../types";
+import type { ProgressCounts } from "../../../utils/ProgressTracker";
 
 export class StoreMainView {
   //Background / main group
@@ -14,6 +15,7 @@ export class StoreMainView {
   private englishVocab: Konva.Text;
   private frenchVocab: Konva.Text;
   private phonetic: Konva.Text;
+  private progressText: Konva.Text;
 
   private itemImages: Record<string, Konva.Image> = {};
 
@@ -29,10 +31,10 @@ export class StoreMainView {
   private onStartClick: () => void;
 
 
-constructor(
-  onItemClick: (itemName: string) => void,
-  onStartClick: () => void
-) {
+  constructor(
+    onItemClick: (itemName: string) => void,
+    onStartClick: () => void
+  ) {
   this.group = new Konva.Group({ visible: false });
   this.onStartClick = onStartClick;   // <-- store the second callback
 
@@ -47,6 +49,15 @@ constructor(
   
 
   this.group.add(dock, englishText, frenchVocab, phonetic);
+  this.progressText = new Konva.Text({
+    x: 40,
+    y: 30,
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#0F172A",
+    text: "Items 0 / 0 | People 0 / 0 | Minigame 0 / 0",
+  });
+  this.group.add(this.progressText);
   // dock.moveToTop();
   // englishText.moveToTop();
   // frenchVocab.moveToTop();
@@ -345,6 +356,14 @@ private createbackgroundLayer(): Konva.Rect {
     this.popupGroup?.visible(true);
     this.popupGroup?.moveToTop();
   
+    this.group.getLayer()?.draw();
+  }
+
+  updateProgress(counts: ProgressCounts) {
+    const { items, people, minigames } = counts;
+    this.progressText.text(
+      `Items ${items.found} / ${items.total} | People ${people.found} / ${people.total} | Minigame ${minigames.found} / ${minigames.total}`
+    );
     this.group.getLayer()?.draw();
   }
   

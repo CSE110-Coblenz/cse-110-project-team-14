@@ -9,6 +9,7 @@ import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS } from "../../../constants";
 import type { Item, Person } from "../../../types";
 import { globals } from "../../../constants";
+import type { ProgressCounts } from "../../../utils/ProgressTracker";
 
 const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
 
@@ -37,16 +38,19 @@ export class ClassroomAssessmentView {
   private readonly speechText: Text;
   private readonly leftArrow: Group;
   private readonly rightArrow: Group;
+  private readonly dialogueCompleteButton: Group;
 
   private itemImages: KonvaImage[] = [];
   private personIcon?: KonvaImage;
   private personData?: Person;
   private dialogueLines: string[] = [];
   private currentDialogueIndex = 0;
+  private dialogueCompleted = false;
 
   private switchHandler?: () => void;
   private resetHandler?: () => void;
   private minigameHandler?: () => void;
+  private dialogueCompleteHandler?: () => void;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -126,8 +130,10 @@ export class ClassroomAssessmentView {
 
     this.leftArrow = this.createArrowControl("left", () => this.showPreviousDialogue());
     this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
+    this.dialogueCompleteButton = this.createDialogueCompleteButton();
+    this.setCompleteButtonVisible(false);
 
-    this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
+    this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow, this.dialogueCompleteButton);
   }
 
   /** Render all items and person asynchronously */
@@ -191,6 +197,7 @@ export class ClassroomAssessmentView {
   setOnSwitchToRestaurant(handler: () => void) { this.switchHandler = handler; }
   setOnReset(handler: () => void) { this.resetHandler = handler; }
   setOnSwitchToMinigame(handler: () => void) { this.minigameHandler = handler; }
+  setOnDialogueComplete(handler: () => void) { this.dialogueCompleteHandler = handler; }
 
   /** Panel updates */
   updatePanel(item: Item) {
@@ -207,8 +214,11 @@ export class ClassroomAssessmentView {
     this.layer.batchDraw();
   }
 
-  updateProgress(found: number, total: number) {
-    this.progressText.text(`${found} / ${total} found`);
+  updateProgress(counts: ProgressCounts) {
+    const { items, people, minigames } = counts;
+    this.progressText.text(
+      `Items ${items.found} / ${items.total} | People ${people.found} / ${people.total} | Minigame ${minigames.found} / ${minigames.total}`
+    );
     this.layer.batchDraw();
   }
 
@@ -219,6 +229,7 @@ export class ClassroomAssessmentView {
   private openDialogue() {
     if (!this.personData || this.dialogueLines.length === 0) return;
     this.currentDialogueIndex = 0;
+    this.dialogueCompleted = false;
     this.updateDialogueText();
     this.applyBlur();
     this.personIcon?.visible(false);
@@ -249,6 +260,8 @@ export class ClassroomAssessmentView {
     this.speechText.text(this.dialogueLines[this.currentDialogueIndex] ?? "");
     this.setArrowState(this.leftArrow, this.currentDialogueIndex > 0);
     this.setArrowState(this.rightArrow, this.currentDialogueIndex < this.dialogueLines.length - 1);
+    const atEnd = this.currentDialogueIndex === this.dialogueLines.length - 1;
+    this.setCompleteButtonVisible(atEnd && !this.dialogueCompleted);
     this.layer.batchDraw();
   }
 
@@ -370,6 +383,56 @@ export class ClassroomAssessmentView {
   private setArrowState(arrow: Group, enabled: boolean) {
     arrow.opacity(enabled ? 1 : 0.3);
     arrow.listening(enabled);
+  }
+
+  private createDialogueCompleteButton(): Group {
+    const group = new Konva.Group({
+      x: this.speechBubble.x() + this.speechBubble.width() - 180,
+      y: this.speechBubble.y() + this.speechBubble.height() - 80,
+    });
+    const rect = new Konva.Rect({
+      width: 150,
+      height: 46,
+      cornerRadius: 12,
+      fill: "#16a34a",
+      stroke: "#0F172A",
+      strokeWidth: 1,
+      shadowColor: "rgba(0,0,0,0.15)",
+      shadowBlur: 8,
+      shadowOffsetY: 3,
+    });
+    const text = new Konva.Text({
+      width: rect.width(),
+      height: rect.height(),
+      align: "center",
+      verticalAlign: "middle",
+      text: "Complete!",
+      fontSize: 18,
+      fontFamily: "Arial",
+      fill: "#FFFFFF",
+      listening: false,
+    });
+    group.add(rect, text);
+    group.on("click tap", () => {
+      if (this.dialogueCompleted) return;
+      this.dialogueCompleted = true;
+      this.setCompleteButtonVisible(false);
+      this.dialogueCompleteHandler?.();
+    });
+    group.on("mouseenter", () => this.setCursor("pointer"));
+    group.on("mouseleave", () => this.setCursor("default"));
+    return group;
+  }
+
+  private setCompleteButtonVisible(visible: boolean) {
+    this.dialogueCompleteButton.visible(visible);
+    this.dialogueCompleteButton.listening(visible);
+  }
+
+  showDialogueCompleted() {
+    this.dialogueCompleted = true;
+    this.setCompleteButtonVisible(false);
+    this.layer.batchDraw();
   }
 
   private applyBlur() {

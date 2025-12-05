@@ -7,7 +7,7 @@
       "phonetic": "luh cray-ohn",
       "image": "/ItemImage/Classroom/PENCIL.png",
       "x": 120,
-      "y": 180
+      "y": 400
     },
     {
       "name": "book",
@@ -16,16 +16,16 @@
       "phonetic": "leev-ruh",
       "image": "/ItemImage/Classroom/BOOK.png",
       "x": 340,
-      "y": 160
+      "y": 400
     },
     {
       "name": "table",
       "english": "Table",
       "french": "La table",
       "phonetic": "lah tah-bluh",
-      "image": "/ItemImage/Classroom/table.png",
+      "image": "/ItemImage/Classroom/TABLE.png",
       "x": 560,
-      "y": 200
+      "y": 100
     },
     {
       "name": "chair",
@@ -34,24 +34,25 @@
       "phonetic": "lah shez",
       "image": "/ItemImage/Classroom/CHAIR.jpeg",
       "x": 780,
-      "y": 180
+      "y": 100
     }
   ],
   "person": {
-    "name": "Monsieur Theo",
-    "role": "Friendly Student",
-    "image": "/ItemImage/Classroom/CRStudent1.png",
-    "x": 650,
-    "y": 80,
+    "name": "Camille",
+    "role": "Confused girl",
+    "image": "/ItemImage/Classroom/camille.png",
+    "x": 100,
+    "y": 100,
     "dialogue": [
-      "Bonjour! Vous parlez français?..",
-      "...",
-      "Pardon me, you must be our new neighbor from America!",
-      "Welcome to _____!! My name is Theo, you may call me Monsieur Theo if you like…",
-      "The word « Monsieur », in French, is Mister!",
-      "What is your name?",
-      "Very nice to meet you ____",
-      "Is this your first time here?"
+      "Hmm... I'm always confused in this class...",
+      "If you want to ask a question in French, you can say J'ai une question. That means I have a question.",
+      "French often uses apostrophes to shorten words when a vowel comes next.",
+      "In this example, <<J'ai>> is really Je + ai. \n<<Je>> means 'I', and <<ai>> means 'have'",
+      "French loves smooth sound flow, so we remove the vowel in Je and add an apostrophe.",
+      "<<Je ne comprends pas>> — means 'I don't understand' in French",
+      "Here, ne and pas are used to make a sentence negative.",
+      "To negate a verb in French, we put ne before the verb and pas after it. So 'I don't understand' becomes <<Je ne [comprends] pas>> \nand you can replace [comprends] with any verb! Like this: \n<<Je ne [verb] pas>> to negate any meaning.",
+      "Hope this helps a bit!"
     ]
   }
 }

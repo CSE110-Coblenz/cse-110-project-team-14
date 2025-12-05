@@ -1,6 +1,7 @@
 import Konva from "konva";
 import { STAGE_HEIGHT, STAGE_WIDTH, globals } from "../../../constants";
 import type { Item } from '../../../types';
+import type { ProgressCounts } from "../../../utils/ProgressTracker";
 
 export class RestaurantMainView {
   private group: Konva.Group;
@@ -10,6 +11,7 @@ export class RestaurantMainView {
   private dockPhonetic: Konva.Text;
   private background: Konva.Rect;
   private onAssessment: () => void;
+  private progressText: Konva.Text;
 
   constructor(
     onItemClick: (itemName: string) => void,
@@ -28,6 +30,15 @@ export class RestaurantMainView {
       fill: "#d3eaf5ff",
     });
     this.group.add(this.background);
+    this.progressText = new Konva.Text({
+      x: 40,
+      y: 30,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#0F172A",
+      text: "Items 0 / 0 | People 0 / 0 | Minigame 0 / 0",
+    });
+    this.group.add(this.progressText);
 
     // Dock
     const dockHeight = 100;
@@ -125,6 +136,14 @@ export class RestaurantMainView {
   updateDock(item: Item): void {
     this.dockText.text(`${item.english} / ${item.french}`);
     this.dockPhonetic.text(`${item.phonetic}`);
+    this.group.getLayer()?.batchDraw();
+  }
+
+  updateProgress(counts: ProgressCounts) {
+    const { items, people, minigames } = counts;
+    this.progressText.text(
+      `Items ${items.found} / ${items.total} | People ${people.found} / ${people.total} | Minigame ${minigames.found} / ${minigames.total}`
+    );
     this.group.getLayer()?.batchDraw();
   }
 
