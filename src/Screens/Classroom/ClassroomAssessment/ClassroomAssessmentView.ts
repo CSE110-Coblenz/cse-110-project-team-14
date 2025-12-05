@@ -41,10 +41,10 @@ export class ClassroomAssessmentView {
   private readonly rightArrowCircle: Konva.Circle;
   private readonly arrowInstruction: Text;
 
-  private progressBarGroup: Group;
-  private progressBarBg: Rect;
-  private progressBarFill: Rect;
-  private progressHoverText: Text;
+  private progressBarGroup!: Group;
+  private progressBarBg!: Rect;
+  private progressBarFill!: Rect;
+  private progressHoverText!: Text;
   private progressTotals = { found: 0, total: 0 };
   private completionPopup?: Group;
 
@@ -386,9 +386,6 @@ export class ClassroomAssessmentView {
   }
   setOnDialogueComplete(handler: () => void) {
     this.dialogueCompleteHandler = handler;
-  }
-  setOnBack(handler: () => void) {
-    this.backHandler = handler;
   }
   setOnBack(handler: () => void) {
     this.backHandler = handler;

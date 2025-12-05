@@ -34,10 +34,10 @@ export class StoreMainView {
   private onBackClick!: () => void;
   private dialogueCompleteHandler?: () => void;
   private dialogueCompleted = false;
-  private progressBarGroup: Konva.Group;
-  private progressBarBg: Konva.Rect;
-  private progressBarFill: Konva.Rect;
-  private progressHoverText: Konva.Text;
+  private progressBarGroup!: Konva.Group;
+  private progressBarBg!: Konva.Rect;
+  private progressBarFill!: Konva.Rect;
+  private progressHoverText!: Konva.Text;
   private progressTotals = { found: 0, total: 0 };
 
 

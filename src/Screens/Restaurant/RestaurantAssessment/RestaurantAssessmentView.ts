@@ -6,10 +6,10 @@ export class RestaurantAssessmentView {
   private group: Konva.Group = new Konva.Group({ visible: false });
   private typingText?: Konva.Text;
   private scoreText?: Konva.Text;
-  private progressBarGroup: Konva.Group;
-  private progressBarBg: Konva.Rect;
-  private progressBarFill: Konva.Rect;
-  private progressHoverText: Konva.Text;
+  private progressBarGroup!: Konva.Group;
+  private progressBarBg!: Konva.Rect;
+  private progressBarFill!: Konva.Rect;
+  private progressHoverText!: Konva.Text;
   private progressTotals = { found: 0, total: 0 };
   private onRestaurant: () => void;
   private onRestart: () => void;

@@ -35,10 +35,10 @@ export class ClassroomMinigameView implements View {
   private titleNode?: Konva.Text;
   private resultGroup?: Konva.Group;
   private backButtonGroup?: Konva.Group;
-  private progressBarGroup: Group;
-  private progressBarBg: Konva.Rect;
-  private progressBarFill: Konva.Rect;
-  private progressHoverText: Konva.Text;
+  private progressBarGroup!: Group;
+  private progressBarBg!: Konva.Rect;
+  private progressBarFill!: Konva.Rect;
+  private progressHoverText!: Konva.Text;
   private progressTotals = { found: 0, total: 0 };
 
   private onBackToClassroom: () => void = () => {};
