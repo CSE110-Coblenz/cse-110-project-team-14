@@ -6,6 +6,11 @@ export class RestaurantAssessmentView {
   private group: Konva.Group = new Konva.Group({ visible: false });
   private typingText?: Konva.Text;
   private scoreText?: Konva.Text;
+  private progressBarGroup: Konva.Group;
+  private progressBarBg: Konva.Rect;
+  private progressBarFill: Konva.Rect;
+  private progressHoverText: Konva.Text;
+  private progressTotals = { found: 0, total: 0 };
   private onRestaurant: () => void;
   private onRestart: () => void;
 
@@ -21,6 +26,7 @@ export class RestaurantAssessmentView {
       fill: "#FFF8EB",
     });
     this.group.add(bg);
+    this.createProgressBar();
   }
 
   // ----------------- QUESTION SCREENS --------------------
@@ -206,6 +212,8 @@ export class RestaurantAssessmentView {
       fill: "#FFF8EB",
     });
     this.group.add(bg);
+    this.createProgressBar();
+    this.updateTotalProgress(this.progressTotals.found, this.progressTotals.total);
   }
 
   show(): void {
@@ -218,5 +226,65 @@ export class RestaurantAssessmentView {
 
   getGroup(): Konva.Group {
     return this.group;
+  }
+
+  updateTotalProgress(found: number, total: number): void {
+    this.progressTotals = { found, total };
+    const ratio = total === 0 ? 0 : found / total;
+    this.progressBarFill.width(this.progressBarBg.width() * ratio);
+    this.group.getLayer()?.draw();
+  }
+
+  private createProgressBar(): void {
+    const barWidth = 240;
+    const barMargin = 80;
+    this.progressBarGroup = new Konva.Group({
+      x: STAGE_WIDTH - barWidth - barMargin,
+      y: 20,
+    });
+    this.progressBarBg = new Konva.Rect({
+      width: barWidth,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      opacity: 0.25,
+      listening: false,
+    });
+    this.progressBarFill = new Konva.Rect({
+      width: 0,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      listening: false,
+    });
+    this.progressHoverText = new Konva.Text({
+      width: barWidth,
+      height: 18,
+      align: "center",
+      verticalAlign: "middle",
+      fontSize: 12,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      visible: false,
+      listening: false,
+    });
+    this.progressBarGroup.add(
+      this.progressBarBg,
+      this.progressBarFill,
+      this.progressHoverText
+    );
+    this.progressBarGroup.on("mouseenter", () => {
+      this.progressHoverText.text(
+        `${this.progressTotals.found} / ${this.progressTotals.total} tasks`
+      );
+      this.progressHoverText.visible(true);
+      this.group.getLayer()?.draw();
+    });
+    this.progressBarGroup.on("mouseleave", () => {
+      this.progressHoverText.visible(false);
+      this.group.getLayer()?.draw();
+    });
+    this.group.add(this.progressBarGroup);
+    this.progressBarGroup.moveToTop();
   }
 }

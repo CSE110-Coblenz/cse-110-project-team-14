@@ -36,10 +36,14 @@ export class App implements ScreenSwitcher {
 
     // --- Initialize controllers ---
     this.introController = new IntroScreenController(this);
-    this.storeController = new StoreMainController(this);
-    this.restaurantController = new RestaurantMainController(this);
+    this.storeController = new StoreMainController(this, this.progressTracker);
+    this.restaurantController = new RestaurantMainController(
+      this,
+      this.progressTracker
+    );
     this.restaurantAssessmentController = new RestaurantAssessmentController(
-      this
+      this,
+      this.progressTracker
     );
     this.classroomController = new ClassroomAssessmentController(
       this.stage,
@@ -83,7 +87,8 @@ export class App implements ScreenSwitcher {
       this.stage,
       this.layer,
       classroomItems,
-      this
+      this,
+      this.progressTracker
     );
     await this.minigameController.start();
     this.layer.add(this.minigameController.getView().getGroup());

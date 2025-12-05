@@ -4,6 +4,7 @@ import type { Item, ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
 import { ClassroomMinigameModel } from "./ClassroomMinigameModel";
 import { ClassroomMinigameView } from "./ClassroomMinigameView";
+import { ProgressTracker } from "../../../utils/ProgressTracker";
 
 /**
  * Controller for the Classroom Minigame.
@@ -18,10 +19,20 @@ export class ClassroomMinigameController extends ScreenController {
   private view: ClassroomMinigameView;
   private baskets: BasketData[] = [];
   private screenSwitcher: ScreenSwitcher;
+  private tracker: ProgressTracker;
+  private minigameMarked = false;
+  private unsubscribeProgress?: () => void;
 
-  constructor(stage: Stage, layer: Layer, items: Item[], screenSwitcher: ScreenSwitcher) {
+  constructor(
+    stage: Stage,
+    layer: Layer,
+    items: Item[],
+    screenSwitcher: ScreenSwitcher,
+    tracker: ProgressTracker
+  ) {
     super();
     this.screenSwitcher = screenSwitcher;
+    this.tracker = tracker;
 
     this.model = new ClassroomMinigameModel(items);
     this.view = new ClassroomMinigameView(stage, layer);
@@ -33,6 +44,8 @@ export class ClassroomMinigameController extends ScreenController {
       imageSrc: "ItemImage/Classroom/basket.png",
     }));
 
+    this.tracker.registerItems("minigame", ["classroom:minigame"]);
+
     // wire back button
     this.view.setOnBackToClassroom(() => {
       this.model.reset();
@@ -40,16 +53,20 @@ export class ClassroomMinigameController extends ScreenController {
     });
 
     this.view.setOnResetGame(() => this.resetGame());
+
+    this.unsubscribeProgress = this.tracker.onChange((counts) => {
+      this.view.updateTotalProgress(counts.total.found, counts.total.total);
+    });
   }
 
   private async resetGame(): Promise<void> {
-  this.model.reset();
-  await this.view.renderScene(
-    this.model.getItems(),
-    this.baskets,
-    (item, basketName) => this.handleItemDrop(item, basketName)
-  );
-}
+    this.model.reset();
+    await this.view.renderScene(
+      this.model.getItems(),
+      this.baskets,
+      (item, basketName) => this.handleItemDrop(item, basketName)
+    );
+  }
 
   getView(): ClassroomMinigameView {
     return this.view;
@@ -72,6 +89,7 @@ export class ClassroomMinigameController extends ScreenController {
     this.model.placeItem(item.name, basketName);
 
     if (this.model.allItemsPlaced()) {
+      this.markMinigameComplete();
       const correct = this.model.getCorrectCount();
       const total = this.model.getTotal();
       this.view.showFinalResult(correct, total);
@@ -84,5 +102,11 @@ export class ClassroomMinigameController extends ScreenController {
 
   show(): void {
     this.view.show();
+  }
+
+  private markMinigameComplete(): void {
+    if (this.minigameMarked) return;
+    this.minigameMarked = true;
+    this.tracker.markFound("minigame", "classroom:minigame");
   }
 }

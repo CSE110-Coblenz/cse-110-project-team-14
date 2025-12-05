@@ -25,9 +25,7 @@ export class ClassroomAssessmentView {
   private readonly frenchText: Text;
   private readonly phoneticText: Text;
   private readonly englishText: Text;
-  private readonly progressText: Text;
 
-  private readonly switchButton: Group;
   private readonly resetButton: Group;
   private readonly minigameButton: Group;
   private readonly backButton: Group;
@@ -43,6 +41,13 @@ export class ClassroomAssessmentView {
   private readonly rightArrowCircle: Konva.Circle;
   private readonly arrowInstruction: Text;
 
+  private progressBarGroup: Group;
+  private progressBarBg: Rect;
+  private progressBarFill: Rect;
+  private progressHoverText: Text;
+  private progressTotals = { found: 0, total: 0 };
+  private completionPopup?: Group;
+
   private itemImages: KonvaImage[] = [];
   private personIcon?: KonvaImage;
   private personData?: Person;
@@ -50,7 +55,6 @@ export class ClassroomAssessmentView {
   private currentDialogueIndex = 0;
   private dialogueCompleted = false;
 
-  private switchHandler?: () => void;
   private resetHandler?: () => void;
   private minigameHandler?: () => void;
   private dialogueCompleteHandler?: () => void;
@@ -93,46 +97,35 @@ export class ClassroomAssessmentView {
       this.bottomPanel.y() + 84,
       "Tap an item to learn the word."
     );
-    this.progressText = this.createText(
-      22,
-      "normal",
-      "#0F172A",
-      20,
-      "0 / 0 found",
-      "right"
-    );
-
     this.backgroundGroup.add(
       this.frenchText,
       this.phoneticText,
-      this.englishText,
-      this.progressText
+      this.englishText
     );
 
     // Buttons
-    this.switchButton = this.createButton("Switch to Store", 30, 24, () =>
-      this.switchHandler?.()
-    );
-    this.resetButton = this.createButton("Reset", 210, 24, () =>
+    this.resetButton = this.createButton("Reset Progress", 210, 24, () =>
       this.resetHandler?.()
     );
     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () =>
       this.minigameHandler?.()
     );
-    this.dictionaryButton = this.createButton("Dictionary", 570, 24, () =>
+    this.dictionaryButton = this.createButton("Dictionary", 30, 24, () =>
       this.showDictionaryPopup()
     );
-    this.backButton = this.createButton("Back to Intro", 750, 24, () =>
+    this.backButton = this.createButton("Change Scenes", 750, 24, () =>
       this.backHandler?.()
     );
     this.backgroundGroup.add(
-      this.switchButton,
       this.resetButton,
       this.minigameButton,
       this.dictionaryButton,
       this.backButton
     );
     this.createDictionaryPopup();
+
+    this.createProgressBar();
+    this.positionResetButtonBelowProgress();
 
     // Dialogue overlay
     this.overlayScrim = new Konva.Rect({
@@ -347,7 +340,7 @@ export class ClassroomAssessmentView {
             console.log("Dictionary updated:", globals.dictionary);
           }
           onItemClick(item);
-          FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
+          FrenchTTS.speak(item.french, "fr-FR");
         });
 
         node.on("mouseenter", () => this.setCursor("pointer"));
@@ -385,9 +378,6 @@ export class ClassroomAssessmentView {
   }
 
   /** Setters for buttons */
-  setOnSwitchToRestaurant(handler: () => void) {
-    this.switchHandler = handler;
-  }
   setOnReset(handler: () => void) {
     this.resetHandler = handler;
   }
@@ -396,6 +386,12 @@ export class ClassroomAssessmentView {
   }
   setOnDialogueComplete(handler: () => void) {
     this.dialogueCompleteHandler = handler;
+  }
+  setOnBack(handler: () => void) {
+    this.backHandler = handler;
+  }
+  setOnBack(handler: () => void) {
+    this.backHandler = handler;
   }
 
   /** Panel updates */
@@ -413,9 +409,86 @@ export class ClassroomAssessmentView {
     this.layer.batchDraw();
   }
 
-  updateProgress(found: number, total: number) {
-    this.progressText.text(`${found} / ${total} found`);
+  updateTotalProgress(found: number, total: number) {
+    this.progressTotals = { found, total };
+    const ratio = total === 0 ? 0 : found / total;
+    this.progressBarFill.width(this.progressBarBg.width() * ratio);
     this.layer.batchDraw();
+  }
+
+  showCompletionPopup(onRestart: () => void) {
+    if (this.completionPopup) return;
+
+    const overlay = new Konva.Group();
+    const scrim = new Konva.Rect({
+      x: 0,
+      y: 0,
+      width: this.stage.width(),
+      height: this.stage.height(),
+      fill: "rgba(0,0,0,0.5)",
+    });
+    const boxWidth = 420;
+    const boxHeight = 220;
+    const box = new Konva.Rect({
+      x: (this.stage.width() - boxWidth) / 2,
+      y: (this.stage.height() - boxHeight) / 2,
+      width: boxWidth,
+      height: boxHeight,
+      fill: "#ffffff",
+      cornerRadius: 20,
+      shadowColor: "rgba(0,0,0,0.35)",
+      shadowBlur: 18,
+      shadowOffsetY: 6,
+    });
+    const text = new Konva.Text({
+      x: box.x() + 24,
+      y: box.y() + 30,
+      width: boxWidth - 48,
+      align: "center",
+      fontSize: 28,
+      fontFamily: "Arial",
+      fill: "#1f2937",
+      text: "Congratulations for finding everything!",
+    });
+    const buttonWidth = 200;
+    const buttonHeight = 48;
+    const button = new Konva.Group({
+      x: box.x() + (boxWidth - buttonWidth) / 2,
+      y: box.y() + boxHeight - buttonHeight - 30,
+    });
+    const buttonRect = new Konva.Rect({
+      width: buttonWidth,
+      height: buttonHeight,
+      cornerRadius: 14,
+      fill: "#1D4ED8",
+      stroke: "#0F172A",
+      strokeWidth: 2,
+      shadowColor: "rgba(0,0,0,0.25)",
+      shadowBlur: 10,
+      shadowOffsetY: 4,
+    });
+    const buttonText = new Konva.Text({
+      width: buttonWidth,
+      height: buttonHeight,
+      align: "center",
+      verticalAlign: "middle",
+      text: "Restart",
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#fff",
+      listening: false,
+    });
+    button.add(buttonRect, buttonText);
+    button.on("click tap", () => onRestart());
+    button.on("mouseenter", () => this.setCursor("pointer"));
+    button.on("mouseleave", () => this.setCursor("default"));
+
+    overlay.add(scrim, box, text, button);
+    overlay.listening(true);
+    this.layer.add(overlay);
+    overlay.moveToTop();
+    this.completionPopup = overlay;
+    this.layer.draw();
   }
 
   showDialogueCompleted() {
@@ -501,7 +574,7 @@ export class ClassroomAssessmentView {
     this.layer.batchDraw();
     // Speak current dialogue line
     if (this.dialogueLines[this.currentDialogueIndex])
-      FrenchTTS.speak(this.dialogueLines[this.currentDialogueIndex]);
+      FrenchTTS.speak(this.dialogueLines[this.currentDialogueIndex], "en-US");
   }
 
   private clearScene() {
@@ -580,6 +653,70 @@ export class ClassroomAssessmentView {
       text,
       listening: false,
     });
+  }
+
+  private createProgressBar() {
+    const barWidth = 240;
+    const barMargin = 80;
+    const barX = this.stage.width() - barWidth - barMargin;
+    this.progressBarGroup = new Konva.Group({
+      x: barX,
+      y: 20,
+    });
+    this.progressBarBg = new Konva.Rect({
+      width: barWidth,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      opacity: 0.25,
+      listening: false,
+    });
+    this.progressBarFill = new Konva.Rect({
+      width: 0,
+      height: 18,
+      cornerRadius: 9,
+      fill: "#1d4ed8",
+      listening: false,
+    });
+    this.progressHoverText = new Konva.Text({
+      width: barWidth,
+      height: 18,
+      align: "center",
+      verticalAlign: "middle",
+      fontSize: 12,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      visible: false,
+      listening: false,
+    });
+    this.progressBarGroup.add(
+      this.progressBarBg,
+      this.progressBarFill,
+      this.progressHoverText
+    );
+    this.progressBarGroup.on("mouseenter", () => {
+      this.progressHoverText.text(
+        `${this.progressTotals.found} / ${this.progressTotals.total} tasks`
+      );
+      this.progressHoverText.visible(true);
+      this.layer.batchDraw();
+    });
+    this.progressBarGroup.on("mouseleave", () => {
+      this.progressHoverText.visible(false);
+      this.layer.batchDraw();
+    });
+    this.backgroundGroup.add(this.progressBarGroup);
+  }
+
+  private positionResetButtonBelowProgress(): void {
+    const buttonWidth = 160;
+    const spacing = 16;
+    const x =
+      this.progressBarGroup.x() +
+      (this.progressBarBg.width() - buttonWidth) / 2;
+    const y = this.progressBarGroup.y() + this.progressBarBg.height() + spacing;
+    this.resetButton.position({ x, y });
+    this.resetButton.getLayer()?.batchDraw();
   }
 
   private createButton(

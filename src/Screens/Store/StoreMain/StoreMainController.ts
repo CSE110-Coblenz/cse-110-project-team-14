@@ -9,6 +9,7 @@ export class StoreMainController extends ScreenController {
   private view: StoreMainView;
   private screenSwitcher: ScreenSwitcher;
   private tracker: ProgressTracker;
+  private unsubscribeProgress?: () => void;
 
   constructor(screenSwitcher: ScreenSwitcher, tracker: ProgressTracker) {
     super();
@@ -31,10 +32,15 @@ export class StoreMainController extends ScreenController {
     const items = this.model.get_items();
     this.view.showItem(items, (itemName) => this.handleItemClick(itemName));
     this.view.showClerk("ItemImage/Store/cashier.png", 1000, 280, 300, 400);
+    this.view.setOnDialogueComplete(() => this.handleDialogueComplete());
 
     // load progress tracker, count items loaded
     const ids = items.map((item) => `store:${item.name}`);
     this.tracker.registerItems("storeItems", ids);
+    this.tracker.registerItems("people", ["store:clerk"]);
+    this.unsubscribeProgress = this.tracker.onChange((counts) => {
+      this.view.updateTotalProgress(counts.total.found, counts.total.total);
+    });
 
     this.view.show(); // Make store screen visible
   }
@@ -46,6 +52,10 @@ export class StoreMainController extends ScreenController {
     if (!selected) return;
     this.tracker.markFound("storeItems", `store:${itemName}`); // tracker marker
     this.view.updateDock(selected);
+  }
+
+  private handleDialogueComplete(): void {
+    this.tracker.markFound("people", "store:clerk");
   }
 
   // Switch to restaurant screen

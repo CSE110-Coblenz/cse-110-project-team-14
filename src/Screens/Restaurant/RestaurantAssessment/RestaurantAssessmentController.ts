@@ -2,27 +2,40 @@ import type { ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
 import { RestaurantAssessmentModel } from "./RestaurantAssessmentModel";
 import { RestaurantAssessmentView } from "./RestaurantAssessmentView";
+import { ProgressTracker } from "../../../utils/ProgressTracker";
 
 export class RestaurantAssessmentController extends ScreenController {
   private model = new RestaurantAssessmentModel();
   private view: RestaurantAssessmentView;
   private screenSwitcher: ScreenSwitcher;
   private typingBuffer = "";
+  private tracker: ProgressTracker;
+  private assessmentRegistered = false;
+  private unsubscribeProgress?: () => void;
 
-  constructor(screenSwitcher: ScreenSwitcher) {
+  constructor(screenSwitcher: ScreenSwitcher, tracker: ProgressTracker) {
     super();
     this.screenSwitcher = screenSwitcher;
+    this.tracker = tracker;
 
     this.view = new RestaurantAssessmentView(
       () => this.switchToRestaurant(),
       () => this.restart()
     );
 
+    this.unsubscribeProgress = this.tracker.onChange((counts) => {
+      this.view.updateTotalProgress(counts.total.found, counts.total.total);
+    });
+
     this.setupTyping();
   }
 
   async start(): Promise<void> {
     await this.model.load_questions("/ItemImage/Restaurant/questions.json");
+    if (!this.assessmentRegistered) {
+      this.tracker.registerItems("assessments", ["restaurant:assessment"]);
+      this.assessmentRegistered = true;
+    }
     this.showQuestionHandler();
     this.view.show();
   }
@@ -77,6 +90,7 @@ export class RestaurantAssessmentController extends ScreenController {
 
     if (this.model.isFinished()) {
       this.model.updateBestScore();
+      this.tracker.markFound("assessments", "restaurant:assessment");
       this.view.showResults(
         this.model.getCurrentScore(),
         this.model.getTotalCount(),

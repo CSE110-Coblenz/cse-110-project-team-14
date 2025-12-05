@@ -3,9 +3,10 @@ export type ProgressCategory =
   | "storeItems"
   | "restaurantItems"
   | "people"
-  | "minigame";
+  | "minigame"
+  | "assessments";
 
-type ProgressCounts = Record<
+export type ProgressCounts = Record<
   ProgressCategory | "total",
   { found: number; total: number }
 >;
@@ -25,6 +26,7 @@ export class ProgressTracker {
     restaurantItems: new Set(),
     people: new Set(),
     minigame: new Set(),
+    assessments: new Set(),
   };
   private readonly discovered: Record<ProgressCategory, Set<string>> = {
     classroomItems: new Set(),
@@ -32,6 +34,7 @@ export class ProgressTracker {
     restaurantItems: new Set(),
     people: new Set(),
     minigame: new Set(),
+    assessments: new Set(),
   };
   private readonly listeners = new Set<ProgressListener>();
 
@@ -90,6 +93,7 @@ export class ProgressTracker {
       `Restaurant: ${counts.restaurantItems.found}/${counts.restaurantItems.total},`,
       `People: ${counts.people.found}/${counts.people.total},`,
       `Minigame: ${counts.minigame.found}/${counts.minigame.total},`,
+      `Assessments: ${counts.assessments.found}/${counts.assessments.total},`,
       `Total: ${counts.total.found}/${counts.total.total}`
     );
     this.listeners.forEach((listener) => listener(counts));

@@ -1,3 +1,4 @@
+import Konva from "konva";
 import type { Item, Person } from "../../../types";
 import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
@@ -14,6 +15,7 @@ export class ClassroomAssessmentController extends ScreenController {
   private readonly tracker: ProgressTracker;
   private readonly screenSwitcher: ScreenSwitcher;
   private unsubscribeProgress?: () => void;
+  private completionShown = false;
 
   constructor(
     stage: Konva.Stage,
@@ -47,21 +49,21 @@ export class ClassroomAssessmentController extends ScreenController {
     this.view.renderScene(items, person, (item) => this.handleItemClick(item));
 
     // Wire top buttons
-    this.view.setOnSwitchToStore(() =>
-      this.screenSwitcher.switchToScreen({ type: "Store" })
-    );
     this.view.setOnReset(() => this.handleReset());
     this.view.setOnSwitchToMinigame(() =>
       this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" })
     );
+    this.view.setOnBack(() => this.screenSwitcher.switchToScreen({ type: "Intro" }));
     this.view.setOnDialogueComplete(() => this.handleDialogueComplete(person));
 
     // Update progress text whenever tracker changes
     this.unsubscribeProgress = this.tracker.onChange((counts) => {
-      this.view.updateProgress(
-        counts.classroomItems.found,
-        counts.classroomItems.total
-      );
+      this.view.updateTotalProgress(counts.total.found, counts.total.total);
+      const { found, total } = counts.total;
+      if (!this.completionShown && total > 0 && found === total) {
+        this.completionShown = true;
+        this.view.showCompletionPopup(() => this.restartExperience());
+      }
     });
 
     // Initialize panel
@@ -108,5 +110,10 @@ export class ClassroomAssessmentController extends ScreenController {
   private handleReset(): void {
     this.tracker.reset();
     this.view.resetPanel();
+    this.completionShown = false;
+  }
+
+  private restartExperience(): void {
+    window.location.reload();
   }
 }

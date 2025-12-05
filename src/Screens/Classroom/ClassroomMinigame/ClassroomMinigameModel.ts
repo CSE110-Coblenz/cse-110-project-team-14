@@ -23,6 +23,26 @@ export class ClassroomMinigameModel {
     this.placements.set(itemName, basketName);
   }
 
+  // Returns true if the item was placed in the correct basket
+  // added helper methods so that existing tests would work
+  placeItemInBasket(itemName: string, basketName: string): boolean {
+    const item = this.items.find((i) => i.name === itemName);
+    if (!item) return false;
+    this.placements.set(itemName, basketName);
+    return basketName === item.french;
+  }
+
+  isPlaced(itemName: string): boolean {
+    return this.placements.has(itemName);
+  }
+
+  getBasketContents(basketName: string): Item[] {
+    return this.items.filter(
+      (item) => this.placements.get(item.name) === basketName
+    );
+  }
+  // end helper methods
+
   /** Total number of items in the game */
   getTotal(): number {
     return this.items.length;
