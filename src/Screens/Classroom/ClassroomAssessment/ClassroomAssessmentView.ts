@@ -10,7 +10,7 @@ import { IMAGE_DIMENSIONS, getPlayerName, globals } from "../../../constants";
 import type { Item, Person } from "../../../types";
 import { FrenchTTS } from "../../../utils/texttospeech";
 
-const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
+const CLASSROOM_BACKGROUND = "/Background/classroom.png";
 
 type ItemSelectHandler = (item: Item) => void;
 
