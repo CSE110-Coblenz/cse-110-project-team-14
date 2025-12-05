@@ -1,0 +1,86 @@
+[
+  {
+    "type": "mcq",
+    "question": "What is the French word for 'apple'?",
+    "options": ["le chien", "la pomme", "le lait", "la table"],
+    "answerIndex": 1
+  },
+  {
+    "type": "mcq",
+    "question": "Which one means 'bread'?",
+    "options": ["le pain", "la porte", "le livre", "le chocolat"],
+    "answerIndex": 0
+  },
+  {
+    "type": "mcq",
+    "question": "Choose the correct translation for 'the chair'.",
+    "options": ["la chaise", "le chat", "la chemise", "le fromage"],
+    "answerIndex": 0
+  },
+  {
+    "type": "type",
+    "question": "Type the French word for 'le lait'.",
+    "answer": "milk",
+    "characterLimit": 15
+  },
+  {
+    "type": "type",
+    "question": "Type the French word for 'le crayon'.",
+    "answer": "pencil",
+    "characterLimit": 15
+  },
+  {
+    "type": "mcq",
+    "question": "Which word means 'the book'?",
+    "options": ["le livre", "la fenêtre", "le jardin", "la cuisine"],
+    "answerIndex": 0
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'le fromage'.",
+    "answer": "cheese",
+    "characterLimit": 15
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the fish'?",
+  "options": ["le poisson", "le chien", "la table", "la voiture"],
+  "answerIndex": 0
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'la table'.",
+    "answer": "table",
+    "characterLimit": 15
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'œuf'.",
+    "answer": "egg",
+    "characterLimit": 15
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'bœuf'.",
+    "answer": "beef",
+    "characterLimit": 15
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the tomato'?",
+  "options": ["le citron", "la pomme", "le fromage", "la tomate"],
+  "answerIndex": 3
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the banana'?",
+  "options": ["la carotte", "le raisin", "la banane", "le pain"],
+  "answerIndex": 2
+  },
+  {
+  "type": "type",
+  "question": "Type the English word for 'brocoli'.",
+  "answer": "broccoli",
+  "characterLimit": 15
+  }
+]

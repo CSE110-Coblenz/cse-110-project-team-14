@@ -1,6 +1,8 @@
 import type { Group } from 'konva/lib/Group';
 import { globals } from './constants.js';
 
+export type Question = MCProblem | TypingProblem;
+
 export interface View {
     getGroup(): Group;
     show(): void;
@@ -22,13 +24,13 @@ export type Screen =
 	| { type: "Store"}
     | { type: "StoreMinigame" }
     | { type: "StoreAssessment" }
-    | { type: "ClassroomAssessment" }
     | { type: "RestaurantAssessment" }
-    | { type: "Outro" };
+    | { type: "Outro" }
+    | { type: "ClassroomMinigame" } ;
 
 
 export interface ScreenSwitcher {
-    switchToScreen(screenName: string): void;
+    switchToScreen(screenName: Screen): void;
 }
 
 export abstract class ScreenController {
@@ -43,6 +45,7 @@ export abstract class ScreenController {
 	}
 }
 
+//Interface for Items in json
 export interface Item {
     name: string;
     english: string;
@@ -53,19 +56,44 @@ export interface Item {
     y: number;
 }
 
+//Interface for Assessment portion
 export interface Assessment {
-    questions: string;
-    answers: string[];
-    correctAnswerIndex: number;
+    question: string;
 }
 
+export interface MCProblem extends Assessment{
+    type: "mcq";
+    options: string[];
+    answerIndex: number;
+}
+
+export interface TypingProblem extends Assessment{
+    type: "type";
+    answer: string;
+    characterLimit: number;
+}
+
+//Interface for npcs
+export interface DialogueNode {
+    id: string;
+    speaker: string;
+    text: string;
+    action?: "expectItem";         // currently only supporting item expectation
+    expectedItem?: string;
+    onCorrect?: string;            // next dialogue ID if correct
+    onWrong?: string;              // next dialogue ID if wrong
+    next?: string | null;          // next dialogue ID for simple progression
+}
 
 export interface Person {
     name: string;
     role: string;
-    dialogue: string[];
-}
+    image: string;
+    x: number;
+    y: number;
+    dialogue?: string[];
 
+}
 export interface Minigame {
     instructions: string;
     items: Item[];

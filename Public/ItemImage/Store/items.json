@@ -1,0 +1,84 @@
+[
+    {
+        "name": "tomato",
+        "english": "tomato",
+        "french": "tomate",
+        "phonetic": "toh-maht",
+        "image": "/ItemImage/Store/tomato.png",
+        "x": 75,
+        "y": 425
+    },
+    {
+        "name": "brocolli",
+        "english": "brocolli",
+        "french": "brocoli",
+        "phonetic": "broh-koh-LEE",
+        "image": "/ItemImage/Store/brocolli.png",
+        "x": 80,
+        "y": 580
+    },
+    {
+        "name": "apple",
+        "english": "apple",
+        "french": "pomme",
+        "phonetic": "pom",
+        "image": "/ItemImage/Store/apple.png",
+        "x": 75,
+        "y": 155
+    },
+    {
+        "name": "banana",
+        "english": "banana",
+        "french": "banane",
+        "phonetic": "bah-nahn",
+        "image": "/ItemImage/Store/banana.png",
+        "x": 75,
+        "y": 265
+    },
+    {
+        "name": "milk",
+        "english": "milk",
+        "french": "lait",
+        "phonetic": "leh",
+        "image": "/ItemImage/Store/milk.png",
+        "x": 450,
+        "y": 180
+    },
+    {
+        "name": "egg",
+        "english": "egg",
+        "french": "œuf",
+        "phonetic": "uhf",
+        "image": "/ItemImage/Store/egg.png",
+        "x": 450,
+        "y": 70
+    },
+    {
+        "name": "beef",
+        "english": "beef",
+        "french": "bœuf",
+        "phonetic": "buff",
+        "image": "/ItemImage/Store/beef.png",
+        "x": 475,
+        "y": 400
+    },
+    {
+        "name": "fishy",
+        "english": "fish",
+        "french": "poisson",
+        "phonetic": "pwah-sohn",
+        "image": "/ItemImage/Store/fishs.png",
+        "x": 470,
+        "y": 285
+    },
+    {
+        "name": "cheese",
+        "english": "cheese",
+        "french": "fromage",
+        "phonetic": "froh-mahzh",
+        "image": "ItemImage/Store/cheese.png",
+        "x": 600,
+        "y": 300
+    }
+   
+]

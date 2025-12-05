@@ -1,0 +1,29 @@
+[
+  {
+    "name": "soup",
+    "english": "Soup",
+    "french": "La soupe",
+    "phonetic": "lah soop",
+    "image": "/ItemImage/Restaurant/soup.png",
+    "x": 140,
+    "y": 160
+  },
+  {
+    "name": "spoon",
+    "english": "Spoon",
+    "french": "La cuillère",
+    "phonetic": "lah kwee-yair",
+    "image": "/ItemImage/Restaurant/spoon.png",
+    "x": 420,
+    "y": 180
+  },
+  {
+    "name": "napkin",
+    "english": "Napkin",
+    "french": "La serviette",
+    "phonetic": "lah sair-vyet",
+    "image": "/ItemImage/Restaurant/napkin.png",
+    "x": 650,
+    "y": 220
+  }
+]
