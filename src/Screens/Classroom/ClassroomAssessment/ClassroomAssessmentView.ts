@@ -37,16 +37,21 @@ export class ClassroomAssessmentView {
   private readonly speechText: Text;
   private readonly leftArrow: Group;
   private readonly rightArrow: Group;
+  private readonly leftArrowCircle: Konva.Circle;
+  private readonly rightArrowCircle: Konva.Circle;
+  private readonly arrowInstruction: Text;
 
   private itemImages: KonvaImage[] = [];
   private personIcon?: KonvaImage;
   private personData?: Person;
   private dialogueLines: string[] = [];
   private currentDialogueIndex = 0;
+  private dialogueCompleted = false;
 
   private switchHandler?: () => void;
   private resetHandler?: () => void;
   private minigameHandler?: () => void;
+  private dialogueCompleteHandler?: () => void;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -162,12 +167,30 @@ export class ClassroomAssessmentView {
     });
     this.speechText.on("click tap", (evt) => (evt.cancelBubble = true));
 
-    this.leftArrow = this.createArrowControl("left", () =>
+    const leftArrowConfig = this.createArrowControl("left", () =>
       this.showPreviousDialogue()
     );
-    this.rightArrow = this.createArrowControl("right", () =>
+    this.leftArrow = leftArrowConfig.group;
+    this.leftArrowCircle = leftArrowConfig.circle;
+
+    const rightArrowConfig = this.createArrowControl("right", () =>
       this.showNextDialogue()
     );
+    this.rightArrow = rightArrowConfig.group;
+    this.rightArrowCircle = rightArrowConfig.circle;
+
+    this.arrowInstruction = new Konva.Text({
+      x: this.rightArrow.x() - 160,
+      y: this.rightArrow.y() - 60,
+      width: 150,
+      align: "center",
+      text: "Press green to complete",
+      fontSize: 16,
+      fontFamily: "Arial",
+      fill: "#94a3b8",
+      visible: false,
+      listening: false,
+    });
 
     this.dialogueOverlay.add(
       this.overlayScrim,
@@ -175,7 +198,8 @@ export class ClassroomAssessmentView {
       this.speechBubble,
       this.speechText,
       this.leftArrow,
-      this.rightArrow
+      this.rightArrow,
+      this.arrowInstruction
     );
 
     // Debug: show mouse coordinates
@@ -278,6 +302,9 @@ export class ClassroomAssessmentView {
   setOnSwitchToMinigame(handler: () => void) {
     this.minigameHandler = handler;
   }
+  setOnDialogueComplete(handler: () => void) {
+    this.dialogueCompleteHandler = handler;
+  }
 
   /** Panel updates */
   updatePanel(item: Item) {
@@ -299,6 +326,13 @@ export class ClassroomAssessmentView {
     this.layer.batchDraw();
   }
 
+  showDialogueCompleted() {
+    this.dialogueCompleted = true;
+    this.arrowInstruction.visible(false);
+    this.setArrowColor(this.rightArrowCircle, "rgba(22,163,74,0.9)");
+    this.layer.batchDraw();
+  }
+
   show() {
     this.backgroundGroup.visible(true);
     this.layer.batchDraw();
@@ -313,6 +347,9 @@ export class ClassroomAssessmentView {
   private openDialogue() {
     if (!this.personData || this.dialogueLines.length === 0) return;
     this.currentDialogueIndex = 0;
+    this.dialogueCompleted = false;
+    this.arrowInstruction.visible(false);
+    this.setArrowColor(this.rightArrowCircle, "rgba(29,78,216,0.9)");
     this.updateDialogueText();
     this.applyBlur();
     this.personIcon?.visible(false);
@@ -324,28 +361,41 @@ export class ClassroomAssessmentView {
     this.dialogueOverlay.visible(false);
     this.personIcon?.visible(true);
     this.removeBlur();
+    this.arrowInstruction.visible(false);
     this.layer.batchDraw();
   }
 
   private showNextDialogue() {
-    if (this.currentDialogueIndex >= this.dialogueLines.length - 1) return;
+    if (this.currentDialogueIndex >= this.dialogueLines.length - 1) {
+      if (!this.dialogueCompleted) {
+        this.dialogueCompleted = true;
+        this.arrowInstruction.visible(false);
+        this.setArrowColor(this.rightArrowCircle, "rgba(22,163,74,0.9)");
+        this.dialogueCompleteHandler?.();
+      } else {
+        this.closeDialogue();
+      }
+      this.layer.batchDraw();
+      return;
+    }
     this.currentDialogueIndex++;
+    this.dialogueCompleted = false;
     this.updateDialogueText();
   }
 
   private showPreviousDialogue() {
     if (this.currentDialogueIndex <= 0) return;
     this.currentDialogueIndex--;
+    this.dialogueCompleted = false;
     this.updateDialogueText();
   }
 
   private updateDialogueText() {
     this.speechText.text(this.dialogueLines[this.currentDialogueIndex] ?? "");
     this.setArrowState(this.leftArrow, this.currentDialogueIndex > 0);
-    this.setArrowState(
-      this.rightArrow,
-      this.currentDialogueIndex < this.dialogueLines.length - 1
-    );
+    this.setArrowState(this.rightArrow, true);
+    const atEnd = this.currentDialogueIndex >= this.dialogueLines.length - 1;
+    this.updateCompletionIndicators(atEnd);
     this.layer.batchDraw();
   }
 
@@ -466,7 +516,7 @@ export class ClassroomAssessmentView {
   private createArrowControl(
     direction: "left" | "right",
     onClick: () => void
-  ): Group {
+  ): { group: Group; circle: Konva.Circle } {
     const group = new Konva.Group({
       x:
         direction === "left"
@@ -491,12 +541,32 @@ export class ClassroomAssessmentView {
     group.on("click tap", onClick);
     group.on("mouseenter", () => this.setCursor("pointer"));
     group.on("mouseleave", () => this.setCursor("default"));
-    return group;
+    return { group, circle };
   }
 
   private setArrowState(arrow: Group, enabled: boolean) {
     arrow.opacity(enabled ? 1 : 0.3);
     arrow.listening(enabled);
+  }
+
+  private updateCompletionIndicators(atEnd: boolean) {
+    if (this.dialogueCompleted) {
+      this.arrowInstruction.visible(false);
+      this.setArrowColor(this.rightArrowCircle, "rgba(22,163,74,0.9)");
+      return;
+    }
+
+    if (atEnd) {
+      this.arrowInstruction.visible(true);
+      this.setArrowColor(this.rightArrowCircle, "rgba(34,197,94,0.9)");
+    } else {
+      this.arrowInstruction.visible(false);
+      this.setArrowColor(this.rightArrowCircle, "rgba(29,78,216,0.9)");
+    }
+  }
+
+  private setArrowColor(circle: Konva.Circle, color: string) {
+    circle.fill(color);
   }
 
   private applyBlur() {

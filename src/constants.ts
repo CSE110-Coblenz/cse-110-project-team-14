@@ -1,19 +1,17 @@
-
 export const globals = {
-    dictionary: {} as Record<string, string>,
-    progress: {
-        numItems: 0,
-        minigameScore: 0,
-        assessmentScore: 0,
-    },
+  dictionary: {} as Record<string, string>,
+  progress: {
+    numItems: 0,
+    minigameScore: 0,
+    assessmentScore: 0,
+  },
 };
 
 export const IMAGE_DIMENSIONS = {
-    width: 200,
-    height: 200,
+  width: 200,
+  height: 200,
 };
 
 // Stage dimensions
 export const STAGE_WIDTH = 1500;
 export const STAGE_HEIGHT = 800;
-

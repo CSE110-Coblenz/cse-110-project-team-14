@@ -1,4 +1,4 @@
-import type { Item } from "../../../types";
+import type { Item, Person } from "../../../types";
 import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
@@ -16,13 +16,18 @@ export class ClassroomAssessmentController extends ScreenController {
   private readonly screenSwitcher: ScreenSwitcher;
   private unsubscribeProgress?: () => void;
 
-  constructor(stage: Konva.Stage, layer: Konva.Layer, screenSwitcher: ScreenSwitcher) {
+  constructor(
+    stage: Konva.Stage,
+    layer: Konva.Layer,
+    screenSwitcher: ScreenSwitcher,
+    tracker: ProgressTracker
+  ) {
     super();
     this.screenSwitcher = screenSwitcher;
 
     this.model = new ClassroomAssessmentModel();
-    this.view = new ClassroomAssessmentView(stage, layer); // <-- pass stage + layer
-    this.tracker = new ProgressTracker();
+    this.view = new ClassroomAssessmentView(stage, layer);
+    this.tracker = tracker;
   }
 
   /**
@@ -36,7 +41,8 @@ export class ClassroomAssessmentController extends ScreenController {
 
     // Register progress IDs (classroom:itemname)
     const ids = items.map((item) => `classroom:${item.name}`);
-    this.tracker.registerItems(ids);
+    this.tracker.registerItems("classroomItems", ids);
+    this.tracker.registerItems("people", [`classroom:person:${person.name}`]);
 
     // Render scene into View
     this.view.renderScene(items, person, (item) => this.handleItemClick(item));
@@ -45,10 +51,11 @@ export class ClassroomAssessmentController extends ScreenController {
     this.view.setOnSwitchToRestaurant(() => this.screenSwitcher.switchToScreen({ type: "Restaurant" }));
     this.view.setOnReset(() => this.handleReset());
     this.view.setOnSwitchToMinigame(() => this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" }));
+    this.view.setOnDialogueComplete(() => this.handleDialogueComplete(person));
 
     // Update progress text whenever tracker changes
-    this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {
-      this.view.updateProgress(found, total);
+    this.unsubscribeProgress = this.tracker.onChange((counts) => {
+      this.view.updateProgress(counts.classroomItems.found, counts.classroomItems.total);
     });
 
     // Initialize panel
@@ -74,10 +81,15 @@ export class ClassroomAssessmentController extends ScreenController {
     if (!selected) return;
 
     // mark as found
-    this.tracker.markFound(`classroom:${item.name}`);
+    this.tracker.markFound("classroomItems", `classroom:${item.name}`);
 
     // update info panel
     this.view.updatePanel(selected);
+  }
+
+  private handleDialogueComplete(person: Person): void {
+    this.tracker.markFound("people", `classroom:person:${person.name}`);
+    this.view.showDialogueCompleted();
   }
 
   getItems(): Item[] {

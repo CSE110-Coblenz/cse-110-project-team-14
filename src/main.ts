@@ -5,6 +5,7 @@ import type { Screen, ScreenSwitcher } from "./types";
 // Controllers
 import { ClassroomAssessmentController } from "./Screens/Classroom/ClassroomAssessment/ClassroomAssessmentController";
 import { ClassroomMinigameController } from "./Screens/Classroom/ClassroomMinigame/ClassroomMinigameController";
+import { ProgressTracker } from "./utils/ProgressTracker";
 import { IntroScreenController } from "./Screens/Intro/IntroScreenController";
 import { RestaurantAssessmentController } from "./Screens/Restaurant/RestaurantAssessment/RestaurantAssessmentController";
 import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
@@ -20,6 +21,7 @@ export class App implements ScreenSwitcher {
   private restaurantAssessmentController: RestaurantAssessmentController;
   private classroomController: ClassroomAssessmentController;
   private minigameController: ClassroomMinigameController;
+  private progressTracker: ProgressTracker;
 
   constructor(container: string) {
     this.stage = new Konva.Stage({
@@ -29,6 +31,8 @@ export class App implements ScreenSwitcher {
     });
     this.layer = new Konva.Layer();
     this.stage.add(this.layer);
+
+    this.progressTracker = new ProgressTracker();
 
     // --- Initialize controllers ---
     this.introController = new IntroScreenController(this);
@@ -40,7 +44,8 @@ export class App implements ScreenSwitcher {
     this.classroomController = new ClassroomAssessmentController(
       this.stage,
       this.layer,
-      this
+      this,
+      this.progressTracker
     );
     this.minigameController = {} as ClassroomMinigameController; // placeholder, initialized after classroom items are loaded
 
