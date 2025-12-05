@@ -11,7 +11,6 @@ import type { Item, Person } from "../../../types";
 import { FrenchTTS } from "../../../utils/texttospeech";
 
 const CLASSROOM_BACKGROUND = "/Background/classroom.png";
-const CLASSROOM_BACKGROUND = "/Background/classroom.png";
 
 type ItemSelectHandler = (item: Item) => void;
 
