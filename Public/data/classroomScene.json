@@ -6,8 +6,10 @@
       "french": "Le crayon",
       "phonetic": "luh cray-ohn",
       "image": "/ItemImage/Classroom/PENCIL.png",
-      "x": 120,
-      "y": 180
+      "x": 64,
+      "y": 529,
+      "width": 70,
+      "height": 70
     },
     {
       "name": "book",
@@ -15,43 +17,90 @@
       "french": "Le livre",
       "phonetic": "leev-ruh",
       "image": "/ItemImage/Classroom/BOOK.png",
-      "x": 340,
-      "y": 160
+      "x": 1175,
+      "y": 211,
+      "width": 150,
+      "height": 150
     },
     {
       "name": "table",
       "english": "Table",
       "french": "La table",
       "phonetic": "lah tah-bluh",
-      "image": "/ItemImage/Classroom/table.png",
-      "x": 560,
-      "y": 200
+      "image": "/ItemImage/Classroom/TABLE.png",
+      "x": 882,
+      "y": 413
     },
     {
       "name": "chair",
       "english": "Chair",
       "french": "La chaise",
       "phonetic": "lah shez",
-      "image": "/ItemImage/Classroom/CHAIR.jpeg",
-      "x": 780,
-      "y": 180
+      "image": "/ItemImage/Classroom/CHAIR.png",
+      "x": 1084,
+      "y": 446
+    },
+    {
+      "name": "notebook",
+      "english": "Notebook",
+      "french": "Le cahier",
+      "phonetic": "kay-yay",
+      "image": "/ItemImage/Classroom/NOTEBOOK.png",
+      "x": 634,
+      "y": 479
+    },
+    {
+      "name": "backpack",
+      "english": "Backpack",
+      "french": "Le sac à dos",
+      "phonetic": "sak-ah-doh",
+      "image": "/ItemImage/Classroom/BACKPACK.png",
+      "x": 243,
+      "y": 448,
+      "width": 150,
+      "height": 150
+    },
+    {
+      "name": "eraser",
+      "english": "Eraser",
+      "french": "La gomme",
+      "phonetic": "lah gom",
+      "image": "/ItemImage/Classroom/ERASER.png",
+      "x": 509,
+      "y": 531,
+      "width": 60,
+      "height": 60
+    },
+    {
+      "name": "chalk",
+      "english": "Chalk",
+      "french": "La craie",
+      "phonetic": "la kray",
+      "image": "/ItemImage/Classroom/CHALK.png",
+      "x": 274,
+      "y": 412,
+      "width": 40,
+      "height": 40
     }
   ],
   "person": {
-    "name": "Monsieur Theo",
-    "role": "Friendly Student",
-    "image": "/ItemImage/Classroom/CRStudent1.png",
-    "x": 650,
-    "y": 80,
+    "name": "Camille",
+    "role": "Confused girl",
+    "image": "/ItemImage/Classroom/camille.png",
+    "x": 5159,
+    "y": 312,
+    "width": 180,
+    "height": 220,
     "dialogue": [
-      "Bonjour! Vous parlez français?..",
-      "...",
-      "Pardon me, you must be our new neighbor from America!",
-      "Welcome to _____!! My name is Theo, you may call me Monsieur Theo if you like…",
-      "The word « Monsieur », in French, is Mister!",
-      "What is your name?",
-      "Very nice to meet you ____",
-      "Is this your first time here?"
+      "Hmm... I'm always confused in this class...",
+      "If you want to ask a question in French, you can say J'ai une question. That means I have a question.",
+      "French often uses apostrophes to shorten words when a vowel comes next.",
+      "In this example, <<J'ai>> is really Je + ai. \n<<Je>> means 'I', and <<ai>> means 'have'",
+      "French loves smooth sound flow, so we remove the vowel in Je and add an apostrophe.",
+      "<<Je ne comprends pas>> — means 'I don't understand' in French",
+      "Here, ne and pas are used to make a sentence negative.",
+      "To negate a verb in French, we put ne before the verb and pas after it. So 'I don't understand' becomes <<Je ne [comprends] pas>> \nand you can replace [comprends] with any verb! Like this: \n<<Je ne [verb] pas>> to negate any meaning.",
+      "Hope this helps a bit!"
     ]
   }
 }

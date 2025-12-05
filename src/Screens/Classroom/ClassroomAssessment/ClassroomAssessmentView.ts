@@ -10,7 +10,7 @@ import { IMAGE_DIMENSIONS } from "../../../constants";
 import type { Item, Person } from "../../../types";
 import { globals } from "../../../constants";
 
-const CLASSROOM_BACKGROUND = "/Background/classroomScene.png";
+const CLASSROOM_BACKGROUND = "/Background/classroom.png";
 
 type ItemSelectHandler = (item: Item) => void;
 
@@ -64,18 +64,56 @@ export class ClassroomAssessmentView {
     this.backgroundGroup.add(this.bottomPanel);
 
     // Text panels
-    this.frenchText = this.createText(26, "bold", "#1D3557", this.bottomPanel.y() + 16);
-    this.phoneticText = this.createText(22, "italic", "#475569", this.bottomPanel.y() + 50);
-    this.englishText = this.createText(24, "normal", "#0F172A", this.bottomPanel.y() + 84, "Tap an item to learn the word.");
-    this.progressText = this.createText(22, "normal", "#0F172A", 20, "0 / 0 found", "right");
+    this.frenchText = this.createText(
+      26,
+      "bold",
+      "#1D3557",
+      this.bottomPanel.y() + 16
+    );
+    this.phoneticText = this.createText(
+      22,
+      "italic",
+      "#475569",
+      this.bottomPanel.y() + 50
+    );
+    this.englishText = this.createText(
+      24,
+      "normal",
+      "#0F172A",
+      this.bottomPanel.y() + 84,
+      "Tap an item to learn the word."
+    );
+    this.progressText = this.createText(
+      22,
+      "normal",
+      "#0F172A",
+      20,
+      "0 / 0 found",
+      "right"
+    );
 
-    this.backgroundGroup.add(this.frenchText, this.phoneticText, this.englishText, this.progressText);
+    this.backgroundGroup.add(
+      this.frenchText,
+      this.phoneticText,
+      this.englishText,
+      this.progressText
+    );
 
     // Buttons
-    this.switchButton = this.createButton("Switch to Restaurant", 30, 24, () => this.switchHandler?.());
-    this.resetButton = this.createButton("Reset", 210, 24, () => this.resetHandler?.());
-    this.minigameButton = this.createButton("Go to Minigame", 390, 24, () => this.minigameHandler?.());
-    this.backgroundGroup.add(this.switchButton, this.resetButton, this.minigameButton);
+    this.switchButton = this.createButton("Switch to Restaurant", 30, 24, () =>
+      this.switchHandler?.()
+    );
+    this.resetButton = this.createButton("Reset", 210, 24, () =>
+      this.resetHandler?.()
+    );
+    this.minigameButton = this.createButton("Go to Minigame", 390, 24, () =>
+      this.minigameHandler?.()
+    );
+    this.backgroundGroup.add(
+      this.switchButton,
+      this.resetButton,
+      this.minigameButton
+    );
 
     // Dialogue overlay
     this.overlayScrim = new Konva.Rect({
@@ -95,7 +133,7 @@ export class ClassroomAssessmentView {
       opacity: 0,
       image: new Image(),
     });
-    this.overlayCharacter.on("click tap", (evt) => evt.cancelBubble = true);
+    this.overlayCharacter.on("click tap", (evt) => (evt.cancelBubble = true));
 
     const bubbleWidth = stage.width() * 0.55;
     const bubbleHeight = stage.height() * 0.45;
@@ -110,7 +148,7 @@ export class ClassroomAssessmentView {
       shadowBlur: 20,
       shadowOffsetY: 10,
     });
-    this.speechBubble.on("click tap", (evt) => evt.cancelBubble = true);
+    this.speechBubble.on("click tap", (evt) => (evt.cancelBubble = true));
 
     this.speechText = new Konva.Text({
       x: this.speechBubble.x() + 32,
@@ -122,58 +160,101 @@ export class ClassroomAssessmentView {
       fill: "#0F172A",
       text: "",
     });
-    this.speechText.on("click tap", (evt) => evt.cancelBubble = true);
+    this.speechText.on("click tap", (evt) => (evt.cancelBubble = true));
 
-    this.leftArrow = this.createArrowControl("left", () => this.showPreviousDialogue());
-    this.rightArrow = this.createArrowControl("right", () => this.showNextDialogue());
+    this.leftArrow = this.createArrowControl("left", () =>
+      this.showPreviousDialogue()
+    );
+    this.rightArrow = this.createArrowControl("right", () =>
+      this.showNextDialogue()
+    );
 
-    this.dialogueOverlay.add(this.overlayScrim, this.overlayCharacter, this.speechBubble, this.speechText, this.leftArrow, this.rightArrow);
+    this.dialogueOverlay.add(
+      this.overlayScrim,
+      this.overlayCharacter,
+      this.speechBubble,
+      this.speechText,
+      this.leftArrow,
+      this.rightArrow
+    );
+
+    // Debug: show mouse coordinates
+    const coordText = new Konva.Text({
+      x: 10,
+      y: 10,
+      text: "",
+      fontSize: 16,
+      fontFamily: "Arial",
+      listening: false, // don't block clicks
+    });
+    this.stage.on("mousemove", () => {
+      const pos = this.stage.getPointerPosition();
+      if (!pos) return;
+
+      coordText.text(`x: ${Math.round(pos.x)}, y: ${Math.round(pos.y)}`);
+      this.layer.batchDraw();
+    });
+
+    this.layer.add(coordText);
   }
 
   /** Render all items and person asynchronously */
-  async renderScene(items: Item[], person: Person, onItemClick: ItemSelectHandler) {
+  async renderScene(
+    items: Item[],
+    person: Person,
+    onItemClick: ItemSelectHandler
+  ) {
     this.personData = person;
     this.dialogueLines = person.dialogue ?? [];
     this.resetPanel();
     this.clearScene();
 
-    const spacing = this.stage.width() / (items.length + 2);
-    const targetY = this.stage.height() * 0.2;
+    // Render items
+    await Promise.all(
+      items.map(async (item) => {
+        const img = await this.loadImage(item.image);
 
-    await Promise.all(items.map(async (item, i) => {
-      const img = await this.loadImage(item.image);
-      const node = new Konva.Image({
-        x: spacing * (i + 1) - IMAGE_DIMENSIONS.width / 2,
-        y: targetY,
-        width: IMAGE_DIMENSIONS.width,
-        height: IMAGE_DIMENSIONS.height,
-        image: img,
-        draggable: true,
-      });
-      //node.on("click tap", () => onItemClick(item));
-      node.on("click tap", () => {
-        // Add to dictionary if missing
-        if (!globals.dictionary[item.english]) {
-          globals.dictionary[item.english] = item.french;
-          console.log("Dictionary updated:", globals.dictionary);
-        }
-      
-        onItemClick(item);
-      });
-      node.on("mouseenter", () => this.setCursor("pointer"));
-      node.on("mouseleave", () => this.setCursor("default"));
-      this.backgroundGroup.add(node);
-      this.itemImages.push(node);
-    }));
+        const node = new Konva.Image({
+          x: item.x,
+          y: item.y,
+          width: item.width ?? IMAGE_DIMENSIONS.width, // fallback to default
+          height: item.height ?? IMAGE_DIMENSIONS.height,
+          image: img,
+          draggable: true,
+        });
 
+        // Debug: log drag position
+        this.attachDragPositionLogger(node, item.english);
+
+        node.on("click tap", () => {
+          if (!globals.dictionary[item.english]) {
+            globals.dictionary[item.english] = item.french;
+            console.log("Dictionary updated:", globals.dictionary);
+          }
+          onItemClick(item);
+        });
+
+        node.on("mouseenter", () => this.setCursor("pointer"));
+        node.on("mouseleave", () => this.setCursor("default"));
+
+        this.backgroundGroup.add(node);
+        this.itemImages.push(node);
+      })
+    );
+
+    // Render person
     const personImg = await this.loadImage(person.image);
     const personNode = new Konva.Image({
-      x: spacing * (items.length + 1) - IMAGE_DIMENSIONS.width / 2,
-      y: targetY,
-      width: IMAGE_DIMENSIONS.width,
-      height: IMAGE_DIMENSIONS.height,
+      x: person.x,
+      y: person.y,
+      width: person.width ?? IMAGE_DIMENSIONS.width,
+      height: person.height ?? IMAGE_DIMENSIONS.height * 1.4,
       image: personImg,
+      draggable: true,
     });
+    // Debug: log drag position Person
+    this.attachDragPositionLogger(personNode, "person");
+
     personNode.on("click tap", () => this.openDialogue());
     personNode.on("mouseenter", () => this.setCursor("pointer"));
     personNode.on("mouseleave", () => this.setCursor("default"));
@@ -188,9 +269,15 @@ export class ClassroomAssessmentView {
   }
 
   /** Setters for buttons */
-  setOnSwitchToRestaurant(handler: () => void) { this.switchHandler = handler; }
-  setOnReset(handler: () => void) { this.resetHandler = handler; }
-  setOnSwitchToMinigame(handler: () => void) { this.minigameHandler = handler; }
+  setOnSwitchToRestaurant(handler: () => void) {
+    this.switchHandler = handler;
+  }
+  setOnReset(handler: () => void) {
+    this.resetHandler = handler;
+  }
+  setOnSwitchToMinigame(handler: () => void) {
+    this.minigameHandler = handler;
+  }
 
   /** Panel updates */
   updatePanel(item: Item) {
@@ -212,8 +299,15 @@ export class ClassroomAssessmentView {
     this.layer.batchDraw();
   }
 
-  show() { this.backgroundGroup.visible(true); this.layer.batchDraw(); }
-  hide() { this.backgroundGroup.visible(false); this.closeDialogue(); this.layer.batchDraw(); }
+  show() {
+    this.backgroundGroup.visible(true);
+    this.layer.batchDraw();
+  }
+  hide() {
+    this.backgroundGroup.visible(false);
+    this.closeDialogue();
+    this.layer.batchDraw();
+  }
 
   /** Dialogue logic */
   private openDialogue() {
@@ -248,12 +342,15 @@ export class ClassroomAssessmentView {
   private updateDialogueText() {
     this.speechText.text(this.dialogueLines[this.currentDialogueIndex] ?? "");
     this.setArrowState(this.leftArrow, this.currentDialogueIndex > 0);
-    this.setArrowState(this.rightArrow, this.currentDialogueIndex < this.dialogueLines.length - 1);
+    this.setArrowState(
+      this.rightArrow,
+      this.currentDialogueIndex < this.dialogueLines.length - 1
+    );
     this.layer.batchDraw();
   }
 
   private clearScene() {
-    this.itemImages.forEach(i => i.destroy());
+    this.itemImages.forEach((i) => i.destroy());
     this.itemImages = [];
     this.personIcon?.destroy();
     this.personIcon = undefined;
@@ -274,6 +371,15 @@ export class ClassroomAssessmentView {
       this.layer.batchDraw();
     };
     img.src = CLASSROOM_BACKGROUND;
+  }
+
+  private attachDragPositionLogger(node: KonvaImage, label?: string) {
+    node.on("dragend", () => {
+      const { x, y } = node.position(); // same as { x: node.x(), y: node.y() }
+      console.log(
+        `${label ?? "node"} dragged to x=${Math.round(x)}, y=${Math.round(y)}`
+      );
+    });
   }
 
   private async loadImage(src: string): Promise<HTMLImageElement> {
@@ -299,7 +405,14 @@ export class ClassroomAssessmentView {
     });
   }
 
-  private createText(fontSize: number, fontStyle: string, fill: string, y: number, text = "", align: "center" | "right" = "center"): Text {
+  private createText(
+    fontSize: number,
+    fontStyle: string,
+    fill: string,
+    y: number,
+    text = "",
+    align: "center" | "right" = "center"
+  ): Text {
     return new Konva.Text({
       x: 50,
       y,
@@ -314,7 +427,12 @@ export class ClassroomAssessmentView {
     });
   }
 
-  private createButton(label: string, x: number, y: number, handler: () => void): Group {
+  private createButton(
+    label: string,
+    x: number,
+    y: number,
+    handler: () => void
+  ): Group {
     const group = new Konva.Group({ x, y });
     const rect = new Konva.Rect({
       width: 160,
@@ -345,12 +463,21 @@ export class ClassroomAssessmentView {
     return group;
   }
 
-  private createArrowControl(direction: "left" | "right", onClick: () => void): Group {
+  private createArrowControl(
+    direction: "left" | "right",
+    onClick: () => void
+  ): Group {
     const group = new Konva.Group({
-      x: direction === "left" ? this.speechBubble.x() + 40 : this.speechBubble.x() + this.speechBubble.width() - 40,
+      x:
+        direction === "left"
+          ? this.speechBubble.x() + 40
+          : this.speechBubble.x() + this.speechBubble.width() - 40,
       y: this.speechBubble.y() + this.speechBubble.height() - 40,
     });
-    const circle = new Konva.Circle({ radius: 26, fill: "rgba(29,78,216,0.9)" });
+    const circle = new Konva.Circle({
+      radius: 26,
+      fill: "rgba(29,78,216,0.9)",
+    });
     const triangle = new Konva.RegularPolygon({
       x: 0,
       y: 0,
