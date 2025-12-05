@@ -1,12 +1,12 @@
-import type { Group } from 'konva/lib/Group';
-import { globals } from './constants.js';
+import type { Group } from "konva/lib/Group";
+import { globals } from "./constants.js";
 
 export type Question = MCProblem | TypingProblem;
 
 export interface View {
-    getGroup(): Group;
-    show(): void;
-    hide(): void;
+  getGroup(): Group;
+  show(): void;
+  hide(): void;
 }
 
 /**
@@ -18,150 +18,161 @@ export interface View {
  *   - score: Final score to display on results screen
  */
 export type Screen =
-    | { type: "Intro" }
-	| { type: "Restaurant" }
-	| { type: "Classroom" }
-	| { type: "Store"}
-    | { type: "StoreMinigame" }
-    | { type: "StoreAssessment" }
-    | { type: "RestaurantAssessment" }
-    | { type: "Outro" }
-    | { type: "ClassroomMinigame" } ;
-
+  | { type: "Intro" }
+  | { type: "Restaurant" }
+  | { type: "Classroom" }
+  | { type: "Store" }
+  | { type: "StoreMinigame" }
+  | { type: "StoreAssessment" }
+  | { type: "RestaurantAssessment" }
+  | { type: "Outro" }
+  | { type: "ClassroomMinigame" };
 
 export interface ScreenSwitcher {
-    switchToScreen(screenName: Screen): void;
+  switchToScreen(screenName: Screen): void;
 }
 
 export abstract class ScreenController {
-	abstract getView(): View;
+  abstract getView(): View;
 
-	show(): void {
-		this.getView().show();
-	}
+  show(): void {
+    this.getView().show();
+  }
 
-	hide(): void {
-		this.getView().hide();
-	}
+  hide(): void {
+    this.getView().hide();
+  }
 }
 
 //Interface for Items in json
 export interface Item {
-    name: string;
-    english: string;
-    french: string;
-    phonetic: string;
-    image: string;
-    x: number;
-    y: number;
+  name: string;
+  english: string;
+  french: string;
+  phonetic: string;
+  image: string;
+  x: number;
+  y: number;
+  // Optional features for items
+  width?: number;
+  height?: number;
 }
 
 //Interface for Assessment portion
 export interface Assessment {
-    question: string;
+  question: string;
 }
 
-export interface MCProblem extends Assessment{
-    type: "mcq";
-    options: string[];
-    answerIndex: number;
+export interface MCProblem extends Assessment {
+  type: "mcq";
+  options: string[];
+  answerIndex: number;
 }
 
-export interface TypingProblem extends Assessment{
-    type: "type";
-    answer: string;
-    characterLimit: number;
+export interface TypingProblem extends Assessment {
+  type: "type";
+  answer: string;
+  characterLimit: number;
 }
 
 //Interface for npcs
 export interface DialogueNode {
-    id: string;
-    speaker: string;
-    text: string;
-    action?: "expectItem";         // currently only supporting item expectation
-    expectedItem?: string;
-    onCorrect?: string;            // next dialogue ID if correct
-    onWrong?: string;              // next dialogue ID if wrong
-    next?: string | null;          // next dialogue ID for simple progression
+  id: string;
+  speaker: string;
+  text: string;
+  action?: "expectItem"; // currently only supporting item expectation
+  expectedItem?: string;
+  onCorrect?: string; // next dialogue ID if correct
+  onWrong?: string; // next dialogue ID if wrong
+  next?: string | null; // next dialogue ID for simple progression
 }
 
 export interface Person {
-    name: string;
-    role: string;
-    image: string;
-    x: number;
-    y: number;
-    dialogue?: string[];
-
+  name: string;
+  role: string;
+  image: string;
+  x: number;
+  y: number;
+  dialogue?: string[];
+  width?: number;
+  height?: number;
 }
 export interface Minigame {
-    instructions: string;
-    items: Item[];
-    isPlayed() : boolean;
+  instructions: string;
+  items: Item[];
+  isPlayed(): boolean;
 }
 
 export abstract class Scene {
-    getItems(): Item[] {
-        // From where?
-        return [];
-    }
-    nextScene(): Scene | null {
-        return null;
-    }
+  getItems(): Item[] {
+    // From where?
+    return [];
+  }
+  nextScene(): Scene | null {
+    return null;
+  }
 
-    assessment(): Assessment | null {
-        return null;
-    }
-    
-    getDictionary(): Record<string, string> | null {
-        return globals.dictionary;
-    }
+  assessment(): Assessment | null {
+    return null;
+  }
 
-    getProgress(): typeof globals.progress {
-        return globals.progress;
-    }
+  getDictionary(): Record<string, string> | null {
+    return globals.dictionary;
+  }
 
-    person(): Person | null {
-        return null;
-    }
+  getProgress(): typeof globals.progress {
+    return globals.progress;
+  }
 
+  person(): Person | null {
+    return null;
+  }
 }
 
 export class ProgressBar {
-    private progress: typeof globals.progress;
-    
-    constructor() {
-        this.progress = globals.progress;
-    }
-    getProgress() {
-        return this.progress;
-    }
+  private progress: typeof globals.progress;
 
-    updateProgress(numItems: number, minigameScore: number, assessmentScore: number) {
-        this.progress.numItems += numItems;
-        this.progress.minigameScore += minigameScore;
-        this.progress.assessmentScore += assessmentScore;
-    }
+  constructor() {
+    this.progress = globals.progress;
+  }
+  getProgress() {
+    return this.progress;
+  }
 
-    calculatePercentage(totalItems: number, totalMinigameScore: number, totalAssessmentScore: number): number {
-        const itemPercentage = (this.progress.numItems / totalItems) * 100;
-        const minigamePercentage = (this.progress.minigameScore / totalMinigameScore) * 100;
-        const assessmentPercentage = (this.progress.assessmentScore / totalAssessmentScore) * 100;
-        
-        // Average the three percentages
-        return (itemPercentage + minigamePercentage + assessmentPercentage) / 3;
-    }
+  updateProgress(
+    numItems: number,
+    minigameScore: number,
+    assessmentScore: number
+  ) {
+    this.progress.numItems += numItems;
+    this.progress.minigameScore += minigameScore;
+    this.progress.assessmentScore += assessmentScore;
+  }
+
+  calculatePercentage(
+    totalItems: number,
+    totalMinigameScore: number,
+    totalAssessmentScore: number
+  ): number {
+    const itemPercentage = (this.progress.numItems / totalItems) * 100;
+    const minigamePercentage =
+      (this.progress.minigameScore / totalMinigameScore) * 100;
+    const assessmentPercentage =
+      (this.progress.assessmentScore / totalAssessmentScore) * 100;
+
+    // Average the three percentages
+    return (itemPercentage + minigamePercentage + assessmentPercentage) / 3;
+  }
 }
 
 export abstract class Interactable {
-    audioSrc: string;
-    imgSrc: string;
+  audioSrc: string;
+  imgSrc: string;
 
-    constructor(audioSrc: string, imgSrc: string) {
-        this.audioSrc = audioSrc;
-        this.imgSrc = imgSrc;
-    }
+  constructor(audioSrc: string, imgSrc: string) {
+    this.audioSrc = audioSrc;
+    this.imgSrc = imgSrc;
+  }
 
-    abstract whenClicked(): void;
-
+  abstract whenClicked(): void;
 }

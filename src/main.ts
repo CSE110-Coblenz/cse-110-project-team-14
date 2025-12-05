@@ -34,7 +34,9 @@ export class App implements ScreenSwitcher {
     this.introController = new IntroScreenController(this);
     this.storeController = new StoreMainController(this);
     this.restaurantController = new RestaurantMainController(this);
-    this.restaurantAssessmentController = new RestaurantAssessmentController(this);
+    this.restaurantAssessmentController = new RestaurantAssessmentController(
+      this
+    );
     this.classroomController = new ClassroomAssessmentController(
       this.stage,
       this.layer,
@@ -49,23 +51,29 @@ export class App implements ScreenSwitcher {
     // --- Intro Screen ---
     await this.introController.start();
     this.layer.add(this.introController.getView().getGroup());
-    this.introController.getView().loadBackground("Public/Background/intro.webp");
+    this.introController
+      .getView()
+      .loadBackground("Public/Background/intro.webp");
 
     // --- Store ---
     await this.storeController.start();
     this.layer.add(this.storeController.getView().getGroup());
+    this.storeController.hide();
 
     // --- Restaurant ---
     await this.restaurantController.start();
     this.layer.add(this.restaurantController.getView().getGroup());
+    this.restaurantController.hide();
 
     // --- Restaurant Assessment ---
     await this.restaurantAssessmentController.start();
     this.layer.add(this.restaurantAssessmentController.getView().getGroup());
+    this.restaurantAssessmentController.hide();
 
     // --- Classroom ---
     await this.classroomController.start();
     this.layer.add(this.classroomController.getView().getGroup());
+    this.classroomController.hide();
 
     // --- Minigame (after classroom items loaded) ---
     const classroomItems = this.classroomController.getItems();
@@ -76,6 +84,7 @@ export class App implements ScreenSwitcher {
     );
     await this.minigameController.start();
     this.layer.add(this.minigameController.getView().getGroup());
+    this.minigameController.hide();
 
     // --- Start with Intro Screen ---
     this.switchToScreen({ type: "Intro" });
