@@ -2,6 +2,7 @@ import type { Layer } from "konva/lib/Layer";
 import type { Stage } from "konva/lib/Stage";
 import type { Item, ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
+import { globals } from "../../../constants";
 import { ClassroomMinigameModel } from "./ClassroomMinigameModel";
 import { ClassroomMinigameView } from "./ClassroomMinigameView";
 
@@ -75,6 +76,15 @@ export class ClassroomMinigameController extends ScreenController {
       const correct = this.model.getCorrectCount();
       const total = this.model.getTotal();
       this.view.showFinalResult(correct, total);
+      // Update global minigame score
+      try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        globals.progress.minigameScore += correct;
+        globals.progress.minigameTotal += total;
+      } catch (e) {
+        // ignore if globals not available in this module
+      }
     }
   }
 

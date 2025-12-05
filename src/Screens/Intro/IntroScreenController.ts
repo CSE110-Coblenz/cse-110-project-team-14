@@ -13,7 +13,8 @@ export class IntroScreenController extends ScreenController{
       () => this.handleLoginSuccess(),
       () => this.goToClassroom(),
       () => this.goToRestaurant(),
-      () => this.goToStore()
+      () => this.goToStore(),
+      () => this.endGame()
     );
   }
 
@@ -24,6 +25,16 @@ export class IntroScreenController extends ScreenController{
   private handleLoginSuccess(): void {
     // globals.playerName = this.view.getGroup().name();
     console.log("Login success:", globals.playerName);
+    // Start session timer when player logs in
+    try {
+      globals.sessionStart = Date.now();
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  private endGame(): void {
+    this.screenSwitcher.switchToScreen({ type: "Session" });
   }
 
   private goToClassroom(): void {
