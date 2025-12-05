@@ -16,17 +16,18 @@ export class StoreMainController extends ScreenController {
 
     this.view = new StoreMainView(
       (itemName) => this.handleItemClick(itemName),
-      () => this.switchToRestaurant()
+      () => this.switchToRestaurant(),
+      () => this.switchToIntro()
     );
   }
 
   // Show the store screen and load content 
   async start(): Promise<void> {
-    this.view.loadBackground("Public/Background/storeBackground.png");
+    this.view.loadBackground("Public/Background/store.png");
     await this.model.load_items("/ItemImage/Store/items.json");
     const items = this.model.get_items();
     this.view.showItem(items, (itemName) => this.handleItemClick(itemName));
-    this.view.showClerk("ItemImage/Store/cashier.png", 550, 225, 225, 300);
+    this.view.showClerk("ItemImage/Store/cashier.png", 1000, 280, 300, 400);
     
     this.view.show();  // Make store screen visible
   }
@@ -43,6 +44,11 @@ export class StoreMainController extends ScreenController {
   private switchToRestaurant(): void {
     this.screenSwitcher.switchToScreen({ type: "Restaurant" });
   }
+
+  private switchToIntro(): void {
+  this.screenSwitcher.switchToScreen({ type: "Intro" });
+  }
+
 
   /** Show/hide methods for screen management */
   show(): void {

@@ -6,9 +6,9 @@ import type { Rect } from "konva/lib/shapes/Rect";
 import type { Text } from "konva/lib/shapes/Text";
 import type { Stage } from "konva/lib/Stage";
 
-import { IMAGE_DIMENSIONS } from "../../../constants";
+import { IMAGE_DIMENSIONS, getPlayerName, globals } from "../../../constants";
 import type { Item, Person } from "../../../types";
-import { globals } from "../../../constants";
+import { FrenchTTS } from "../../../utils/texttospeech";
 
 const CLASSROOM_BACKGROUND = "/Background/classroom.png";
 
@@ -30,6 +30,7 @@ export class ClassroomAssessmentView {
   private readonly switchButton: Group;
   private readonly resetButton: Group;
   private readonly minigameButton: Group;
+  private readonly backButton: Group;
 
   private readonly overlayScrim: Rect;
   private readonly overlayCharacter: KonvaImage;
@@ -37,6 +38,7 @@ export class ClassroomAssessmentView {
   private readonly speechText: Text;
   private readonly leftArrow: Group;
   private readonly rightArrow: Group;
+  private readonly dictionaryButton: Group;
   private readonly leftArrowCircle: Konva.Circle;
   private readonly rightArrowCircle: Konva.Circle;
   private readonly arrowInstruction: Text;
@@ -52,6 +54,9 @@ export class ClassroomAssessmentView {
   private resetHandler?: () => void;
   private minigameHandler?: () => void;
   private dialogueCompleteHandler?: () => void;
+  private backHandler?: () => void;
+  private dictionaryPopupGroup?: Konva.Group;
+  private dictionaryText?: Konva.Text;
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
@@ -105,7 +110,7 @@ export class ClassroomAssessmentView {
     );
 
     // Buttons
-    this.switchButton = this.createButton("Switch to Restaurant", 30, 24, () =>
+    this.switchButton = this.createButton("Switch to Store", 30, 24, () =>
       this.switchHandler?.()
     );
     this.resetButton = this.createButton("Reset", 210, 24, () =>
@@ -114,11 +119,20 @@ export class ClassroomAssessmentView {
     this.minigameButton = this.createButton("Go to Minigame", 390, 24, () =>
       this.minigameHandler?.()
     );
+    this.dictionaryButton = this.createButton("Dictionary", 570, 24, () =>
+      this.showDictionaryPopup()
+    );
+    this.backButton = this.createButton("Back to Intro", 750, 24, () =>
+      this.backHandler?.()
+    );
     this.backgroundGroup.add(
       this.switchButton,
       this.resetButton,
-      this.minigameButton
+      this.minigameButton,
+      this.dictionaryButton,
+      this.backButton
     );
+    this.createDictionaryPopup();
 
     // Dialogue overlay
     this.overlayScrim = new Konva.Rect({
@@ -222,13 +236,90 @@ export class ClassroomAssessmentView {
     this.layer.add(coordText);
   }
 
-  /** Render all items and person asynchronously */
+  /** Dictionary popup */
+  private createDictionaryPopup(): void {
+    const width = 300;
+    const height = 300;
+    const x = this.stage.width() / 2 - width / 2;
+    const y = this.stage.height() / 2 - height / 2;
+
+    const group = new Konva.Group({
+      x,
+      y,
+      visible: false,
+      clip: { x: 0, y: 0, width, height },
+    });
+    const background = new Konva.Rect({
+      width,
+      height,
+      fill: "#fff",
+      stroke: "#000",
+      strokeWidth: 2,
+      cornerRadius: 10,
+    });
+    const text = new Konva.Text({
+      x: 20,
+      y: 20,
+      width: width - 40,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#000",
+      align: "left",
+      wrap: "word",
+      text: "",
+    });
+
+    group.add(background, text);
+    this.backgroundGroup.add(group);
+    this.dictionaryPopupGroup = group;
+    this.dictionaryText = text;
+
+    let scrollOffset = 0;
+    const updateScroll = (dy: number) => {
+      if (!this.dictionaryText) return;
+      scrollOffset -= dy;
+      const minY = Math.min(height - 40 - text.height(), 0);
+      const maxY = 20;
+      scrollOffset = Math.max(minY, Math.min(scrollOffset, maxY));
+      this.dictionaryText.y(scrollOffset);
+      this.layer.batchDraw();
+    };
+
+    group.on("wheel", (e) => {
+      e.evt.preventDefault();
+      updateScroll(e.evt.deltaY);
+    });
+
+    this.backgroundGroup.on("mousedown", (e) => {
+      if (!this.dictionaryPopupGroup?.visible()) return;
+      if (!e.target.isAncestorOf(this.dictionaryPopupGroup)) {
+        this.dictionaryPopupGroup.visible(false);
+        this.layer.batchDraw();
+      }
+    });
+  }
+
+  private showDictionaryPopup(): void {
+    if (!this.dictionaryPopupGroup || !this.dictionaryText) return;
+
+    const entries = Object.entries(globals.dictionary);
+    this.dictionaryText.text(
+      entries.map(([eng, fr]) => `${eng} / ${fr}`).join("\n") ||
+        "No words found"
+    );
+    this.dictionaryText.y(20);
+    this.dictionaryPopupGroup.visible(true);
+    this.dictionaryPopupGroup.moveToTop();
+    this.layer.batchDraw();
+  }
+
   async renderScene(
     items: Item[],
     person: Person,
     onItemClick: ItemSelectHandler
   ) {
     this.personData = person;
+    // Keep raw dialogue lines (substitution happens when dialogue opens)
     this.dialogueLines = person.dialogue ?? [];
     this.resetPanel();
     this.clearScene();
@@ -256,6 +347,7 @@ export class ClassroomAssessmentView {
             console.log("Dictionary updated:", globals.dictionary);
           }
           onItemClick(item);
+          FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
         });
 
         node.on("mouseenter", () => this.setCursor("pointer"));
@@ -345,7 +437,17 @@ export class ClassroomAssessmentView {
 
   /** Dialogue logic */
   private openDialogue() {
-    if (!this.personData || this.dialogueLines.length === 0) return;
+    const raw = this.personData?.dialogue ?? [];
+    if (!this.personData || raw.length === 0) return;
+    // Re-process raw dialogue lines with current player name in case name was entered
+    const player = getPlayerName();
+    this.dialogueLines = raw.map((line) => {
+      let out = player ? line.replace(/_{2,}/g, player) : line;
+      if (/Very nice to meet you\s*$/i.test(out) && player) {
+        out = out.replace(/\s*$/, "") + " " + player;
+      }
+      return out;
+    });
     this.currentDialogueIndex = 0;
     this.dialogueCompleted = false;
     this.arrowInstruction.visible(false);
@@ -397,6 +499,9 @@ export class ClassroomAssessmentView {
     const atEnd = this.currentDialogueIndex >= this.dialogueLines.length - 1;
     this.updateCompletionIndicators(atEnd);
     this.layer.batchDraw();
+    // Speak current dialogue line
+    if (this.dialogueLines[this.currentDialogueIndex])
+      FrenchTTS.speak(this.dialogueLines[this.currentDialogueIndex]);
   }
 
   private clearScene() {

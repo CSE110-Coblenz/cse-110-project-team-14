@@ -3,7 +3,6 @@ import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
 import { ClassroomAssessmentView } from "./ClassroomAssessmentView";
-import Konva from "konva";
 
 /**
  * Controller: connects model ↔ view and communicates progress
@@ -48,14 +47,21 @@ export class ClassroomAssessmentController extends ScreenController {
     this.view.renderScene(items, person, (item) => this.handleItemClick(item));
 
     // Wire top buttons
-    this.view.setOnSwitchToRestaurant(() => this.screenSwitcher.switchToScreen({ type: "Restaurant" }));
+    this.view.setOnSwitchToStore(() =>
+      this.screenSwitcher.switchToScreen({ type: "Store" })
+    );
     this.view.setOnReset(() => this.handleReset());
-    this.view.setOnSwitchToMinigame(() => this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" }));
+    this.view.setOnSwitchToMinigame(() =>
+      this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" })
+    );
     this.view.setOnDialogueComplete(() => this.handleDialogueComplete(person));
 
     // Update progress text whenever tracker changes
     this.unsubscribeProgress = this.tracker.onChange((counts) => {
-      this.view.updateProgress(counts.classroomItems.found, counts.classroomItems.total);
+      this.view.updateProgress(
+        counts.classroomItems.found,
+        counts.classroomItems.total
+      );
     });
 
     // Initialize panel

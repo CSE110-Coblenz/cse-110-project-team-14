@@ -25,8 +25,8 @@
   },
   {
     "type": "type",
-    "question": "Type the French word for 'le chat'.",
-    "answer": "cat",
+    "question": "Type the French word for 'le crayon'.",
+    "answer": "pencil",
     "characterLimit": 15
   },
   {
@@ -40,5 +40,77 @@
     "question": "Type the English word for 'le fromage'.",
     "answer": "cheese",
     "characterLimit": 15
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the fish'?",
+  "options": ["le poisson", "le chien", "la table", "la voiture"],
+  "answerIndex": 0
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'la table'.",
+    "answer": "table",
+    "characterLimit": 15
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'œuf'.",
+    "answer": "egg",
+    "characterLimit": 15
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'bœuf'.",
+    "answer": "beef",
+    "characterLimit": 15
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the tomato'?",
+  "options": ["le citron", "la pomme", "le fromage", "la tomate"],
+  "answerIndex": 3
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the banana'?",
+  "options": ["la carotte", "le raisin", "la banane", "le pain"],
+  "answerIndex": 2
+  },
+  {
+  "type": "type",
+  "question": "Type the English word for 'brocoli'.",
+  "answer": "broccoli",
+  "characterLimit": 15
+  },
+  {
+  "type": "type",
+  "question": "Type the English word for 'la glace'.",
+  "answer": "ice cream",
+  "characterLimit": 15
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the cookie'?",
+  "options": ["la tarte", "le biscuit", "le gâteau", "la confiture"],
+  "answerIndex": 1
+  },
+  {
+    "type": "mcq",
+    "question": "Which word means 'the napkin'?",
+    "options": ["le couteau", "la serviette", "la fourchette", "l'assiette"],
+    "answerIndex": 1
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'l'assiette'.",
+    "answer": "plate",
+    "characterLimit": 15
+  },
+  {
+    "type": "mcq",
+    "question": "Which word means 'the spoon'?",
+    "options": ["la fourchette", "le couteau", "la cuillère", "le plat"],
+    "answerIndex": 2
   }
 ]
