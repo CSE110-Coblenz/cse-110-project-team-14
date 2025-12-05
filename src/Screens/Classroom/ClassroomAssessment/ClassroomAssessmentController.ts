@@ -1,7 +1,6 @@
 import Konva from "konva";
 import type { Item } from "../../../types";
 import { ScreenController, ScreenSwitcher } from "../../../types";
-import { globals } from "../../../constants";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
 import { ClassroomAssessmentModel } from "./ClassroomAssessmentModel";
 import { ClassroomAssessmentView } from "./ClassroomAssessmentView";
@@ -77,19 +76,7 @@ export class ClassroomAssessmentController extends ScreenController {
     if (!selected) return;
 
     // mark as found
-    const isNew = this.tracker.markFound(`classroom:${item.name}`);
-
-    // Update global progress count when a new item is found
-    if (isNew) {
-      try {
-        // increment numItems by one for this session
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        globals.progress.numItems += 1;
-      } catch (e) {
-        // ignore
-      }
-    }
+    this.tracker.markFound(`classroom:${item.name}`);
 
     // update info panel
     this.view.updatePanel(selected);

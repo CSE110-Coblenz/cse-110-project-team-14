@@ -1,6 +1,5 @@
 import type { ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
-import { globals } from "../../../constants";
 import { RestaurantAssessmentModel } from "./RestaurantAssessmentModel";
 import { RestaurantAssessmentView } from "./RestaurantAssessmentView";
 
@@ -83,15 +82,6 @@ export class RestaurantAssessmentController extends ScreenController {
         this.model.getTotalCount(),
         this.model.getBestScore()
       );
-      // Update global assessment score for this session
-      try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        globals.progress.assessmentScore += this.model.getCurrentScore();
-        globals.progress.assessmentTotal += this.model.getTotalCount();
-      } catch (e) {
-        // ignore if globals not available
-      }
       return;
     }
 

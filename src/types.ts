@@ -26,7 +26,6 @@ export type Screen =
     | { type: "StoreAssessment" }
     | { type: "RestaurantAssessment" }
     | { type: "Outro" }
-    | { type: "Session" }
     | { type: "ClassroomMinigame" } ;
 
 

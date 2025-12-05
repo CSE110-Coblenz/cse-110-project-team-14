@@ -6,12 +6,7 @@ export const globals = {
         numItems: 0,
         minigameScore: 0,
         assessmentScore: 0,
-        // Totals to allow fraction display
-        minigameTotal: 0,
-        assessmentTotal: 0,
     },
-    // timestamp (ms) when the session started (set at login)
-    sessionStart: null as number | null,
 };
 
 export function getPlayerName(): string {
