@@ -1,9 +1,3 @@
-# Lab2
+--- CSE 110 ---
 
-Fresh repository with main branch.
-
-Amy Zhang
-Fresh repository with main branch. <br>
-Sankalp-branch Added
-
-Allison Chan
+French Game Final Project

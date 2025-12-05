@@ -9,6 +9,7 @@ import { IntroScreenController } from "./Screens/Intro/IntroScreenController";
 import { RestaurantAssessmentController } from "./Screens/Restaurant/RestaurantAssessment/RestaurantAssessmentController";
 import { RestaurantMainController } from "./Screens/Restaurant/RestaurantMain/RestaurantMainController";
 import { StoreMainController } from "./Screens/Store/StoreMain/StoreMainController";
+import { SessionScreenController } from "./Screens/Session/SessionScreenController";
 
 export class App implements ScreenSwitcher {
   private stage: Konva.Stage;
@@ -20,6 +21,7 @@ export class App implements ScreenSwitcher {
   private restaurantAssessmentController: RestaurantAssessmentController;
   private classroomController: ClassroomAssessmentController;
   private minigameController: ClassroomMinigameController;
+  private sessionController: SessionScreenController;
 
   constructor(container: string) {
     this.stage = new Konva.Stage({
@@ -41,6 +43,7 @@ export class App implements ScreenSwitcher {
       this
     );
     this.minigameController = {} as ClassroomMinigameController; // placeholder, initialized after classroom items are loaded
+    this.sessionController = new SessionScreenController(this);
 
     this.initScreens();
   }
@@ -79,6 +82,10 @@ export class App implements ScreenSwitcher {
     await this.minigameController.start();
     this.layer.add(this.minigameController.getView().getGroup());
     this.minigameController.hide();
+    // --- Session Screen ---
+    await this.sessionController.start();
+    this.layer.add(this.sessionController.getView().getGroup());
+    this.sessionController.hide();
     // --- Start with Intro Screen ---
     this.switchToScreen({ type: "Intro" });
     //this.layer.draw();
@@ -113,6 +120,9 @@ export class App implements ScreenSwitcher {
         break;
       case "ClassroomMinigame":
         this.minigameController.show();
+        break;
+      case "Session":
+        this.sessionController.show();
         break;
     }
     this.layer.draw();

@@ -167,10 +167,22 @@ private createbackgroundLayer(): Konva.Rect {
         
         //dictionary implentation when clicking on item
         imgNode.on("click", () => {
+          let added = false;
           if (!globals.dictionary[item.english]) {
             globals.dictionary[item.english] = item.french;
+            added = true;
             console.log(globals.dictionary);
           }
+
+          // If a new word was added to the dictionary, increment session words learned
+          if (added) {
+            try {
+              globals.progress.numItems += 1;
+            } catch (e) {
+              // ignore
+            }
+          }
+
           onItemClick(item.name);
           // Speak French word and definition
           FrenchTTS.speak(`${item.french} ,,, ${item.english}`);

@@ -18,18 +18,21 @@ export class IntroScreenView implements View {
   private onClassroomClick: () => void;
   private onRestaurantClick: () => void;
   private onStoreClick: () => void;
+  private onEndGameClick: () => void;
 
   constructor(
     onLoginSuccess: () => void,
     onClassroomClick: () => void,
     onRestaurantClick: () => void,
-    onStoreClick: () => void
+    onStoreClick: () => void,
+    onEndGameClick: () => void
   ) {
     this.group = new Konva.Group({ visible: false });
     this.onLoginSuccess = onLoginSuccess;
     this.onClassroomClick = onClassroomClick;
     this.onRestaurantClick = onRestaurantClick;
     this.onStoreClick = onStoreClick;
+    this.onEndGameClick = onEndGameClick;
 
     // Background layer
     this.backgroundLayer = new Konva.Rect({
@@ -92,6 +95,15 @@ export class IntroScreenView implements View {
       this.restaurantButton,
       this.storeButton
     );
+
+    // End Game button
+    const endGameButton = this.createButton(
+      "End Game",
+      STAGE_WIDTH / 2 - 75,
+      500,
+      () => this.onEndGameClick()
+    );
+    this.menuGroup.add(endGameButton);
 
     // (moved) hidden input created earlier in constructor
   }
