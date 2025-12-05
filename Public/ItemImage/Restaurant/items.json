@@ -1,3 +1,4 @@
+
 [
   {
     "name": "soup",
@@ -34,5 +35,24 @@
     "image": "/ItemImage/Restaurant/plate.png",
     "x": 290,
     "y": 365
+  },
+  {
+    "name": "ice cream",
+    "english": "Ice Cream",
+    "french": "La glace",
+    "phonetic": "lah glass",
+    "image": "/ItemImage/Restaurant/ice_cream.png",
+    "x": 720,
+    "y": 305
+  },
+  {
+    "name": "cookie",
+    "english": "Cookie",
+    "french": "Le biscuit",
+    "phonetic": "luh bees-kwee",
+    "image": "/ItemImage/Restaurant/cookie.png",
+    "x": 1250,
+    "y": 285
   }
 ]
+
