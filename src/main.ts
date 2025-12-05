@@ -47,39 +47,41 @@ export class App implements ScreenSwitcher {
 
   private async initScreens() {
     // --- Intro Screen ---
-    await this.introController.start();
     this.layer.add(this.introController.getView().getGroup());
+    await this.introController.start();
     this.introController.getView().loadBackground("Public/Background/intro.webp");
+    this.layer.draw();
 
     // --- Store ---
     await this.storeController.start();
     this.layer.add(this.storeController.getView().getGroup());
-
+    this.storeController.hide();
     // --- Restaurant ---
     await this.restaurantController.start();
     this.layer.add(this.restaurantController.getView().getGroup());
-
+    this.restaurantController.hide();
     // --- Restaurant Assessment ---
     await this.restaurantAssessmentController.start();
     this.layer.add(this.restaurantAssessmentController.getView().getGroup());
-
+    this.restaurantAssessmentController.hide();
     // --- Classroom ---
     await this.classroomController.start();
     this.layer.add(this.classroomController.getView().getGroup());
-
+    this.classroomController.hide();
     // --- Minigame (after classroom items loaded) ---
     const classroomItems = this.classroomController.getItems();
     this.minigameController = new ClassroomMinigameController(
       this.stage,
       this.layer,
-      classroomItems
+      classroomItems,
+      this
     );
     await this.minigameController.start();
     this.layer.add(this.minigameController.getView().getGroup());
-
+    this.minigameController.hide();
     // --- Start with Intro Screen ---
     this.switchToScreen({ type: "Intro" });
-    this.layer.draw();
+    //this.layer.draw();
   }
 
   switchToScreen(screenName: Screen): void {
@@ -94,6 +96,7 @@ export class App implements ScreenSwitcher {
     // --- Show selected screen ---
     switch (screenName.type) {
       case "Intro":
+        console.log("Showing intro screen");
         this.introController.show();
         break;
       case "Store":
@@ -112,6 +115,7 @@ export class App implements ScreenSwitcher {
         this.minigameController.show();
         break;
     }
+    this.layer.draw();
   }
 }
 

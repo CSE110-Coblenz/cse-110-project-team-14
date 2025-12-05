@@ -1,5 +1,5 @@
+import type { ScreenSwitcher } from "../../../types";
 import { ScreenController } from "../../../types";
-import type { ScreenSwitcher } from "../../../types.ts";
 import { RestaurantMainModel } from './RestaurantMainModel';
 import { RestaurantMainView } from './RestaurantMainView';
 
@@ -13,10 +13,14 @@ export class RestaurantMainController extends ScreenController {
     this.screenSwitcher = screenSwitcher;
     this.model = new RestaurantMainModel();
 
-    // Pass callback to view so "Start Assessment" button switches to assessment
+    // Pass THREE callbacks now:
+    // 1) Item click -> update dock vocab
+    // 2) Assessment click -> go to assessment
+    // 3) Back click -> go to Intro
     this.view = new RestaurantMainView(
       (itemName) => this.handleItemClick(itemName),
-      () => this.switchToAssessment()
+      () => this.switchToAssessment(),
+      () => this.switchToIntro()         // <-- NEW BACK ACTION
     );
   }
 
@@ -34,9 +38,13 @@ export class RestaurantMainController extends ScreenController {
     this.view.updateDock(selected);
   }
 
-  // Updated to switch to the new RestaurantAssessmentController screen
   private switchToAssessment(): void {
     this.screenSwitcher.switchToScreen({ type: "RestaurantAssessment" });
+  }
+
+  // NEW — Return to intro screen
+  private switchToIntro(): void {
+    this.screenSwitcher.switchToScreen({ type: "Intro" });
   }
 
   getView(): RestaurantMainView {

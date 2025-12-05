@@ -1,3 +1,4 @@
+import Konva from "konva";
 import type { Item } from "../../../types";
 import { ScreenController, ScreenSwitcher } from "../../../types";
 import { ProgressTracker } from "../../../utils/ProgressTracker";
@@ -14,6 +15,7 @@ export class ClassroomAssessmentController extends ScreenController {
   private readonly tracker: ProgressTracker;
   private readonly screenSwitcher: ScreenSwitcher;
   private unsubscribeProgress?: () => void;
+  
 
   constructor(stage: Konva.Stage, layer: Konva.Layer, screenSwitcher: ScreenSwitcher) {
     super();
@@ -41,9 +43,10 @@ export class ClassroomAssessmentController extends ScreenController {
     this.view.renderScene(items, person, (item) => this.handleItemClick(item));
 
     // Wire top buttons
-    this.view.setOnSwitchToRestaurant(() => this.screenSwitcher.switchToScreen({ type: "Restaurant" }));
+    this.view.setOnSwitchToStore(() => this.screenSwitcher.switchToScreen({ type: "Store" }));
     this.view.setOnReset(() => this.handleReset());
     this.view.setOnSwitchToMinigame(() => this.screenSwitcher.switchToScreen({ type: "ClassroomMinigame" }));
+    this.view.setOnBack(() => this.screenSwitcher.switchToScreen({ type: "Intro" }));
 
     // Update progress text whenever tracker changes
     this.unsubscribeProgress = this.tracker.onChange(({ found, total }) => {

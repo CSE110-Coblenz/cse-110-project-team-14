@@ -91,9 +91,9 @@ export interface Person {
     image: string;
     x: number;
     y: number;
-    dialogue: Record<string, DialogueNode>;
-}
+    dialogue?: string[];
 
+}
 export interface Minigame {
     instructions: string;
     items: Item[];

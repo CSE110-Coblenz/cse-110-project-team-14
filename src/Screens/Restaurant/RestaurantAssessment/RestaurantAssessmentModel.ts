@@ -1,66 +1,74 @@
-import {Question, MCProblem, TypingProblem} from '../../../types';
+    import { MCProblem, Question, TypingProblem } from "../../../types";
 
-export class RestaurantAssessmentModel {
+    export class RestaurantAssessmentModel {
     private questions: Question[] = [];
     private index = 0;
     private score = 0;
+    private bestScore = 0; // track best score this session
 
-    //Load questions from json file
     async load_questions(jsonPath: string): Promise<void> {
         const response = await fetch(jsonPath);
-        const totalQuestions = (await response.json()) as Question[];
+        const all = (await response.json()) as Question[];
 
-        //Shuffles question bank and outputs 7 problems
-        this.questions = totalQuestions.sort(() => Math.random() - .5).slice(0,1);
+        // Shuffle and pick 7 random
+        this.questions = all.sort(() => Math.random() - 0.5).slice(0, 1);
+        this.index = 0;
+        this.score = 0;
     }
 
-    //Returns the question that the player is on
     getCurrentQuestion(): Question | null {
         return this.questions[this.index] || null;
     }
 
-    //Returns true if player picks the correct answer
-    answerMC(pickedIndex: number) : boolean {
-        const question = this.getCurrentQuestion() as MCProblem;
-        const correct = question.answerIndex == pickedIndex;
-        if(correct){
-            this.score++;
-        }
+    answerMC(choice: number): boolean {
+        const q = this.getCurrentQuestion() as MCProblem;
+        const correct = q.answerIndex === choice;
+        if (correct) this.score++;
         return correct;
     }
 
-    //Returns true if player types the correct answer
     answerTyping(input: string): boolean {
-        const question = this.getCurrentQuestion() as TypingProblem;
-        const correct = input.trim().toLowerCase() === question.answer.trim().toLowerCase();
-        if(correct){
-            this.score++;
-        }
+        const q = this.getCurrentQuestion() as TypingProblem;
+        const correct =
+        input.trim().toLowerCase() === q.answer.trim().toLowerCase();
+        if (correct) this.score++;
         return correct;
     }
 
-    //Goes to next question
-    next() : void {
+    next(): void {
         this.index++;
     }
 
-    //Returns true if player finished all questions
-    isFinished():boolean{
+    isFinished(): boolean {
         return this.index >= this.questions.length;
     }
 
-    //Returns score
-    getScore():number{
+    getCurrentScore(): number {
         return this.score;
     }
 
-    //Returns number of questions in total given
-    getTotal():number{
+    getTotalCount(): number {
         return this.questions.length;
     }
 
-    reset():void{
+    getCurrentIndex(): number {
+        return this.index + 1; // 1-based index
+    }
+
+    updateBestScore(): void {
+        if (this.score > this.bestScore) {
+        this.bestScore = this.score;
+        localStorage.setItem("restaurantBestScore", String(this.bestScore));
+        }
+    }
+
+    getBestScore(): number {
+        const stored = localStorage.getItem("restaurantBestScore");
+        return stored ? Number(stored) : this.bestScore;
+    }
+
+    reset(): void {
         this.index = 0;
         this.score = 0;
     }
-}
+    }

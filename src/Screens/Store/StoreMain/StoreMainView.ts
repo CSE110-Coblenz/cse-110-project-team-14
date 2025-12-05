@@ -1,7 +1,7 @@
 import Konva from "konva";
-import type { Item } from "../../../types"; 
-import { STAGE_WIDTH, STAGE_HEIGHT, globals } from "../../../constants"; // import globals
-import type { Person, DialogueNode } from "../../../types";
+import { STAGE_HEIGHT, STAGE_WIDTH, globals } from "../../../constants"; // import globals
+import type { Item } from "../../../types";
+import { FrenchTTS } from "../../../utils/texttospeech";
 
 export class StoreMainView {
   //Background / main group
@@ -18,6 +18,10 @@ export class StoreMainView {
   private itemImages: Record<string, Konva.Image> = {};
 
   private clerkImage?: Konva.Image;
+
+
+  private dictionaryPopupGroup?: Konva.Group;
+  private dictionaryText?: Konva.Text;
  
 
   //popup for character
@@ -27,14 +31,17 @@ export class StoreMainView {
   private currentDialogue: string[] = []; 
 
   private onStartClick: () => void;
+  private onBackClick!: () => void;
 
 
 constructor(
   onItemClick: (itemName: string) => void,
-  onStartClick: () => void
+  onStartClick: () => void,
+  onBackClick: () => void
 ) {
   this.group = new Konva.Group({ visible: false });
   this.onStartClick = onStartClick;   // <-- store the second callback
+  this.onBackClick = onBackClick;     // <-- store the back button callback
 
   this.backgroundLayer = this.createbackgroundLayer();
   this.group.add(this.backgroundLayer);
@@ -46,7 +53,7 @@ constructor(
   this.phonetic = phonetic;
   
 
-  this.group.add(dock, englishText, frenchVocab, phonetic);
+  this.group.add(dock, frenchVocab, englishText, phonetic);
   // dock.moveToTop();
   // englishText.moveToTop();
   // frenchVocab.moveToTop();
@@ -54,6 +61,9 @@ constructor(
 
   this.createRestaurantButton(); // <-- new button
   this.createPopup(); 
+  this.createDictionaryButton();
+  this.createDictionaryPopup();
+  this.createBackButton();
 }
 
 //bacground layer (if background doens't load)
@@ -110,7 +120,7 @@ private createbackgroundLayer(): Konva.Rect {
     const textY = dockY + 25;
 
     const englishText = new Konva.Text({
-      x: dockX,
+      x: dockX + sectionWidth,
       y: textY,
       width: sectionWidth,
       align: "center",
@@ -120,7 +130,7 @@ private createbackgroundLayer(): Konva.Rect {
     });
 
     const frenchVocab = new Konva.Text({
-      x: dockX + sectionWidth,
+      x: dockX,
       y: textY,
       width: sectionWidth,
       align: "center",
@@ -149,8 +159,8 @@ private createbackgroundLayer(): Konva.Rect {
         imgNode.setAttrs({
           x: item.x,
           y: item.y,
-          width: 60,
-          height: 60,
+          width: 90,
+          height: 90,
           name: item.name,
           image: imgNode.image(),
         });
@@ -162,6 +172,8 @@ private createbackgroundLayer(): Konva.Rect {
             console.log(globals.dictionary);
           }
           onItemClick(item.name);
+          // Speak French word and definition
+          FrenchTTS.speak(`${item.french} ,,, ${item.english}`);
         });
 
         this.itemImages[item.name] = imgNode;
@@ -202,6 +214,12 @@ private createbackgroundLayer(): Konva.Rect {
       //when clicked on, show dialogue from json function called 
       imgNode.on("click", () => {
         this.showDialogue("clerk");
+        // Speak first dialogue line in French (async)
+        setTimeout(async () => {
+          const response = await fetch("Public/ItemImage/Store/dialogue.json");
+          const data = await response.json();
+          const lines = data["clerk"]?.greeting || [];
+        }, 300);
       });
   
       this.group.getLayer()?.draw();
@@ -217,8 +235,8 @@ private createbackgroundLayer(): Konva.Rect {
     const button = new Konva.Rect({
       x: btnX,
       y: btnY,
-      width: 100,
-      height: 30,
+      width: 0,
+      height: 0,
       fill: "#ffffff",
       stroke: "#000",
       strokeWidth: 2
@@ -229,7 +247,7 @@ private createbackgroundLayer(): Konva.Rect {
       y: btnY + 10,
       width: 100,
       align: "center",
-      text: "Restaurant",
+      text: "",
       fontSize: 16,
       fontFamily: "Arial",
       fill: "#000000"
@@ -242,6 +260,52 @@ private createbackgroundLayer(): Konva.Rect {
   
     this.group.add(button, label);
   }
+
+private createBackButton(): void {
+  const buttonWidth = 180;
+  const buttonHeight = 50;
+  const btnX = 30;     // Left side like classroom
+  const btnY = 24;     // Top bar position
+
+  const group = new Konva.Group({ x: btnX, y: btnY });
+
+  const rect = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    cornerRadius: 14,
+    fill: "#1D4ED8",           // Classroom blue
+    stroke: "#0F172A",
+    strokeWidth: 2,
+    shadowColor: "rgba(0,0,0,0.3)",
+    shadowBlur: 8,
+    shadowOffsetY: 3,
+  });
+
+  const text = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Back to Intro",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    fontStyle: "bold",
+    listening: false
+  });
+
+  // Wire click handler
+  group.on("click tap", () => this.onBackClick());
+  group.on("mouseenter", () => document.body.style.cursor = "pointer");
+  group.on("mouseleave", () => document.body.style.cursor = "default");
+
+  group.add(rect, text);
+  this.group.add(group);
+
+  group.moveToTop(); // ensure visible above everything
+}
+
+
 
   //popup for character dialogue
   private createPopup(): void {
@@ -291,17 +355,19 @@ private createbackgroundLayer(): Konva.Rect {
 
     group.on("click", () => {
       if (!this.currentDialogue.length) return;
-  
+
       this.popupDialogueIndex++;
-  
+
       if (this.popupDialogueIndex >= this.currentDialogue.length) {
         this.currentDialogue = [];
         this.popupDialogueIndex = 0;
         group.visible(false); 
       } else {
         text.text(this.currentDialogue[this.popupDialogueIndex]);
+        // Speak new dialogue line
+        FrenchTTS.speak(this.currentDialogue[this.popupDialogueIndex], "en-US");
       }
-  
+
       group.moveToTop(); 
       this.group.getLayer()?.draw();
     });
@@ -310,16 +376,18 @@ private createbackgroundLayer(): Konva.Rect {
     //allowing the background of the dialogue to change to next sentence too
     background.on("click", () => {
       if (!this.currentDialogue.length) return;
-  
+
       this.popupDialogueIndex++;
-  
+
       if (this.popupDialogueIndex >= this.currentDialogue.length) {
         this.currentDialogue = [];
         this.popupDialogueIndex = 0;
       } else {
         text.text(this.currentDialogue[this.popupDialogueIndex]);
+        // Speak new dialogue line
+        FrenchTTS.speak(this.currentDialogue[this.popupDialogueIndex], "en-US");
       }
-  
+
       group.moveToTop(); 
       this.group.getLayer()?.draw();
     });
@@ -338,16 +406,163 @@ private createbackgroundLayer(): Konva.Rect {
     const response = await fetch("Public/ItemImage/Store/dialogue.json");
     const data = await response.json();
   
+    // resolve player name from globals or localStorage
     this.currentDialogue = data[characterName]?.greeting || ["(No dialogue found)"];
     this.popupDialogueIndex = 0;
   
     this.popupText?.text(this.currentDialogue[this.popupDialogueIndex]);
     this.popupGroup?.visible(true);
     this.popupGroup?.moveToTop();
-  
+    // Speak first dialogue line
+    if (this.currentDialogue.length > 0) FrenchTTS.speak(this.currentDialogue[0], "en-US");
+
     this.group.getLayer()?.draw();
   }
   
+
+  //dictionary button
+private createDictionaryButton(): void {
+  const buttonWidth = 180;
+  const buttonHeight = 50;
+
+  // Position aligned next to Back button
+  const btnX = 300;  // adjust depending on spacing
+  const btnY = 24;
+
+  const group = new Konva.Group({ x: btnX, y: btnY });
+
+  const rect = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    cornerRadius: 14,
+    fill: "#1D4ED8",            // Same blue as Back button
+    stroke: "#0F172A",
+    strokeWidth: 2,
+    shadowColor: "rgba(0,0,0,0.3)",
+    shadowBlur: 8,
+    shadowOffsetY: 3,
+  });
+
+  const text = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Dictionary",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    fontStyle: "bold",
+    listening: false
+  });
+
+  group.on("click tap", () => this.showDictionaryPopup());
+  group.on("mouseenter", () => document.body.style.cursor = "pointer");
+  group.on("mouseleave", () => document.body.style.cursor = "default");
+
+  group.add(rect, text);
+  this.group.add(group);
+  group.moveToTop();
+}
+
+
+  private createDictionaryPopup(): void {
+    const popupWidth = 300;
+    const popupHeight = 300;
+    const x = STAGE_WIDTH / 2 - popupWidth / 2;
+    const y = STAGE_HEIGHT / 2 - popupHeight / 2;
+  
+    // Group with clipping
+    const group = new Konva.Group({
+      x,
+      y,
+      visible: false,
+      clip: {
+        x: 0,
+        y: 0,
+        width: popupWidth,
+        height: popupHeight,
+      }
+    });
+  
+    const background = new Konva.Rect({
+      width: popupWidth,
+      height: popupHeight,
+      fill: "#ffffff",
+      stroke: "#000",
+      strokeWidth: 2,
+      cornerRadius: 10,
+    });
+  
+    const text = new Konva.Text({
+      x: 20,
+      y: 20,
+      width: popupWidth - 40,
+      fontSize: 20,
+      fontFamily: "Arial",
+      fill: "#000",
+      align: "left",
+      wrap: "word",
+    });
+  
+    group.add(background, text);
+    this.group.add(group);
+  
+    this.dictionaryPopupGroup = group;
+    this.dictionaryText = text;
+  
+    // Scroll state
+    let scrollOffset = 0;
+  
+    const updateScroll = (dy: number) => {
+      if (!this.dictionaryText) return;
+  
+      scrollOffset -= dy; // moving wheel down should move text up
+  
+      const minY = Math.min(popupHeight - 40 - text.height(), 0); // bottom limit
+      const maxY = 20; // top limit
+  
+      if (scrollOffset < minY) scrollOffset = minY;
+      if (scrollOffset > maxY) scrollOffset = maxY;
+  
+      this.dictionaryText.y(scrollOffset);
+      this.group.getLayer()?.draw();
+    };
+  
+    // Wheel event
+    group.on("wheel", (e) => {
+      e.evt.preventDefault(); // prevent page scroll
+      updateScroll(e.evt.deltaY);
+    });
+  
+    group.name("dictionaryPopup");
+  
+    // Click outside to closea
+    this.group.on("mousedown", (e) => {
+      if (!this.dictionaryPopupGroup?.visible()) return;
+      if (!e.target.hasName("dictionaryPopup")) {
+        this.dictionaryPopupGroup.visible(false);
+        this.group.getLayer()?.draw();
+      }
+    });
+  }
+  
+  
+  private showDictionaryPopup(): void {
+    if (!this.dictionaryPopupGroup || !this.dictionaryText) return;
+  
+    const entries = Object.entries(globals.dictionary);
+    const textContent = entries.map(([english, french]) => `${english} / ${french}`).join("\n");
+  
+    this.dictionaryText.text(textContent || "No Words Found!");
+  
+    // Reset scroll position
+    this.dictionaryText.y(20);
+  
+    this.dictionaryPopupGroup.visible(true);
+    this.dictionaryPopupGroup.moveToTop();
+    this.group.getLayer()?.draw();
+  }
   
   //for scene switching
   show(): void {
@@ -362,3 +577,4 @@ private createbackgroundLayer(): Konva.Rect {
     return this.group;
   }
 }
+

@@ -82,5 +82,35 @@
   "question": "Type the English word for 'brocoli'.",
   "answer": "broccoli",
   "characterLimit": 15
+  },
+  {
+  "type": "type",
+  "question": "Type the English word for 'la glace'.",
+  "answer": "ice cream",
+  "characterLimit": 15
+  },
+  {
+  "type": "mcq",
+  "question": "Which word means 'the cookie'?",
+  "options": ["la tarte", "le biscuit", "le gâteau", "la confiture"],
+  "answerIndex": 1
+  },
+  {
+    "type": "mcq",
+    "question": "Which word means 'the napkin'?",
+    "options": ["le couteau", "la serviette", "la fourchette", "l'assiette"],
+    "answerIndex": 1
+  },
+  {
+    "type": "type",
+    "question": "Type the English word for 'l'assiette'.",
+    "answer": "plate",
+    "characterLimit": 15
+  },
+  {
+    "type": "mcq",
+    "question": "Which word means 'the spoon'?",
+    "options": ["la fourchette", "le couteau", "la cuillère", "le plat"],
+    "answerIndex": 2
   }
 ]

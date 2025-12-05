@@ -4,8 +4,7 @@ import type { Layer } from "konva/lib/Layer";
 import type { Image as KonvaImage } from "konva/lib/shapes/Image";
 import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS, STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
-import type { Item } from "../../../types";
-import { View } from "../../../types";
+import type { Item, View } from "../../../types";
 
 const MINIGAME_BG = "/Background/ClassMinigame.jpg";
 
@@ -14,12 +13,12 @@ interface BasketData {
   imageSrc: string;
 }
 
-/** Helper to shuffle array for random basket placement */
+/** Simple shuffle helper */
 function shuffleArray<T>(array: T[]): T[] {
   return array
-    .map((value) => ({ value, sort: Math.random() }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ value }) => value);
+    .map((v) => ({ v, r: Math.random() }))
+    .sort((a, b) => a.r - b.r)
+    .map((o) => o.v);
 }
 
 export class ClassroomMinigameView implements View {
@@ -28,15 +27,20 @@ export class ClassroomMinigameView implements View {
   private group: Group;
 
   private itemNodes: KonvaImage[] = [];
-  private baskets: KonvaImage[] = [];
+  private basketNodes: KonvaImage[] = [];
   private basketLabels: Konva.Text[] = [];
-  private _feedbackGroup?: Konva.Group;
-  private _titleNode?: Konva.Text;
+
+  private titleNode?: Konva.Text;
+  private resultGroup?: Konva.Group;
+  private backButtonGroup?: Konva.Group;
+
+  private onBackToClassroom: () => void = () => {};
 
   constructor(stage: Stage, layer: Layer) {
     this.stage = stage;
     this.layer = layer;
     this.group = new Konva.Group({ visible: false });
+
     this.addBackground();
   }
 
@@ -54,62 +58,70 @@ export class ClassroomMinigameView implements View {
     this.layer.batchDraw();
   }
 
-  /** Render all items and baskets */
+  /** Allow controller to attach a back-to-classroom handler */
+  setOnBackToClassroom(handler: () => void): void {
+    this.onBackToClassroom = handler;
+    if (this.backButtonGroup) {
+      this.backButtonGroup.off("click tap");
+      this.backButtonGroup.on("click tap", this.onBackToClassroom);
+    }
+  }
+
+  /** Main render function */
   async renderScene(
     items: Item[],
     baskets: BasketData[],
     onItemDrop: (item: Item, basketName: string) => void
-  ) {
+  ): Promise<void> {
     this.clearScene();
+    this.addBackground();
+    this.addTitle();
+    this.addBackButton();
 
-    // --- Add title ---
-    this.addTitle("Put the items in the right Basket");
+    const shuffledBaskets = shuffleArray(baskets);
 
-    // --- Randomize baskets ---
-    const randomizedBaskets = shuffleArray(baskets);
+    // --- BASKETS ---
+    const basketWidth = IMAGE_DIMENSIONS.width * 0.9;
+    const basketHeight = IMAGE_DIMENSIONS.height * 0.9;
+    const basketY = STAGE_HEIGHT - basketHeight - 140;
+    const basketSpacing = STAGE_WIDTH / (shuffledBaskets.length + 1);
 
-    // --- Basket sizing & spacing ---
-    const basketWidth = IMAGE_DIMENSIONS.width * 0.8;   // slightly smaller than items
-    const basketHeight = IMAGE_DIMENSIONS.height * 0.8;
-    const basketSpacing = STAGE_WIDTH / (randomizedBaskets.length + 1);
-    const basketY = STAGE_HEIGHT - basketHeight - 150; // moved up for spacing
-
-    // Render baskets
-    for (let i = 0; i < randomizedBaskets.length; i++) {
-      const basketData = randomizedBaskets[i];
+    for (let i = 0; i < shuffledBaskets.length; i++) {
+      const basketData = shuffledBaskets[i];
       const img = await this.loadImage(basketData.imageSrc);
 
-      const basketNode = new Konva.Image({
+      const basket = new Konva.Image({
         x: basketSpacing * (i + 1) - basketWidth / 2,
         y: basketY,
         width: basketWidth,
         height: basketHeight,
         image: img,
+        listening: false,
       });
-      this.group.add(basketNode);
-      this.baskets.push(basketNode);
 
-      const labelNode = new Konva.Text({
-        x: basketNode.x(),
-        y: basketNode.y() + basketHeight + 5,
+      const label = new Konva.Text({
+        x: basket.x(),
+        y: basket.y() + basketHeight + 8,
         width: basketWidth,
         align: "center",
         text: basketData.name,
-        fontSize: 30,
+        fontSize: 28,
         fontFamily: "Times New Roman",
         fill: "#000",
+        listening: false,
       });
-      this.group.add(labelNode);
-      this.basketLabels.push(labelNode);
+
+      this.group.add(basket, label);
+      this.basketNodes.push(basket);
+      this.basketLabels.push(label);
     }
 
-    // --- Item sizing & spacing ---
+    // --- ITEMS ---
     const itemWidth = IMAGE_DIMENSIONS.width;
     const itemHeight = IMAGE_DIMENSIONS.height;
     const itemSpacing = STAGE_WIDTH / (items.length + 1);
-    const itemY = 170;
+    const itemY = 160;
 
-    // Render draggable items
     await Promise.all(
       items.map(async (item, idx) => {
         const img = await this.loadImage(item.image);
@@ -122,26 +134,40 @@ export class ClassroomMinigameView implements View {
           draggable: true,
         });
 
-        // Drag & drop logic
         node.on("dragend", () => {
-          const basketIndex = this.baskets.findIndex(
-            (b) =>
-              node.x() + node.width() / 2 > b.x() &&
-              node.x() + node.width() / 2 < b.x() + b.width() &&
-              node.y() + node.height() / 2 > b.y() &&
-              node.y() + node.height() / 2 < b.y() + b.height()
-          );
+          const centerX = node.x() + node.width() / 2;
+          const centerY = node.y() + node.height() / 2;
 
-          if (basketIndex !== -1) {
-            const basketName = randomizedBaskets[basketIndex].name;
-            // Snap to basket
+          const hitIndex = this.basketNodes.findIndex((b) => {
+            return (
+              centerX > b.x() &&
+              centerX < b.x() + b.width() &&
+              centerY > b.y() &&
+              centerY < b.y() + b.height()
+            );
+          });
+
+          if (hitIndex !== -1) {
+            const basketName = shuffledBaskets[hitIndex].name;
+
+            // Snap item into the center of the basket
             node.position({
-              x: this.baskets[basketIndex].x() + this.baskets[basketIndex].width() / 2 - node.width() / 2,
-              y: this.baskets[basketIndex].y() + this.baskets[basketIndex].height() / 2 - node.height() / 2,
+              x: this.basketNodes[hitIndex].x() +
+                this.basketNodes[hitIndex].width() / 2 -
+                node.width() / 2,
+              y: this.basketNodes[hitIndex].y() +
+                this.basketNodes[hitIndex].height() / 2 -
+                node.height() / 2,
             });
+
             onItemDrop(item, basketName);
           }
+
+          this.layer.batchDraw();
         });
+
+        node.on("mouseenter", () => this.setCursor("pointer"));
+        node.on("mouseleave", () => this.setCursor("default"));
 
         this.group.add(node);
         this.itemNodes.push(node);
@@ -151,30 +177,134 @@ export class ClassroomMinigameView implements View {
     this.layer.batchDraw();
   }
 
-  /** Destroy previous scene nodes */
-  private clearScene() {
-    this.itemNodes.forEach((n) => n.destroy());
-    this.itemNodes = [];
-
-    this.baskets.forEach((b) => b.destroy());
-    this.baskets = [];
-
-    this.basketLabels.forEach((t) => t.destroy());
-    this.basketLabels = [];
-
-    if (this._feedbackGroup) {
-      this._feedbackGroup.destroy();
-      this._feedbackGroup = undefined;
-    }
-
-    if (this._titleNode) {
-      this._titleNode.destroy();
-      this._titleNode = undefined;
-    }
+  /** Show end-of-game result: X out of Y correct */
+/** Show end-of-game result: X out of Y correct */
+/** Show end-of-game result: X out of Y correct */
+showFinalResult(correct: number, total: number): void {
+  if (this.resultGroup) {
+    this.resultGroup.destroy();
   }
 
-  /** Add background image */
-  private addBackground() {
+  const allCorrect = correct === total;
+  const title = allCorrect ? "Correct!" : "Wrong!";
+  const color = allCorrect ? "#16a34a" : "#dc2626";
+
+  const group = new Konva.Group();
+  const boxWidth = 500;
+  const boxHeight = 260; // increased height for 2 buttons
+
+  const rect = new Konva.Rect({
+    x: STAGE_WIDTH / 2 - boxWidth / 2,
+    y: STAGE_HEIGHT / 2 - boxHeight / 2,
+    width: boxWidth,
+    height: boxHeight,
+    fill: "rgba(255,255,255,0.95)",
+    stroke: "#111827",
+    strokeWidth: 3,
+    cornerRadius: 20,
+    shadowColor: "rgba(0,0,0,0.25)",
+    shadowBlur: 16,
+    shadowOffsetY: 6,
+  });
+
+  const text = new Konva.Text({
+    x: rect.x() + 20,
+    y: rect.y() + 24,
+    width: rect.width() - 40,
+    align: "center",
+    text: `${title}\nYou got ${correct} out of ${total} correct.`,
+    fontSize: 28,
+    fontFamily: "Arial",
+    fill: color,
+    lineHeight: 1.4,
+  });
+
+  const buttonWidth = 260;
+  const buttonHeight = 50;
+  const btnX = STAGE_WIDTH / 2 - buttonWidth / 2;
+
+  // === PLAY AGAIN BUTTON GROUP ===
+  const playAgainY = rect.y() + boxHeight - buttonHeight * 2 - 30;
+
+  const playAgainGroup = new Konva.Group({
+    x: btnX,
+    y: playAgainY,
+    width: buttonWidth,
+    height: buttonHeight,
+  });
+
+  const playAgainBtn = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    fill: "#16A34A",
+    cornerRadius: 12,
+  });
+
+  const playAgainText = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Play Again",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    listening: false,
+  });
+
+  playAgainGroup.add(playAgainBtn, playAgainText);
+  playAgainGroup.on("click tap", () => this.onResetGame());
+  playAgainGroup.on("mouseenter", () => this.setCursor("pointer"));
+  playAgainGroup.on("mouseleave", () => this.setCursor("default"));
+
+
+  // === BACK TO CLASSROOM BUTTON GROUP ===
+  const backBtnY = playAgainY + buttonHeight + 10;
+
+  const backGroup = new Konva.Group({
+    x: btnX,
+    y: backBtnY,
+    width: buttonWidth,
+    height: buttonHeight,
+  });
+
+  const backBtn = new Konva.Rect({
+    width: buttonWidth,
+    height: buttonHeight,
+    fill: "#1D4ED8",
+    cornerRadius: 12,
+  });
+
+  const backText = new Konva.Text({
+    width: buttonWidth,
+    height: buttonHeight,
+    align: "center",
+    verticalAlign: "middle",
+    text: "Back to Classroom",
+    fontSize: 20,
+    fontFamily: "Arial",
+    fill: "#FFFFFF",
+    listening: false,
+  });
+
+  backGroup.add(backBtn, backText);
+  backGroup.on("click tap", () => this.onBackToClassroom());
+  backGroup.on("mouseenter", () => this.setCursor("pointer"));
+  backGroup.on("mouseleave", () => this.setCursor("default"));
+
+
+  // Add everything to popup group
+  group.add(rect, text, playAgainGroup, backGroup);
+  this.group.add(group);
+  this.resultGroup = group;
+
+  this.layer.batchDraw();
+}
+
+
+  // ----- Helpers -----
+
+  private addBackground(): void {
     const img = new window.Image();
     img.onload = () => {
       const bg = new Konva.Image({
@@ -192,8 +322,7 @@ export class ClassroomMinigameView implements View {
     img.src = MINIGAME_BG;
   }
 
-  /** Load image from URL */
-  private loadImage(src: string): Promise<HTMLImageElement> {
+  private async loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new window.Image();
       img.onload = () => resolve(img);
@@ -202,82 +331,92 @@ export class ClassroomMinigameView implements View {
     });
   }
 
-  /** Add title text at the top */
-  private addTitle(text: string) {
-    if (this._titleNode) {
-      this._titleNode.destroy();
-      this._titleNode = undefined;
-    }
+  private addTitle(): void {
+    if (this.titleNode) this.titleNode.destroy();
 
-    const titleNode = new Konva.Text({
-      text,
-      fontSize: 50,
-      fontFamily: "Times New Roman",
-      fill: "#000000ff",
+    this.titleNode = new Konva.Text({
+      text: "🧺 Classroom Sorting Challenge 🧺",
+      fontFamily: "Georgia",
+      fontStyle: "bold",
+      fontSize: 52,
+      fill: "#1F2937",
       width: STAGE_WIDTH,
       align: "center",
-      y: 75,
+      y: 60,
+      shadowColor: "rgba(0,0,0,0.25)",
+      shadowBlur: 10,
+      shadowOffsetY: 4,
     });
 
-    this.group.add(titleNode);
-    this._titleNode = titleNode;
+    this.group.add(this.titleNode);
   }
 
-  /** Show feedback cloud */
-  showFeedback(message: string, correct: boolean) {
-    if (this._feedbackGroup) {
-      this._feedbackGroup.destroy();
-      this._feedbackGroup = undefined;
-    }
+  private addBackButton(): void {
+    const width = 220;
+    const height = 50;
+    const x = 40;
+    const y = 40;
 
-    const group = new Konva.Group();
-    const padding = 20;
+    const group = new Konva.Group({ x, y });
 
     const rect = new Konva.Rect({
-      x: STAGE_WIDTH / 2,
-      y: STAGE_HEIGHT / 2 - 50,
-      width: 0,
-      height: 60,
-      fill: correct ? "rgba(0,200,0,0.85)" : "rgba(200,0,0,0.85)",
-      cornerRadius: 20,
-      opacity: 0,
+      width,
+      height,
+      cornerRadius: 12,
+      fill: "#1D4ED8",
+      stroke: "#0F172A",
+      strokeWidth: 2,
+      shadowColor: "rgba(0,0,0,0.2)",
+      shadowBlur: 8,
+      shadowOffsetY: 3,
     });
 
     const text = new Konva.Text({
-      text: message,
-      fontSize: 28,
-      fontFamily: "Calibri",
-      fill: "#fff",
+      width,
+      height,
+      text: "← Back to Classroom",
       align: "center",
-      opacity: 0,
+      verticalAlign: "middle",
+      fontSize: 18,
+      fontFamily: "Arial",
+      fill: "#FFFFFF",
+      listening: false,
     });
 
-    text.x(STAGE_WIDTH / 2 - text.width() / 2);
-    text.y(rect.y() + (rect.height() - text.height()) / 2);
+    group.add(rect, text);
+    group.on("mouseenter", () => this.setCursor("pointer"));
+    group.on("mouseleave", () => this.setCursor("default"));
+    group.on("click tap", () => this.onBackToClassroom());
 
-    rect.width(text.width() + padding * 2);
-    rect.x(STAGE_WIDTH / 2 - rect.width() / 2);
+    this.group.add(group);
+    this.backButtonGroup = group;
+  }
 
-    group.add(rect);
-    group.add(text);
-    this.layer.add(group);
-    this._feedbackGroup = group;
-    this.layer.draw();
+  private clearScene(): void {
+    this.itemNodes.forEach((n) => n.destroy());
+    this.basketNodes.forEach((b) => b.destroy());
+    this.basketLabels.forEach((l) => l.destroy());
 
-    rect.to({ opacity: 1, duration: 0.25 });
-    text.to({ opacity: 1, duration: 0.25 });
+    this.itemNodes = [];
+    this.basketNodes = [];
+    this.basketLabels = [];
 
-    setTimeout(() => {
-      rect.to({
-        opacity: 0,
-        duration: 0.25,
-        onFinish: () => {
-          group.destroy();
-          this._feedbackGroup = undefined;
-          this.layer.draw();
-        },
-      });
-      text.to({ opacity: 0, duration: 0.25 });
-    }, 700);
+    if (this.titleNode) {
+      this.titleNode.destroy();
+      this.titleNode = undefined;
+    }
+    if (this.resultGroup) {
+      this.resultGroup.destroy();
+      this.resultGroup = undefined;
+    }
+  }
+
+  private setCursor(cursor: string): void {
+    this.stage.container().style.cursor = cursor;
+  }
+
+  private onResetGame: () => void = () => {};
+  setOnResetGame(handler: () => void): void {
+    this.onResetGame = handler;
   }
 }
