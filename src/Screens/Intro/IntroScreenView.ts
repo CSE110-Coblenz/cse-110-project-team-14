@@ -98,11 +98,22 @@ export class IntroScreenView implements View {
 
     // End Game button
     const endGameButton = this.createButton(
-      "End Game",
-      STAGE_WIDTH / 2 - 75,
-      500,
+      "End Session",
+      STAGE_WIDTH /2 - 75,
+      700,
       () => this.onEndGameClick()
     );
+    // Make the End Session button smaller and centered
+    const smallWidth = 110;
+    const smallHeight = 30;
+    const smallX = STAGE_WIDTH / 2 - smallWidth / 2 + 600;
+    const smallY = 700;
+    const rectNode = endGameButton.findOne("Rect") as Konva.Rect | null;
+    const labelNode = endGameButton.findOne("Text") as Konva.Text | null;
+    if (rectNode && labelNode) {
+      rectNode.setAttrs({ x: smallX, y: smallY, width: smallWidth, height: smallHeight });
+      labelNode.setAttrs({ x: smallX, y: smallY + 6, width: smallWidth, fontSize: 16 });
+    }
     this.menuGroup.add(endGameButton);
 
     // (moved) hidden input created earlier in constructor

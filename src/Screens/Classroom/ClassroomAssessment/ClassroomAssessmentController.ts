@@ -63,7 +63,10 @@ export class ClassroomAssessmentController extends ScreenController {
       const { found, total } = counts.total;
       if (!this.completionShown && total > 0 && found === total) {
         this.completionShown = true;
-        this.view.showCompletionPopup(() => this.restartExperience());
+        this.view.showCompletionPopup(
+          () => this.restartExperience(),
+          () => this.screenSwitcher.switchToScreen({ type: "Session" })
+        );
       }
     });
 

@@ -413,7 +413,7 @@ export class ClassroomAssessmentView {
     this.layer.batchDraw();
   }
 
-  showCompletionPopup(onRestart: () => void) {
+  showCompletionPopup(onRestart: () => void, onEndSession?: () => void) {
     if (this.completionPopup) return;
 
     const overlay = new Konva.Group();
@@ -447,40 +447,36 @@ export class ClassroomAssessmentView {
       fill: "#1f2937",
       text: "Congratulations for finding everything!",
     });
-    const buttonWidth = 200;
     const buttonHeight = 48;
-    const button = new Konva.Group({
-      x: box.x() + (boxWidth - buttonWidth) / 2,
-      y: box.y() + boxHeight - buttonHeight - 30,
-    });
-    const buttonRect = new Konva.Rect({
-      width: buttonWidth,
-      height: buttonHeight,
-      cornerRadius: 14,
-      fill: "#1D4ED8",
-      stroke: "#0F172A",
-      strokeWidth: 2,
-      shadowColor: "rgba(0,0,0,0.25)",
-      shadowBlur: 10,
-      shadowOffsetY: 4,
-    });
-    const buttonText = new Konva.Text({
-      width: buttonWidth,
-      height: buttonHeight,
-      align: "center",
-      verticalAlign: "middle",
-      text: "Restart",
-      fontSize: 20,
-      fontFamily: "Arial",
-      fill: "#fff",
-      listening: false,
-    });
-    button.add(buttonRect, buttonText);
-    button.on("click tap", () => onRestart());
-    button.on("mouseenter", () => this.setCursor("pointer"));
-    button.on("mouseleave", () => this.setCursor("default"));
+    //either this works or copilot fucked me
+    const btnW = 160;
+    const gap = 20;
+    const totalButtonsWidth = onEndSession ? btnW * 2 + gap : btnW;
 
-    overlay.add(scrim, box, text, button);
+    // Restart button (left or centered)
+    const restartX = box.x() + (boxWidth - totalButtonsWidth) / 2;
+    const restartBtn = new Konva.Group({ x: restartX, y: box.y() + boxHeight - buttonHeight - 30 });
+    const restartRect = new Konva.Rect({ width: btnW, height: buttonHeight, cornerRadius: 12, fill: "#1D4ED8", stroke: "#0F172A", strokeWidth: 2 });
+    const restartText = new Konva.Text({ width: btnW, height: buttonHeight, align: "center", verticalAlign: "middle", text: "Restart", fontSize: 18, fontFamily: "Arial", fill: "#fff", listening: false });
+    restartBtn.add(restartRect, restartText);
+    restartBtn.on("click tap", () => onRestart());
+    restartBtn.on("mouseenter", () => this.setCursor("pointer"));
+    restartBtn.on("mouseleave", () => this.setCursor("default"));
+
+    overlay.add(scrim, box, text, restartBtn);
+
+    // Optional End Session button (right)
+    if (onEndSession) {
+      const endX = restartX + btnW + gap;
+      const endBtn = new Konva.Group({ x: endX, y: box.y() + boxHeight - buttonHeight - 30 });
+      const endRect = new Konva.Rect({ width: btnW, height: buttonHeight, cornerRadius: 12, fill: "#10B981", stroke: "#0F172A", strokeWidth: 1 });
+      const endText = new Konva.Text({ width: btnW, height: buttonHeight, align: "center", verticalAlign: "middle", text: "End Session", fontSize: 18, fontFamily: "Arial", fill: "#fff", listening: false });
+      endBtn.add(endRect, endText);
+      endBtn.on("click tap", () => onEndSession());
+      endBtn.on("mouseenter", () => this.setCursor("pointer"));
+      endBtn.on("mouseleave", () => this.setCursor("default"));
+      overlay.add(endBtn);
+    }
     overlay.listening(true);
     this.layer.add(overlay);
     overlay.moveToTop();
