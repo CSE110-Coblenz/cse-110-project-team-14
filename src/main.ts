@@ -65,7 +65,7 @@ export class App implements ScreenSwitcher {
     await this.introController.start();
     this.introController
       .getView()
-      .loadBackground("Public/Background/intro.webp");
+      .loadBackground("Public/Background/intro.jpg");
     this.layer.draw();
 
     // --- Store ---

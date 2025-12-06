@@ -4,6 +4,11 @@ import type { MCProblem, TypingProblem } from "../../../types";
 
 export class RestaurantAssessmentView {
   private group: Konva.Group = new Konva.Group({ visible: false });
+
+  // Background support
+  private backgroundLayer: Konva.Rect;
+  private backgroundImage?: Konva.Image;
+
   private typingText?: Konva.Text;
   private scoreText?: Konva.Text;
   private progressBarGroup!: Konva.Group;
@@ -18,18 +23,20 @@ export class RestaurantAssessmentView {
     this.onRestaurant = onRestaurant;
     this.onRestart = onRestart;
 
-    const bg = new Konva.Rect({
+    // Fallback background
+    this.backgroundLayer = new Konva.Rect({
       x: 0,
       y: 0,
       width: STAGE_WIDTH,
       height: STAGE_HEIGHT,
       fill: "#FFF8EB",
     });
-    this.group.add(bg);
+
+    this.group.add(this.backgroundLayer);
     this.createProgressBar();
   }
 
-  // ----------------- QUESTION SCREENS --------------------
+  // ----------------- MCQ SCREEN --------------------
 
   showMCQ(
     problem: MCProblem,
@@ -42,23 +49,33 @@ export class RestaurantAssessmentView {
     this.addScore(score, total);
 
     const question = new Konva.Text({
-      x: 60,
+      x: 0,
       y: 120,
       text: problem.question,
       fontSize: 32,
       fill: "#1a1a1a",
-      width: STAGE_WIDTH - 120,
+      width: STAGE_WIDTH,
+      align: "center",
     });
     this.group.add(question);
 
     problem.options.forEach((opt, i) => {
-      const btn = this.makeButton(80, 240 + i * 90, 700, 70, opt, "#DCE5F2");
+      const btn = this.makeButton(
+        (STAGE_WIDTH - 700) / 2,
+        260 + i * 100,
+        700,
+        80,
+        opt,
+        "#DCE5F2"
+      );
       btn.rect.on("click", () => callback(i));
       btn.text.on("click", () => callback(i));
     });
 
     this.group.getLayer()?.draw();
   }
+
+  // ----------------- TYPING SCREEN (UPDATED) --------------------
 
   showTyping(
     problem: TypingProblem,
@@ -70,22 +87,46 @@ export class RestaurantAssessmentView {
 
     this.addScore(score, total);
 
+    // Centered question
     const q = new Konva.Text({
-      x: 60,
-      y: 120,
+      x: 0,
+      y: 140,
       text: problem.question,
       fontSize: 32,
+      width: STAGE_WIDTH,
+      align: "center",
       fill: "#1a1a1a",
-      width: STAGE_WIDTH - 120,
     });
     this.group.add(q);
 
+    const boxWidth = 600;
+    const boxHeight = 70;
+    const boxX = (STAGE_WIDTH - boxWidth) / 2;
+    const boxY = 260;
+
+    // Visible input box
+    const inputBox = new Konva.Rect({
+      x: boxX,
+      y: boxY,
+      width: boxWidth,
+      height: boxHeight,
+      fill: "#FFFFFF",
+      stroke: "#004AAD",
+      strokeWidth: 3,
+      cornerRadius: 12,
+    });
+    this.group.add(inputBox);
+
+    // Typing text inside box
     this.typingText = new Konva.Text({
-      x: 60,
-      y: 240,
+      x: boxX + 12,
+      y: boxY + 18,
+      width: boxWidth - 24,
       text: typed,
       fontSize: 32,
       fill: "#004AAD",
+      fontFamily: "Arial",
+      align: "left",
     });
     this.group.add(this.typingText);
 
@@ -102,8 +143,10 @@ export class RestaurantAssessmentView {
   showFeedback(correct: boolean): void {
     this.clear();
     const msg = new Konva.Text({
-      x: 60,
+      x: 0,
       y: 240,
+      width: STAGE_WIDTH,
+      align: "center",
       text: correct ? "Correct!" : "Wrong!",
       fontSize: 46,
       fill: correct ? "#20A020" : "#D02020",
@@ -117,8 +160,10 @@ export class RestaurantAssessmentView {
     this.clear();
 
     const title = new Konva.Text({
-      x: 60,
+      x: 0,
       y: 160,
+      width: STAGE_WIDTH,
+      align: "center",
       text: `Final Score: ${score} / ${total}`,
       fontSize: 46,
       fill: "#000",
@@ -126,15 +171,16 @@ export class RestaurantAssessmentView {
     this.group.add(title);
 
     const bestScore = new Konva.Text({
-      x: 60,
+      x: 0,
       y: 240,
+      width: STAGE_WIDTH,
+      align: "center",
       text: `Best Score: ${best} / ${total}`,
       fontSize: 40,
       fill: "#444",
     });
     this.group.add(bestScore);
 
-    // Buttons positioned below score
     this.makeCenterButton(
       STAGE_HEIGHT - 220,
       "Retry Assessment",
@@ -152,7 +198,7 @@ export class RestaurantAssessmentView {
     this.group.getLayer()?.draw();
   }
 
-  // ----------------- UI Helpers --------------------
+  // ----------------- HELPERS --------------------
 
   private addScore(score: number, total: number) {
     this.scoreText = new Konva.Text({
@@ -179,13 +225,13 @@ export class RestaurantAssessmentView {
 
     const text = new Konva.Text({
       x,
-      y: y + 18,
+      y: y + 24,
       width: w,
       align: "center",
       text: txt,
-      fontSize: 24,
-      fontFamily: "Arial",
+      fontSize: 28,
       fill: "#111",
+      fontFamily: "Arial",
     });
 
     this.group.add(rect, text);
@@ -193,8 +239,8 @@ export class RestaurantAssessmentView {
   }
 
   private makeCenterButton(y: number, txt: string, color: string, cb: () => void) {
-    const w = 300;
-    const h = 60;
+    const w = 340;
+    const h = 70;
     const x = (STAGE_WIDTH - w) / 2;
 
     const { rect, text } = this.makeButton(x, y, w, h, txt, color);
@@ -204,14 +250,10 @@ export class RestaurantAssessmentView {
 
   clear(): void {
     this.group.destroyChildren();
-    const bg = new Konva.Rect({
-      x: 0,
-      y: 0,
-      width: STAGE_WIDTH,
-      height: STAGE_HEIGHT,
-      fill: "#FFF8EB",
-    });
-    this.group.add(bg);
+
+    this.group.add(this.backgroundLayer);
+    if (this.backgroundImage) this.group.add(this.backgroundImage);
+
     this.createProgressBar();
     this.updateTotalProgress(this.progressTotals.found, this.progressTotals.total);
   }
@@ -235,13 +277,17 @@ export class RestaurantAssessmentView {
     this.group.getLayer()?.draw();
   }
 
+  // ----------------- PROGRESS BAR --------------------
+
   private createProgressBar(): void {
     const barWidth = 240;
     const barMargin = 80;
+
     this.progressBarGroup = new Konva.Group({
       x: STAGE_WIDTH - barWidth - barMargin,
       y: 20,
     });
+
     this.progressBarBg = new Konva.Rect({
       width: barWidth,
       height: 18,
@@ -250,6 +296,7 @@ export class RestaurantAssessmentView {
       opacity: 0.25,
       listening: false,
     });
+
     this.progressBarFill = new Konva.Rect({
       width: 0,
       height: 18,
@@ -257,34 +304,43 @@ export class RestaurantAssessmentView {
       fill: "#1d4ed8",
       listening: false,
     });
+
     this.progressHoverText = new Konva.Text({
       width: barWidth,
       height: 18,
       align: "center",
       verticalAlign: "middle",
       fontSize: 12,
-      fontFamily: "Arial",
       fill: "#0f172a",
       visible: false,
       listening: false,
     });
+
     this.progressBarGroup.add(
       this.progressBarBg,
       this.progressBarFill,
       this.progressHoverText
     );
-    this.progressBarGroup.on("mouseenter", () => {
-      this.progressHoverText.text(
-        `${this.progressTotals.found} / ${this.progressTotals.total} tasks`
-      );
-      this.progressHoverText.visible(true);
-      this.group.getLayer()?.draw();
-    });
-    this.progressBarGroup.on("mouseleave", () => {
-      this.progressHoverText.visible(false);
-      this.group.getLayer()?.draw();
-    });
+
     this.group.add(this.progressBarGroup);
     this.progressBarGroup.moveToTop();
+  }
+
+  // ----------------- BACKGROUND IMAGE SUPPORT --------------------
+
+  loadBackground(imageUrl: string): void {
+    Konva.Image.fromURL(imageUrl, (img) => {
+      img.position({ x: 0, y: 0 });
+      img.width(STAGE_WIDTH);
+      img.height(STAGE_HEIGHT);
+
+      if (this.backgroundImage) this.backgroundImage.destroy();
+      this.backgroundImage = img;
+
+      this.group.add(img);
+      img.moveToBottom();
+      this.backgroundLayer.moveToBottom();
+      this.group.getLayer()?.draw();
+    });
   }
 }

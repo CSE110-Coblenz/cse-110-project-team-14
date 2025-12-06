@@ -14,6 +14,9 @@ export class RestaurantAssessmentController extends ScreenController {
   private assessmentRegistered = false;
   private unsubscribeProgress?: () => void;
 
+  // 🟢 NEW: ensure background image loads only once
+  private backgroundLoaded = false;
+
   constructor(screenSwitcher: ScreenSwitcher, tracker: ProgressTracker) {
     super();
     this.screenSwitcher = screenSwitcher;
@@ -32,11 +35,19 @@ export class RestaurantAssessmentController extends ScreenController {
   }
 
   async start(): Promise<void> {
+    // 🟢 Load restaurant assessment background once
+    if (!this.backgroundLoaded) {
+      this.view.loadBackground("Public/Background/AssessmentImage.jpg");
+      this.backgroundLoaded = true;
+    }
+
     await this.model.load_questions("/ItemImage/Restaurant/questions.json");
+
     if (!this.assessmentRegistered) {
       this.tracker.registerItems("assessments", ["restaurant:assessment"]);
       this.assessmentRegistered = true;
     }
+
     this.showQuestionHandler();
     this.view.show();
   }
@@ -92,19 +103,18 @@ export class RestaurantAssessmentController extends ScreenController {
     if (this.model.isFinished()) {
       this.model.updateBestScore();
       this.tracker.markFound("assessments", "restaurant:assessment");
+
       this.view.showResults(
         this.model.getCurrentScore(),
         this.model.getTotalCount(),
         this.model.getBestScore()
       );
-      // Update global assessment score for this session
+
       try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
         globals.progress.assessmentScore += this.model.getCurrentScore();
         globals.progress.assessmentTotal += this.model.getTotalCount();
-      } catch (e) {
-        // ignore if globals not available
+      } catch {
+        // ignore if globals missing
       }
       return;
     }
@@ -118,7 +128,7 @@ export class RestaurantAssessmentController extends ScreenController {
 
   restart(): void {
     this.model.reset();
-    this.start(); // reloads questions & starts again
+    this.start();
   }
 
   getView() {

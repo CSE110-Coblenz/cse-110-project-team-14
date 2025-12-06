@@ -5,14 +5,19 @@ import { SessionScreenView } from "./SessionScreenView";
 export class SessionScreenController {
   private view: SessionScreenView;
   private screenSwitcher: ScreenSwitcher;
+  private backgroundLoaded = false; // 🟢 prevent duplicate loads
 
   constructor(screenSwitcher: ScreenSwitcher) {
     this.screenSwitcher = screenSwitcher;
-    this.view = new SessionScreenView(() => this.backToMenu());
+    this.view = new SessionScreenView();
   }
 
   start(): Promise<void> {
-    // nothing async for now
+    // Load background one time when controller starts
+    if (!this.backgroundLoaded) {
+      this.view.loadBackground("Public/Background/EndSession.png"); // 🟢 CHANGE THIS PATH
+      this.backgroundLoaded = true;
+    }
     return Promise.resolve();
   }
 

@@ -8,12 +8,18 @@ export class IntroScreenView implements View {
 
   private loginGroup: Konva.Group;
   private menuGroup: Konva.Group;
+  private endScreenGroup: Konva.Group; // 🟢 new screen
 
   private classroomButton: Konva.Group;
   private restaurantButton: Konva.Group;
   private storeButton: Konva.Group;
+  private endGameButton: Konva.Group;
+
+  private menuBackgroundImage?: Konva.Image;
+  private endScreenBackground?: Konva.Image; // 🟢 new bg
 
   private nameInput: HTMLInputElement;
+
   private onLoginSuccess: () => void;
   private onClassroomClick: () => void;
   private onRestaurantClick: () => void;
@@ -34,189 +40,153 @@ export class IntroScreenView implements View {
     this.onStoreClick = onStoreClick;
     this.onEndGameClick = onEndGameClick;
 
-    // Background layer
+    // Base color fallback background
     this.backgroundLayer = new Konva.Rect({
       x: 0,
       y: 0,
       width: STAGE_WIDTH,
       height: STAGE_HEIGHT,
-      fill: "#d0f0ff", // light blue
+      fill: "#d0f0ff",
     });
     this.group.add(this.backgroundLayer);
 
-    // Create hidden HTML input for name (must exist before building login UI)
+    // HTML Name Input
     this.nameInput = document.createElement("input");
     this.nameInput.type = "text";
     this.nameInput.placeholder = "Enter your name";
-    this.nameInput.style.position = "absolute";
-    this.nameInput.style.left = "50%";
-    this.nameInput.style.top = "50%";
-    this.nameInput.style.transform = "translate(-50%, -50%)";
-    this.nameInput.style.width = "280px";
-    this.nameInput.style.height = "40px";
-    this.nameInput.style.fontSize = "18px";
-    this.nameInput.style.padding = "5px";
-    this.nameInput.style.border = "2px solid #000";
-    this.nameInput.style.borderRadius = "8px";
-    this.nameInput.style.zIndex = "1000";
-    this.nameInput.style.opacity = "0.01";
+    Object.assign(this.nameInput.style, {
+      position: "absolute",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "300px",
+      height: "55px",
+      fontSize: "20px",
+      padding: "8px",
+      borderRadius: "10px",
+      zIndex: "1000",
+      opacity: "0.01",
+      border: "3px solid #000",
+    });
     document.body.appendChild(this.nameInput);
 
-    // Create login group (initially visible)
+    // LOGIN SCREEN
     this.loginGroup = this.createLoginScreen();
     this.group.add(this.loginGroup);
 
-    // Create menu group (initially hidden, shown after login)
+    // MENU SCREEN
     this.menuGroup = new Konva.Group({ visible: false });
     this.group.add(this.menuGroup);
 
-    // Create buttons for menu
-    this.classroomButton = this.createButton(
-      "Classroom",
-      STAGE_WIDTH / 2 - 75,
-      200,
-      this.onClassroomClick
-    );
-    this.restaurantButton = this.createButton(
-      "Restaurant",
-      STAGE_WIDTH / 2 - 75,
-      300,
-      this.onRestaurantClick
-    );
-    this.storeButton = this.createButton(
-      "Store",
-      STAGE_WIDTH / 2 - 75,
-      400,
-      this.onStoreClick
-    );
+    // END SESSION SCREEN 🟢
+    this.endScreenGroup = new Konva.Group({ visible: false });
+    this.group.add(this.endScreenGroup);
 
-    this.menuGroup.add(
-      this.classroomButton,
-      this.restaurantButton,
-      this.storeButton
-    );
+    // MENU BUTTONS
+    this.classroomButton = this.createButton("Classroom", STAGE_WIDTH / 2 - 130, 240, this.onClassroomClick);
+    this.restaurantButton = this.createButton("Restaurant", STAGE_WIDTH / 2 - 130, 360, this.onRestaurantClick);
+    this.storeButton = this.createButton("Store", STAGE_WIDTH / 2 - 130, 480, this.onStoreClick);
 
-    // End Game button
-    const endGameButton = this.createButton(
-      "End Session",
-      STAGE_WIDTH /2 - 75,
-      700,
-      () => this.onEndGameClick()
-    );
-    // Make the End Session button smaller and centered
-    const smallWidth = 110;
-    const smallHeight = 30;
-    const smallX = STAGE_WIDTH / 2 - smallWidth / 2 + 600;
-    const smallY = 700;
-    const rectNode = endGameButton.findOne("Rect") as Konva.Rect | null;
-    const labelNode = endGameButton.findOne("Text") as Konva.Text | null;
-    if (rectNode && labelNode) {
-      rectNode.setAttrs({ x: smallX, y: smallY, width: smallWidth, height: smallHeight });
-      labelNode.setAttrs({ x: smallX, y: smallY + 6, width: smallWidth, fontSize: 16 });
-    }
-    this.menuGroup.add(endGameButton);
+    this.menuGroup.add(this.classroomButton, this.restaurantButton, this.storeButton);
 
-    // (moved) hidden input created earlier in constructor
+    // END SESSION BUTTON on MENU (TOP-LEFT)
+    this.endGameButton = this.createButton("End Session", 30, 30, () => this.handleEndSession());
+    const endRect = this.endGameButton.findOne("Rect") as Konva.Rect;
+    const endLabel = this.endGameButton.findOne("Text") as Konva.Text;
+    endRect.width(200);
+    endRect.height(55);
+    endLabel.width(200);
+    endLabel.height(55);
+    endLabel.fontSize(22);
+    this.menuGroup.add(this.endGameButton);
+
+    // END SCREEN UI TEXT
+    const endText = new Konva.Text({
+      x: 0,
+      y: STAGE_HEIGHT / 2 - 50,
+      width: STAGE_WIDTH,
+      align: "center",
+      text: "Session Ended\nMerci d'avoir joué!",
+      fontSize: 42,
+      fontFamily: "Georgia",
+      fontStyle: "bold",
+      fill: "#ffffff",
+      shadowColor: "black",
+      shadowBlur: 10,
+      shadowOffsetY: 4,
+      shadowOpacity: 0.4,
+    });
+    this.endScreenGroup.add(endText);
   }
 
-private createLoginScreen(): Konva.Group {
-  const loginGroup = new Konva.Group();
+  // LOGIN SCREEN CREATION
+  private createLoginScreen(): Konva.Group {
+    const loginGroup = new Konva.Group();
 
-  // Title
-  const title = new Konva.Text({
-    x: 0,
-    y: STAGE_HEIGHT / 2 - 150,
-    width: STAGE_WIDTH,
-    align: "center",
-    text: "Placeholder game title",
-    fontSize: 32,
-    fontFamily: "Arial",
-    fontStyle: "bold",
-    fill: "#000",
-  });
-  loginGroup.add(title);
+    const title = new Konva.Text({
+      x: 0,
+      y: STAGE_HEIGHT / 2 - 260,
+      width: STAGE_WIDTH,
+      align: "center",
+      text: "UCSD Student in Paris",
+      fontSize: 48,
+      fontFamily: "Georgia",
+      fontStyle: "bold",
+      fill: "#00205B",
+      shadowColor: "black",
+      shadowBlur: 10,
+      shadowOffsetY: 4,
+      shadowOpacity: 0.35,
+    });
+    loginGroup.add(title);
 
-  // Subtitle
-  const subtitle = new Konva.Text({
-    x: 0,
-    y: STAGE_HEIGHT / 2 - 80,
-    width: STAGE_WIDTH,
-    align: "center",
-    text: "enter your name to start",
-    fontSize: 20,
-    fontFamily: "Arial",
-    fill: "#555",
-  });
-  loginGroup.add(subtitle);
+    const inputGroup = new Konva.Group({
+      x: STAGE_WIDTH / 2 - 170,
+      y: STAGE_HEIGHT / 2 - 20,
+      width: 340,
+      height: 60,
+    });
 
-  // === INPUT GROUP (FULLY CLICKABLE) ===
-  const inputGroup = new Konva.Group({
-    x: STAGE_WIDTH / 2 - 150,
-    y: STAGE_HEIGHT / 2 - 20,
-    width: 300,
-    height: 50,
-  });
+    const inputBox = new Konva.Rect({
+      width: 340,
+      height: 60,
+      fill: "#fff",
+      stroke: "#000",
+      strokeWidth: 3,
+      cornerRadius: 12,
+    });
 
-  const inputBox = new Konva.Rect({
-    width: 300,
-    height: 50,
-    fill: "#fff",
-    stroke: "#000",
-    strokeWidth: 2,
-    cornerRadius: 8,
-  });
+    const inputLabel = new Konva.Text({
+      width: 340,
+      height: 60,
+      align: "center",
+      verticalAlign: "middle",
+      text: "Name",
+      fontSize: 22,
+      fontFamily: "Arial",
+      fill: "#666",
+    });
 
-  const inputLabel = new Konva.Text({
-    width: 300,
-    height: 50,
-    align: "center",
-    verticalAlign: "middle",
-    text: "Name",
-    fontSize: 18,
-    fontFamily: "Arial",
-    fill: "#666",
-  });
+    inputGroup.add(inputBox, inputLabel);
+    loginGroup.add(inputGroup);
+    inputGroup.on("click tap", () => this.nameInput.focus());
 
-  inputGroup.add(inputBox, inputLabel);
-  loginGroup.add(inputGroup);
+    this.nameInput.addEventListener("input", () => {
+      inputLabel.text(this.nameInput.value || "Name");
+      loginGroup.getLayer()?.batchDraw();
+    });
 
-  // FOCUS INPUT WHEN CLICKING ANYWHERE ON THE GROUP
-  inputGroup.on("click tap", () => this.nameInput.focus());
+    this.nameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") this.handleLoginSubmit();
+    });
 
-  // Sync HTML input position with Konva box
-  // (so the whole rectangle is active)
-  this.nameInput.style.left = `${inputGroup.x() + inputGroup.width() / 2}px`;
-  this.nameInput.style.top = `${inputGroup.y() + inputGroup.height() / 2}px`;
-  this.nameInput.style.transform = "translate(-50%, -50%)";
-  this.nameInput.style.width = `${inputGroup.width() - 20}px`;
-  this.nameInput.style.height = `${inputGroup.height() - 12}px`;
-  this.nameInput.style.zIndex = "1000";
-  this.nameInput.style.opacity = "0.01"; // invisible but clickable
+    const submitBtn = this.createButton("Start Game", STAGE_WIDTH / 2 - 130, STAGE_HEIGHT / 2 + 80, () =>
+      this.handleLoginSubmit()
+    );
+    loginGroup.add(submitBtn);
 
-  // Update visual text as the player types
-  this.nameInput.addEventListener("input", () => {
-    inputLabel.text(this.nameInput.value || "Name");
-    loginGroup.getLayer()?.batchDraw();
-  });
-
-  // Press Enter to submit
-  this.nameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      this.handleLoginSubmit();
-    }
-  });
-
-  // === SUBMIT BUTTON ===
-  const submitBtn = this.createButton(
-    "Start Game",
-    STAGE_WIDTH / 2 - 75,
-    STAGE_HEIGHT / 2 + 60,
-    () => this.handleLoginSubmit()
-  );
-  loginGroup.add(submitBtn);
-
-  return loginGroup;
-}
+    return loginGroup;
+  }
 
   private handleLoginSubmit(): void {
     const name = this.nameInput.value.trim();
@@ -225,74 +195,88 @@ private createLoginScreen(): Konva.Group {
       this.nameInput.focus();
       return;
     }
-    // Store player name in globals
+
     globals.playerName = name;
-    console.log("Player name set to:", globals.playerName); 
     try {
-      localStorage.setItem("playerName", globals.playerName);
-    } catch (e) {
-      // ignore storage errors
-    }
-    // Hide login, show menu
+      localStorage.setItem("playerName", name);
+    } catch {}
+
+    this.nameInput.style.display = "none"; // 🟢 prevent click blocking
+
     this.loginGroup.visible(false);
     this.menuGroup.visible(true);
-    this.loginGroup.getLayer()?.batchDraw();
+    this.group.getLayer()?.batchDraw();
 
-    // Notify controller
-    
     this.onLoginSuccess();
-    
-    // Broadcast event so other views can update dialogue immediately
-    try {
-      const ev = new CustomEvent("playerNameUpdated", { detail: globals.playerName });
-      window.dispatchEvent(ev);
-    } catch (e) {
-      // ignore
-    }
-  } 
+    window.dispatchEvent(new CustomEvent("playerNameUpdated", { detail: name }));
+  }
 
-  private createButton(
-    text: string,
-    x: number,
-    y: number,
-    onClick: () => void
-  ): Konva.Group {
-    const buttonGroup = new Konva.Group();
+  // MENU -> END SESSION SCREEN
+  private handleEndSession(): void {
+    this.menuGroup.visible(false);
+    this.endScreenGroup.visible(true);
+    this.group.getLayer()?.batchDraw();
+    this.onEndGameClick();
+  }
+
+  // BUTTON FACTORY
+  private createButton(text: string, x: number, y: number, onClick: () => void): Konva.Group {
+    const WIDTH = 260;
+    const HEIGHT = 80;
+
+    const group = new Konva.Group({ x, y, width: WIDTH, height: HEIGHT });
 
     const rect = new Konva.Rect({
-      x,
-      y,
-      width: 150,
-      height: 50,
-      fill: "#ffffff",
+      width: WIDTH,
+      height: HEIGHT,
+      fill: "#fff",
       stroke: "#000",
-      strokeWidth: 2,
-      cornerRadius: 8,
+      strokeWidth: 3,
+      cornerRadius: 16,
+      shadowColor: "black",
+      shadowBlur: 10,
+      shadowOpacity: 0.35,
+      shadowOffsetY: 5,
     });
 
     const label = new Konva.Text({
-      x,
-      y: y + 12,
-      width: 150,
-      align: "center",
+      width: WIDTH,
+      height: HEIGHT,
       text,
-      fontSize: 20,
+      align: "center",
+      verticalAlign: "middle",
+      fontSize: 28,
       fontFamily: "Arial",
+      fontStyle: "bold",
       fill: "#000",
     });
 
-    rect.on("click", onClick);
-    label.on("click", onClick);
+    group.on("mouseenter", () => {
+      document.body.style.cursor = "pointer";
+      rect.fill("#f8f8f8");
+      label.fontSize(30);
+      group.getLayer()?.batchDraw();
+    });
 
-    buttonGroup.add(rect, label);
-    return buttonGroup;
+    group.on("mouseleave", () => {
+      document.body.style.cursor = "default";
+      rect.fill("#fff");
+      rect.shadowBlur(10);
+      label.fontSize(28);
+      group.getLayer()?.batchDraw();
+    });
+
+    group.on("click tap", onClick);
+
+    group.add(rect, label);
+    return group;
   }
 
   show(): void {
     this.group.visible(true);
     this.group.getLayer()?.batchDraw();
   }
-  
+
   hide(): void {
     this.group.visible(false);
     this.group.getLayer()?.batchDraw();
@@ -302,22 +286,48 @@ private createLoginScreen(): Konva.Group {
     return this.group;
   }
 
-  // Add this method inside IntroScreenView
-loadBackground(imageUrl: string): void {
-  Konva.Image.fromURL(imageUrl, (imgNode) => {
-    imgNode.setAttrs({
-      x: 0,
-      y: 0,
-      width: STAGE_WIDTH,
-      height: STAGE_HEIGHT,
-      image: imgNode.image(),
+  // LOGIN BACKGROUND
+  loadBackground(imageUrl: string): void {
+    Konva.Image.fromURL(imageUrl, (img) => {
+      img.position({ x: 0, y: 0 });
+      img.width(STAGE_WIDTH);
+      img.height(STAGE_HEIGHT);
+      this.group.add(img);
+      img.moveToBottom();
+      this.backgroundLayer.moveToBottom();
+      this.group.getLayer()?.batchDraw();
     });
+  }
 
-    this.group.add(imgNode);
-    imgNode.moveToBottom();
-    this.backgroundLayer.moveToBottom();
-    this.group.getLayer()?.draw();
-  });
-}
+  // MENU BACKGROUND
+  loadMenuBackground(imageUrl: string): void {
+    Konva.Image.fromURL(imageUrl, (img) => {
+      img.position({ x: 0, y: 0 });
+      img.width(STAGE_WIDTH);
+      img.height(STAGE_HEIGHT);
 
+      if (this.menuBackgroundImage) this.menuBackgroundImage.destroy();
+      this.menuBackgroundImage = img;
+
+      this.menuGroup.add(img);
+      img.moveToBottom();
+      this.menuGroup.getLayer()?.batchDraw();
+    });
+  }
+
+  // END SCREEN BACKGROUND 🟢
+  loadEndScreenBackground(imageUrl: string): void {
+    Konva.Image.fromURL(imageUrl, (img) => {
+      img.position({ x: 0, y: 0 });
+      img.width(STAGE_WIDTH);
+      img.height(STAGE_HEIGHT);
+
+      if (this.endScreenBackground) this.endScreenBackground.destroy();
+      this.endScreenBackground = img;
+
+      this.endScreenGroup.add(img);
+      img.moveToBottom();
+      this.endScreenGroup.getLayer()?.batchDraw();
+    });
+  }
 }
