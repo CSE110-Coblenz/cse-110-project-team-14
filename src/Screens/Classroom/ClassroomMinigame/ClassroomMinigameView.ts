@@ -2,8 +2,6 @@ import Konva from "konva";
 import type { Group } from "konva/lib/Group";
 import type { Layer } from "konva/lib/Layer";
 import type { Image as KonvaImage } from "konva/lib/shapes/Image";
-import type { Rect } from "konva/lib/shapes/Rect";
-import type { Text } from "konva/lib/shapes/Text";
 import type { Stage } from "konva/lib/Stage";
 import { IMAGE_DIMENSIONS, STAGE_HEIGHT, STAGE_WIDTH } from "../../../constants";
 import type { Item, View } from "../../../types";
@@ -47,6 +45,7 @@ export class ClassroomMinigameView implements View {
     this.stage = stage;
     this.layer = layer;
     this.group = new Konva.Group({ visible: false });
+    this.layer.add(this.group);
 
     this.addBackground();
     this.createProgressBar();
